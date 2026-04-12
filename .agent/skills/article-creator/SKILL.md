@@ -45,12 +45,20 @@ WP_POST_TYPE=posts
 
 ### Step 0: リポジトリルートの特定と設定読み込み
 
-以下のBashコマンドで、このスキルが置かれているリポジトリのルートを特定する。
+以下のBashコマンドで、このスキルのルートディレクトリを特定する。
+シンボリックリンク経由か直接コピーかを自動判別する。
 
 ```bash
-SKILL_DIR=$(dirname "$(readlink ~/.claude/commands/article-creator.md)")
-REPO_ROOT=$(cd "$SKILL_DIR/../../.."; pwd)
-echo "$REPO_ROOT"
+CMD_FILE=~/.claude/commands/article-creator.md
+if [ -L "$CMD_FILE" ]; then
+  # シンボリックリンクの場合: リンク先からリポジトリルートを逆引き
+  SKILL_DIR=$(dirname "$(readlink "$CMD_FILE")")
+  REPO_ROOT=$(cd "$SKILL_DIR/../../.."; pwd)
+else
+  # 直接コピーの場合: ~/.claude/article-creator/ を使用
+  REPO_ROOT="$HOME/.claude/article-creator"
+fi
+echo "REPO_ROOT: $REPO_ROOT"
 ```
 
 取得した `REPO_ROOT` を以降のすべてのパスのベースとして使用する：
