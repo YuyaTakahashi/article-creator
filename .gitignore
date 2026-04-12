@@ -1,0 +1,8 @@
+# credentials
+.env
+
+# generated articles (opt-in to commit if desired)
+drafts/
+
+# OS
+.DS_Store
