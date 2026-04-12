@@ -4,6 +4,25 @@ UX用語の解説記事を生成してWordPressに下書き投稿するClaude Co
 
 Web検索 → 執筆 → ファクトチェック → 提唱者ポートレート挿入 → WordPress下書き投稿まで一気通貫で実行する。
 
+## セットアップ（最速）
+
+Claude Codeに以下をそのまま貼り付けるだけでインストールできる。
+
+```
+以下のClaude Codeスキルをセットアップして。
+https://github.com/YuyaTakahashi/article-creator
+
+手順：
+1. リポジトリを git clone する
+2. ~/.claude/article-creator/ を作成し prompts/ と .env をそこに置く
+3. SKILL.md を ~/.claude/commands/article-creator.md に直接コピーする
+4. WordPress の接続情報（WP_SITE_URL / WP_USER / WP_APP_PASS / WP_POST_TYPE）を聞いて .env に書く
+```
+
+Claudeがクローン・ファイル配置・`.env`の設定まで対話しながら完了させてくれる。
+
+---
+
 ## 動作イメージ
 
 ```
