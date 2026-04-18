@@ -75,6 +75,33 @@ WP_PASS_CLEAN=$(echo "$WP_APP_PASS" | tr -d ' ')
 WP_AUTH=$(echo -n "${WP_USER}:${WP_PASS_CLEAN}" | base64)
 ```
 
+続いて、WP REST API でその投稿タイプに紐づくカテゴリのタクソノミーフィールド名を取得する。
+`posts` の場合は `categories`、カスタム投稿タイプ（例: `glossary`）は独自のタクソノミー名（例: `glossary-category`）を持つことがある。
+
+```python
+import urllib.request, json, base64
+
+wp_auth = base64.b64encode(f"{WP_USER}:{WP_PASS_CLEAN}".encode()).decode()
+
+# 既存投稿1件を取得してカテゴリ系フィールド名を調べる
+req = urllib.request.Request(
+    f"{WP_SITE_URL}/wp-json/wp/v2/{WP_POST_TYPE}?per_page=1",
+    headers={"Authorization": f"Basic {wp_auth}"}
+)
+with urllib.request.urlopen(req) as resp:
+    posts = json.loads(resp.read().decode())
+
+# 'categor' を含むキーを探す（例: categories, glossary-category）
+CATEGORY_FIELD = "categories"  # デフォルト
+if posts:
+    for key in posts[0].keys():
+        if "categ" in key.lower():
+            CATEGORY_FIELD = key
+            break
+```
+
+以降のステップでは `CATEGORY_FIELD` をカテゴリフィールド名として使用する。
+
 ---
 
 ### Step 1: 重複チェック
@@ -238,7 +265,7 @@ curl -s -X POST \
   "content": "{HTML変換後の本文}",
   "excerpt": "{最小限の説明}",
   "status": "draft",
-  "categories": [{category_id}]
+  "{CATEGORY_FIELD}": [{category_id}]
 }
 PAYLOAD
 ```
