@@ -1,11 +1,14 @@
 ---
 name: article-post
-description: drafts/ フォルダのMDファイルをWordPressに下書き投稿するスキル。article-creator で生成したMDを人間が確認・編集したあとに呼び出す。
+description: drafts/ フォルダのMDファイルをWordPressに新規下書き投稿または既存投稿の更新を行うスキル。article-creator で生成したMDを人間が確認・編集したあとに呼び出す。
 ---
 
 # article-post スキル
 
-`drafts/` フォルダに保存されたMDファイルを読み込み、HTMLに変換してWordPressに下書きとして投稿する。
+`drafts/` フォルダに保存されたMDファイルを読み込み、HTMLに変換してWordPressに投稿する。
+
+- **新規作成モード**: フロントマターに `wp_post_id` が無い場合、新しい下書きをPOSTする
+- **更新モード**: フロントマターに `wp_post_id` がある場合、その投稿を更新する
 
 ## 引数
 
@@ -55,13 +58,14 @@ WP_PASS_CLEAN=$(echo "$WP_APP_PASS" | tr -d ' ')
 
 YAMLフロントマターから以下を取得する：
 
-| フィールド | 用途 |
-|---|---|
-| `title` | WP投稿タイトル |
-| `excerpt` | WP投稿抜粋 |
-| `category_id` | カテゴリID |
-| `category_field` | タクソノミーフィールド名（例: `glossary-category`） |
-| `eyecatch_prompt` | 完了報告に出力（WP投稿には使わない） |
+| フィールド | 必須 | 用途 |
+|---|---|---|
+| `title` | ○ | WP投稿タイトル |
+| `excerpt` | ○ | WP投稿抜粋 |
+| `category_id` | ○ | カテゴリID |
+| `category_field` | ○ | タクソノミーフィールド名（例: `glossary-category`） |
+| `wp_post_id` | △ | 既存投稿のID。**ある場合は更新モード、無い場合は新規作成モード** |
+| `eyecatch_prompt` | - | 完了報告に出力（WP投稿には使わない） |
 
 フロントマター終端（`---` の2行目）以降の全テキストを記事本文として扱う。
 
@@ -118,21 +122,33 @@ HTML変換後の `<h2>語源・提唱者</h2>` セクション内のテキスト
 
 ### Step 4: WP REST APIへのPOST
 
+フロントマターの `wp_post_id` の有無で、エンドポイントとペイロードを切り替える。
+
 ```python
 import urllib.request, json, base64
 
 wp_auth = base64.b64encode(f"{WP_USER}:{WP_PASS_CLEAN}".encode()).decode()
 
+# 共通ペイロード
 payload = {
-    "title": title,           # フロントマターから取得
-    "content": html_body,     # Step 2-3 で生成したHTML
-    "excerpt": excerpt,       # フロントマターから取得
-    "status": "draft",
-    category_field: [category_id]   # フロントマターの category_field と category_id を使用
+    "title": title,
+    "content": html_body,
+    "excerpt": excerpt,
+    category_field: [category_id]
 }
 
+if wp_post_id:
+    # 更新モード: 既存投稿の status は変更しない（公開済みなら公開のまま、下書きなら下書きのまま）
+    endpoint = f"{WP_SITE_URL}/wp-json/wp/v2/{WP_POST_TYPE}/{wp_post_id}"
+    mode = "update"
+else:
+    # 新規作成モード: status は draft 固定
+    payload["status"] = "draft"
+    endpoint = f"{WP_SITE_URL}/wp-json/wp/v2/{WP_POST_TYPE}"
+    mode = "create"
+
 req = urllib.request.Request(
-    f"{WP_SITE_URL}/wp-json/wp/v2/{WP_POST_TYPE}",
+    endpoint,
     data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
     headers={
         "Authorization": f"Basic {wp_auth}",
@@ -143,19 +159,51 @@ req = urllib.request.Request(
 ```
 
 レスポンスのHTTPステータスコードを確認する：
-- 201: 成功 → `id` フィールドからWP管理画面URLを組み立てて報告
-- 401: 認証エラー → `.env` の `WP_USER` / `WP_APP_PASS` を確認するよう案内
-- 404: エンドポイントエラー → `WP_POST_TYPE` が正しいか確認するよう案内
+
+| ステータス | 新規 | 更新 | 対応 |
+|---|---|---|---|
+| 200 | - | 成功 | `id` フィールドからWP管理画面URLを組み立てて報告 |
+| 201 | 成功 | - | `id` フィールドからWP管理画面URLを組み立てて報告。**さらにフロントマターに `wp_post_id: {id}` を追記するようユーザーに案内する** |
+| 401 | 認証エラー | 認証エラー | `.env` の `WP_USER` / `WP_APP_PASS` を確認するよう案内 |
+| 404 | エンドポイントエラー | post_idが存在しない | 新規: `WP_POST_TYPE` を確認 / 更新: `wp_post_id` の値を確認 |
+
+---
+
+### Step 5 (新規作成時のみ): フロントマターに wp_post_id を追記
+
+新規作成が成功（201）した場合、レスポンスの `id` を `drafts/{filename}` のフロントマターに自動追記する。
+これにより次回以降の `/article-post` 実行で更新モードに切り替わる。
+
+Edit ツールで `category_field: "..."` の直後に以下を挿入する：
+
+```
+wp_post_id: {id}
+```
+
+挿入後、ユーザーに「次回以降の `/article-post {filename}` は更新モードで動作します」と伝える。
 
 ---
 
 ## 完了報告
 
+### 新規作成時
+
 ```
+モード        : 新規作成
 記事タイトル  : {title}
 カテゴリ      : {category_name}（ID: {category_id}）
 WP下書きURL   : {WP管理画面のedit URL}
+wp_post_id    : {id}（フロントマターに追記済み）
 
 アイキャッチ用プロンプト:
 {eyecatch_prompt}
+```
+
+### 更新時
+
+```
+モード        : 更新
+記事タイトル  : {title}
+wp_post_id    : {wp_post_id}
+WP編集URL     : {WP管理画面のedit URL}
 ```
