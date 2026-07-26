@@ -4,6 +4,42 @@ UX用語の解説記事を生成してWordPressに下書き投稿するClaude Co
 
 Web検索 → 執筆 → ファクトチェック → 提唱者ポートレート挿入 → WordPress下書き投稿まで一気通貫で実行する。
 
+---
+
+## 用語集パイプラインの使い方（用語くん・スタッフ向け）
+
+UX TIMES 用語集（uxdaystokyo.com/articles/glossary/）は、Slackの「用語くん」＋用語DB（スプレッドシート）＋記事ドラフト（Googleドキュメント）＋WordPress で回している。まずSlackの `#用語くん` チャンネルで用語くんにメンションするのが入口。
+
+### よく使うリンク
+
+- 用語DB（スプレッドシート・閲覧可）: https://docs.google.com/spreadsheets/d/1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY/edit
+- 記事ドラフトフォルダ（Googleドキュメント・閲覧可）: https://drive.google.com/drive/folders/1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS
+- このリポジトリ（Claude Codeで使う人向け）: https://github.com/YuyaTakahashi/article-creator
+
+### 全体の流れ（①〜⑥）
+
+| 手順 | やること | 誰が・どうやるか |
+|---|---|---|
+| ① 追加 | 用語を候補に積む | 誰でも：Slackで `@用語くん ◯◯ 追加して` |
+| ② 生成 | 記事ドラフトを作る | 自動（毎週月曜の朝に3本）／`@用語くん ◯◯ の下書き作って` でリクエスト → 月曜（毎週）か金曜（リクエストがある時）に生成して、チャンネルで告知 |
+| ③ レビュー | ドラフトを直す | 誰でも：Googleドキュメントを直接編集 → 用語DBのステータスを「公開OK」に |
+| ④ WP下書き | WordPressに下書き化 | 誰でも：`@用語くん G-xxx をWP下書きに`／用語DBメニュー「用語くん」→「▶ 選択行をWP下書きに送る」 |
+| ⑤ 画像 | 顔写真＋アイキャッチ＋挿絵 | Claudeがある人：`/glossary-wp-images G-xxx`／無い人：用語DBのR列「アイキャッチプロンプト」をChatGPT・Geminiに渡して作り、WP管理画面で貼る（画像は任意） |
+| ⑥ 公開 | 公開する | 誰でも：WP管理画面で「公開」ボタン |
+
+### Claude Code を持っている人（Yuya など）
+
+- 単発で今すぐ1本生成：`bash scripts/generate-term.sh "◯◯"` または `/generate-term ◯◯`
+- 画像入れ：`/glossary-wp-images G-xxx`（提唱者の顔写真・アイキャッチ・各章の挿絵を自動でWP下書きに入れる）
+- セットアップは下の「セットアップ」を参照。
+
+### Claude Code が無い人
+
+- 記事は自分で書かなくてOK。`@用語くん ◯◯ の下書き作って`（または `@用語くん G-xxx 生成して`）でリクエストすれば、月／金の生成タイミングで作られてチャンネルで知らせが来る。
+- 画像を入れたいときは、用語DBのR列「アイキャッチプロンプト」をコピーしてChatGPTやGeminiに渡して画像を作り、WP管理画面（ブロックエディタ）で貼る。顔写真はWikipediaから。画像は無しのまま公開してもOK。
+
+---
+
 ## セットアップ（最速）
 
 Claude Codeに以下をそのまま貼り付けるだけでインストールできる。
@@ -93,6 +129,33 @@ WP_POST_TYPE=glossary                       # 通常の投稿はposts
 
 以上でセットアップ完了。
 
+---
+
+### 方法C: Cowork（Claude デスクトップアプリ）から呼び出す
+
+Cowork から「UX用語の記事を作って」のような自然言語でスキルを起動する方法。
+
+Cowork は、マウントされたフォルダ内の `cowork-skills/*/SKILL.md` を自動的にスキルとして認識する。そのため特別なインストール作業は不要で、以下の手順だけで完了する。
+
+```bash
+# 1. クローン（未取得の場合のみ）
+git clone https://github.com/YuyaTakahashi/article-creator.git
+cd article-creator
+cp .env.example .env
+# .env を開いて WP_SITE_URL / WP_USER / WP_APP_PASS を入力
+```
+
+その後 Cowork で本リポジトリのフォルダ（例: `~/workspace/article-creator`）をマウントすれば、`cowork-skills/article-creator/SKILL.md` と `cowork-skills/article-post/SKILL.md` が自動でスキル一覧に登録される。
+
+Cowork での使い方の例：
+
+- 「メンタルモデルの解説記事を書いて」 → `article-creator` が発火し、対話で topic/context/difficulty/it を聞いてから drafts/ にMDを保存する
+- 「drafts/メンタルモデル.md をWordPressに下書き投稿して」 → `article-post` が発火し、WP REST API に POST する
+
+Claude Code 版（方法A / B）と Cowork 版は同じ `prompts/` ・ `.env` ・ `drafts/` を共有するため、どちらから実行しても同じ動作になる。
+
+---
+
 ## 使い方
 
 ```
@@ -123,12 +186,18 @@ WP_POST_TYPE=glossary                       # 通常の投稿はposts
 
 ```
 article-creator/
-  .agent/skills/article-creator/
-    SKILL.md          # スキル本体（ステップ制御）
+  .agent/skills/
+    article-creator/SKILL.md      # Claude Code スキル本体（下書きMD生成）
+    article-post/SKILL.md         # Claude Code スキル本体（WordPress投稿）
+  cowork-skills/
+    article-creator/SKILL.md      # Cowork 版（下書きMD生成）
+    article-post/SKILL.md         # Cowork 版（WordPress投稿）
   prompts/
     01_information_gathering.md   # Web検索・情報収集の指示
     02_polishing.md               # 難易度パラメータ適用・整形の指示
-  .env.example        # 認証情報のテンプレート
+    03_eyecatch.md                # アイキャッチプロンプト生成の指示
+  drafts/                         # 生成したMDの保存先
+  .env.example                    # 認証情報のテンプレート
   .gitignore
 ```
 

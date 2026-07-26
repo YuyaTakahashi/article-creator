@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-UX TIMES 用語集記事の「セクション装飾イラスト」を Gemini（Nano Banana）で生成する
+UX TIMES 用語集記事の「セクション・インフォグラフィック」を Gemini（Nano Banana）で生成する
 ローカル実行スクリプト。アイキャッチ（generate_eyecatch.py）とは別に、本文の各セクション見出し
-の直下に置く装飾イラストを作る。文字を一切入れない・アイキャッチと同じフラットな配色で統一する。
+の直下に置く、章の要点を可視化したインフォグラフィックを作る。NotebookLM の動画オーバービュー
+のような、白背景・幾何学フラット・ミニマルでモダンなテイストで統一する（こども向け・カートゥーン調に
+しない）。短い日本語ラベルのみ可（サービス名・ロゴ・ウォーターマーク・cite 注釈は禁止）。アイキャッチの配色には寄せない。
 
 Coworkサンドボックスからは外部HTTPSが403で叩けないため Mac 上で直接実行する。
 Gemini呼び出しと .env 読み込みは generate_eyecatch.py の実装を再利用する。
@@ -29,22 +31,28 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from generate_eyecatch import call_gemini_image, load_env  # noqa: E402
 
 
-# セクション装飾イラスト用テンプレート。アイキャッチと配色を揃えつつ、
-# タイトル文字を入れない・横長バナー寄りの構図にする（本文インライン用）。
-SECTION_PROMPT_TEMPLATE = """A minimalist editorial spot illustration for a Japanese UX glossary article, composed as a horizontal banner (roughly 16:9).
+# セクション・インフォグラフィック用テンプレート。NotebookLM の動画オーバービューのような
+# 白背景・幾何学フラット・こども向けキャッチーなテイストに統一する（アイキャッチには寄せない）。
+# 短い日本語ラベルのみ可。サービス名・ロゴ・ウォーターマーク・cite 注釈は禁止。横長（16:9）構図。
+SECTION_PROMPT_TEMPLATE = """A clean, modern infographic that visualizes the key point of one section of a Japanese UX glossary article, in a minimal explainer style like a NotebookLM video-overview illustration. Compose as a horizontal banner (roughly 16:9).
 
 STYLE — strict:
-- Background: warm cream beige (#F5EFE0), flat, edge to edge, no texture, never white
-- Color palette: 3-4 colors only — beige background (#F5EFE0), charcoal outlines (#1A1A1A), soft blue-gray fills (#7A8DA0), and optionally one muted accent (mustard #C9A35E or moss green #8FA68C)
-- Flat, minimalist line-art with subtle fills, thick charcoal outlines, generous whitespace
-- No gradients, no drop shadows, no photorealism, no neon, no harsh colors
-- ABSOLUTELY NO text, letters, numbers, labels, captions, watermarks, or signatures anywhere in the image
+- Background: pure white (#FFFFFF), flat, with generous whitespace; never beige, never cream, no texture
+- Flat modern design built from simple abstract geometric shapes (circles, rounded rectangles, arrows); clean, refined vector look
+- Minimal, modern, understated — not childish, not cartoonish, not cute
+- Restrained color: mostly neutral with only one or two gentle accent colors, used sparingly
+- No heavy gradients, no drop shadows, no photorealism, no neon, no harsh colors
+- One main concept diagram centered, with plenty of breathing room around it
 
-SUBJECT — a simple, abstract visual metaphor for this section (do not draw literal UI screens):
+TEXT — Japanese only, minimal:
+- You MAY place a few very short Japanese words as labels, but ONLY the exact Japanese words specified in SUBJECT below — no other text
+- ABSOLUTELY NO English words, NO service names or brand logos (never write "NotebookLM", "Google", etc.), NO watermarks, NO signatures, NO "cite" or citation-style annotations anywhere
+- Keep any text to single short words; never full sentences
+
+SUBJECT — visualize this key point as a simple centered infographic (do not draw literal UI screens):
 {metaphor}
 
-Compose with breathing room rather than filling the frame.
-OUTPUT: clean, balanced, decorative spot illustration."""
+OUTPUT: clean, balanced, white-background infographic, child-friendly."""
 
 
 def main():
