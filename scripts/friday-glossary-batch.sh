@@ -39,8 +39,15 @@ fi
 
 echo "[$(date)] 金曜バッチ開始（リクエスト ${REQ} 件）" >> "${LOG}"
 
-# 無人実行のため権限プロンプトを出さない（article-creator は多様なツールを使うため allow を絞らない）。
-claude -p "$(cat "${BASE}/pipeline/friday-request-batch-prompt.md")" \
-  --dangerously-skip-permissions >> "${LOG}" 2>&1
+# 無人実行のため権限プロンプトを出さない。出力は失敗判定のため一旦キャプチャする。
+OUT=$(claude -p "$(cat "${BASE}/pipeline/friday-request-batch-prompt.md")" --dangerously-skip-permissions 2>&1)
+printf '%s\n' "${OUT}" >> "${LOG}"
 
-echo "[$(date)] 金曜バッチ終了 (exit $?)  ログ: ${LOG}" >> "${LOG}"
+# claude が起動/認証できない・一時エラー・空出力 → Slackを出さず静かに終了。
+# 生成リクエスト（G列=TRUE）は消化されず残るので、次の週次バッチ（2時間おき）がリトライで拾う。
+if [ -z "${OUT}" ] || printf '%s' "${OUT}" | grep -qiE "Not logged in|Please run /login|Invalid API key|Credit balance|Connection closed|API Error"; then
+  echo "[$(date)] claude起動不可/一時エラー/空出力 → Slackを出さず終了（リクエストは残置、週次バッチがリトライ）" >> "${LOG}"
+  exit 0
+fi
+
+echo "[$(date)] 金曜バッチ終了  ログ: ${LOG}" >> "${LOG}"
