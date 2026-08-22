@@ -26,6 +26,7 @@ UX TIMES 用語集（uxdaystokyo.com/articles/glossary/）は、Slackの「用�
 | ④ WP下書き | WordPressに下書き化 | 誰でも：`@用語くん G-xxx をWP下書きに`／用語DBメニュー「用語くん」→「▶ 選択行をWP下書きに送る」 |
 | ⑤ 画像 | 顔写真＋アイキャッチ＋挿絵 | Claudeがある人：`/glossary-wp-images G-xxx`／無い人：用語DBのR列「アイキャッチプロンプト」をChatGPT・Geminiに渡して作り、WP管理画面で貼る（画像は任意） |
 | ⑥ 公開 | 公開する | 誰でも：WP管理画面で「公開」ボタン |
+| ⑦ 作り直し | 古い書き方の記事を書き直す | 誰でも：`@用語くん ◯◯ を最新版で作り直して` → 月／金の生成タイミングで最新レシピの新しいDocができる |
 
 ### Claude Code を持っている人（Yuya など）
 
@@ -201,9 +202,54 @@ article-creator/
   .gitignore
 ```
 
+## レシピのバージョン管理と記事の作り直し
+
+記事の書き方を決めるプロンプト群（以下「レシピ」）は継続的に直しているため、いつ作った記事かで書きぶりが変わる。どの版で作った記事かを記録して、古い記事を最新の書き方で作り直せるようにしている。
+
+### レシピを直したとき
+
+レシピの構成ファイルは `prompts/recipe-manifest.txt` に列挙されている（`prompts/01_information_gathering.md`・`02_polishing.md`・`03_eyecatch.md`、article-creator と article-review の `SKILL.md`、`CLAUDE.md`）。入れる基準は「直すと記事の中身が変わるか」で、バッチの運用手順や挿絵のスタイルガイドは含めない（含めると書きぶりの同じ記事まで旧版扱いになるため）。どれかを直したら版を上げる。
+
+```bash
+python3 scripts/recipe_version.py bump --note "語源セクションを当時の課題起点に変えた"
+```
+
+`prompts/VERSION`・`prompts/recipe.lock.json`・`prompts/CHANGELOG.md` が更新される。上げ忘れたまま commit しようとすると pre-commit フックが止める（初回だけ `git config core.hooksPath .githooks` が必要。急ぐときは `git commit --no-verify`）。
+
+| コマンド | 用途 |
+|---|---|
+| `python3 scripts/recipe_version.py current` | いまの版とハッシュを見る |
+| `python3 scripts/recipe_version.py check` | 版の上げ忘れを調べる（ずれていれば exit 1） |
+| `python3 scripts/recipe_version.py files` | レシピ構成ファイルと個別ハッシュを一覧する |
+| `python3 scripts/stamp_version.py --list` | `drafts/*.md` の版を一覧し、旧版の本数を出す |
+
+版を上げたあと生成バッチが動くと、用語くんがチャンネルに「レシピを v1 → v2 に更新したよ。前の書き方のままの記事が N件」と一報を入れる。
+
+### 記事側の記録
+
+生成時に `scripts/stamp_version.py` がフロントマターへ `creator_version` / `recipe_hash` / `generated_at` を刻み、同じ値が用語DBのS・T列にも入る。バージョン管理を始める前に作った記事は `v0` になっている。
+
+### 作り直しを頼む
+
+Slackで用語くんに頼む。
+
+```
+@用語くん モーダル を最新版で作り直して
+@用語くん 古い記事教えて
+```
+
+用語DBのU列に作り直しフラグが立ち、次の生成タイミング（月曜の朝／金曜はリクエストがある時だけ）で最大2件ずつ書き直される。**旧Docは消さず新しいDocを作る**ので、人が旧Docに入れた編集は残る。用語DBのI列が新Docに差し替わり、旧DocのURLは備考(L列)に残る。
+
+公開済みの記事も作り直せるが、WordPressへの反映は自動ではやらない。新しいDocを確認してから `@用語くん ◯◯ をWP下書きに` で反映する（`wp_post_id` があるので公開状態は保たれたまま本文だけ差し替わる）。
+
+すでに最新版で作られている記事に作り直しを頼むと用語くんが止める。それでも作り直したいときは「強制で作り直して」と言う。
+
+---
+
 ## プロンプトのカスタマイズ
 
 `prompts/` 以下のファイルを編集することで記事スタイルを調整できる。`SKILL.md` は触らなくてよい。
+編集したら上の「レシピのバージョン管理」に従って版を上げる。
 
 | ファイル | 役割 |
 |---|---|

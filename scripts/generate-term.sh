@@ -18,6 +18,9 @@ LOG="${BASE}/logs/generate-term-${TODAY}.log"
 cd "${BASE}" || exit 1
 echo "[$(date)] 単発生成: ${TERM}" >> "${LOG}"
 
+# 現行レシピ版を用語くん(GAS)に知らせる。版が上がっていれば用語くんがチャンネルに一報を入れる。
+bash "${BASE}/scripts/sync_recipe_version.sh" "${LOG}"
+
 claude -p "$(cat "${BASE}/pipeline/generate-term-prompt.md")
 
 対象用語: ${TERM}" \

@@ -1,0 +1,27 @@
+#!/bin/bash
+# レシピ（記事の書き方を決めるプロンプト群）を直したのに版を上げていないコミットを止める。
+#
+# 版を上げ忘れると、そのあと作った記事に古い版が刻まれ、
+# 「どの書き方で作った記事か」が実態とずれる。ずれた記録は作り直しの判断を狂わせるので、
+# コミットの時点で気づけるようにしている。
+#
+# 有効化: git config core.hooksPath .githooks
+# どうしても先にコミットしたいときは git commit --no-verify
+
+ROOT=$(git rev-parse --show-toplevel)
+[ -f "${ROOT}/scripts/recipe_version.py" ] || exit 0
+
+if ! OUT=$(cd "${ROOT}" && python3 scripts/recipe_version.py check 2>&1); then
+  echo ""
+  echo "────────────────────────────────────────────────"
+  echo "${OUT}"
+  echo "────────────────────────────────────────────────"
+  echo "レシピを直したときは、何を変えたかを1行で残してから commit する:"
+  echo ""
+  echo "  python3 scripts/recipe_version.py bump --note \"語源セクションを当時の課題起点に変えた\""
+  echo ""
+  echo "（プロンプト以外の修正で急ぐときは git commit --no-verify）"
+  echo ""
+  exit 1
+fi
+exit 0

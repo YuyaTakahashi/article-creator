@@ -22,6 +22,9 @@ fi
 
 echo "[$(date)] 週次バッチ開始（week ${WEEK}）" >> "${LOG}"
 
+# 現行レシピ版を用語くん(GAS)に知らせる。版が上がっていれば用語くんがチャンネルに一報を入れる。
+bash "${BASE}/scripts/sync_recipe_version.sh" "${LOG}"
+
 # 無人実行のため権限プロンプトを出さない。出力は失敗判定のため一旦キャプチャする。
 OUT=$(claude -p "$(cat "${BASE}/pipeline/weekly-batch-prompt.md")" --dangerously-skip-permissions 2>&1)
 printf '%s\n' "${OUT}" >> "${LOG}"

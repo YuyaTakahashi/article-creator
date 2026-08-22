@@ -1,0 +1,25 @@
+# article-creator レシピ構成ファイル
+#
+# ここに並べたファイルの内容が「記事の書きぶりを決めるレシピ」の実体。
+# scripts/recipe_version.py がこの一覧の sha256 を束ねて 1 つのバージョン番号にする。
+#
+# 行頭 # はコメント。パスはリポジトリルート相対。シンボリックリンクは実体を読む。
+# ファイルを足す／外すときは、この行の追加削除だけでよい（次の bump で反映される）。
+#
+# 入れる基準は「これを直すと記事の中身が変わるか」の一点。
+# 運用の都合で直すファイルを入れると、書きぶりが同じ記事まで旧版扱いになり、
+# 作り直しの判断が濁る。迷ったら入れない。
+#
+# 入れていないもの:
+#   pipeline/batch-instructions.md       … 生成の運用手順（何件ずつ・どの順で）で、文章を変えないため
+#   pipeline/*-batch-prompt.md           … 同上
+#   style-guide-eyecatch.md              … 挿絵・アイキャッチの絵柄の話で、本文を変えないため
+#   .agent/skills/article-post/SKILL.md  … 投稿時のHTML変換で、下書き本文を変えないため
+#   scripts/*.py                         … 画像生成・投稿の実装で、書きぶりを決めないため
+
+prompts/01_information_gathering.md
+prompts/02_polishing.md
+prompts/03_eyecatch.md
+.agent/skills/article-creator/SKILL.md
+.agent/skills/article-review/SKILL.md
+CLAUDE.md

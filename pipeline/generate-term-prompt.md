@@ -13,6 +13,7 @@
 - WP重複チェックで既存記事が見つかったら生成せず「見送り」（Step 4 で status=見送り＋備考に既存URL）
 - critic / review を内蔵で通し reviewed_at を付与。escalate ならDoc化せず記録
 - drafts/{対象用語}.md に保存。UX TIMESは外部公開の一般記事。特定企業名に寄せない中立な解説にする
+- 保存したら `python3 scripts/stamp_version.py "drafts/{対象用語}.md"` を実行し、レシピ版をフロントマターに刻む
 
 ## Step 3: Doc化
 frontmatterを除去し、冒頭に「# {タイトル}」と次のレビュー案内行（イタリック）を付ける：
@@ -21,7 +22,7 @@ Google Drive の create_file で `contentMimeType=text/markdown`・`parentId=1tQ
 
 ## Step 4: 書き戻し（update_row webhook）
 .env の GAS_WEBAPP_URL に POST：
-`{"token":"<GAS_TOKEN>","action":"update_row","id":"G-xxx","status":"レビュー待ち","doc_url":"<DocURL>","generated_at":"<今日>","slug":"<frontmatterのslug>","excerpt":"<frontmatterのexcerpt>","category_id":<frontmatterのcategory_id>,"eyecatch_prompt":"<frontmatterのeyecatch_prompt>","flag":false}`
+`{"token":"<GAS_TOKEN>","action":"update_row","id":"G-xxx","status":"レビュー待ち","doc_url":"<DocURL>","generated_at":"<今日>","slug":"<frontmatterのslug>","excerpt":"<frontmatterのexcerpt>","category_id":<frontmatterのcategory_id>,"eyecatch_prompt":"<frontmatterのeyecatch_prompt>","creator_version":"<frontmatterのcreator_version>","recipe_hash":"<frontmatterのrecipe_hash>","flag":false}`
 
 ## Step 5: 報告
 対象用語・ステータス・DocのURLを標準出力に出す。**Slackには投稿しない**（告知は月曜レポートがまとめて出す）。

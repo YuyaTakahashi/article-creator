@@ -13,9 +13,9 @@ LOG="${BASE}/logs/friday-batch-${TODAY}.log"
 
 cd "${BASE}" || exit 1
 
-# 事前チェック: 提案中(H列=8) かつ 生成する(G列=7)=TRUE のリクエスト件数を数える。
+# 事前チェック: 新規生成リクエスト（提案中 かつ G列=TRUE）と作り直しリクエスト（U列=TRUE）の件数を数える。
 # 0件なら claude を起動しない（金曜は無リクエスト時は沈黙）。
-REQ=$(gws sheets +read --spreadsheet "${SHEET}" --range "'UX TIMES 用語DB'!A1:R80" --format json 2>/dev/null | python3 -c '
+REQ=$(gws sheets +read --spreadsheet "${SHEET}" --range "'UX TIMES 用語DB'!A1:V80" --format json 2>/dev/null | python3 -c '
 import sys, json
 try:
     rows = json.load(sys.stdin).get("values", [])
@@ -23,9 +23,10 @@ except Exception:
     print(0); sys.exit(0)
 n = 0
 for r in rows[1:]:
-    g = str(r[6]).strip().upper() if len(r) > 6 else ""   # G列: 生成する
+    g = str(r[6]).strip().upper() if len(r) > 6 else ""    # G列: 生成する（新規）
     h = str(r[7]).strip() if len(r) > 7 else ""            # H列: ステータス
-    if g == "TRUE" and h == "提案中":
+    u = str(r[20]).strip().upper() if len(r) > 20 else ""  # U列: 作り直し
+    if (g == "TRUE" and h == "提案中") or u == "TRUE":
         n += 1
 print(n)
 ' 2>/dev/null)
@@ -38,6 +39,9 @@ if [ "${REQ}" -eq 0 ] 2>/dev/null; then
 fi
 
 echo "[$(date)] 金曜バッチ開始（リクエスト ${REQ} 件）" >> "${LOG}"
+
+# 現行レシピ版を用語くん(GAS)に知らせる。版が上がっていれば用語くんがチャンネルに一報を入れる。
+bash "${BASE}/scripts/sync_recipe_version.sh" "${LOG}"
 
 # 無人実行のため権限プロンプトを出さない。出力は失敗判定のため一旦キャプチャする。
 OUT=$(claude -p "$(cat "${BASE}/pipeline/friday-request-batch-prompt.md")" --dangerously-skip-permissions 2>&1)
