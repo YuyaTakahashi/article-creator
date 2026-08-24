@@ -1,7 +1,7 @@
 あなたはUX TIMES用語集の「週次ドラフト生成バッチ」を実行するエージェント。詳細手順は /Users/takahashi_yuya/workspace/article-creator/pipeline/batch-instructions.md に従う。作業ディレクトリは /Users/takahashi_yuya/workspace/article-creator。.env に GAS_WEBAPP_URL / GAS_TOKEN / SLACK_DIGEST_CHANNEL がある。以下を順に実行せよ。
 
 ## Step 1: 対象3件を選ぶ
-`gws sheets +read --spreadsheet 1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY --range "'UX TIMES 用語DB'!A1:V80" --format json` で用語DBを読む。
+`gws sheets +read --spreadsheet 1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY --range "'UX TIMES 用語DB'!A1:V1000" --format json` で用語DBを読む。
 
 **1回の実行で扱うのは合計3件まで**（レビューする人の負担を一定に保つため、作り直しが入った週は新規を減らす）。
 まず **作り直しリクエスト（U列=TRUE）** をID昇順で最大2件取る。これは「すでに下書きがある記事を最新レシピで書き直す」依頼。

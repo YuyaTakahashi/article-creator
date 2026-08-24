@@ -9,9 +9,11 @@ article-creator は日々プロンプトを直すので、記事だけ見ても�
     python3 scripts/stamp_version.py drafts/モーダル.md
     python3 scripts/stamp_version.py drafts/モーダル.md --regenerated-from v2
     python3 scripts/stamp_version.py --show drafts/モーダル.md
-    python3 scripts/stamp_version.py --backfill
+    python3 scripts/stamp_version.py --backfill --yes
         既存の drafts/*.md のうち未記録のものに creator_version: "v0" を付ける
         （v0 = バージョン管理を始める前に作られた記事）
+        バージョン管理を始めた時点の一括移行専用。いま生成した記事にこれを当てると
+        最新版で書いたのに v0 が刻まれてしまうので、生成直後は必ずファイル名を指定する。
     python3 scripts/stamp_version.py --list
         drafts/*.md の版を一覧し、最新版でないものを出す
 """
@@ -110,7 +112,9 @@ def main():
     ap.add_argument("files", nargs="*", help="対象のMDファイル")
     ap.add_argument("--regenerated-from", help="作り直し元の版（例: v2）")
     ap.add_argument("--generated-at", help="生成日（既定は今日）")
-    ap.add_argument("--backfill", action="store_true", help="未記録の既存記事に v0 を付ける")
+    ap.add_argument("--backfill", action="store_true",
+                    help="未記録の既存記事に v0 を付ける（過去記事の一括移行専用。--yes が要る）")
+    ap.add_argument("--yes", action="store_true", help="--backfill の確認を通す")
     ap.add_argument("--list", action="store_true", help="drafts/*.md の版を一覧する")
     ap.add_argument("--show", action="store_true", help="指定ファイルの版を表示する")
     args = ap.parse_args()
@@ -136,6 +140,16 @@ def main():
             print(f"{'  ' if v == cur else '旧'} {v:<12} {name}")
         print(f"\n最新版: {cur} / 全 {len(rows)} 本中 {stale} 本が旧版")
         return 0
+
+    if args.backfill and not args.yes:
+        print("--backfill はバージョン管理を始める前の記事を一括で v0 にする移行専用のコマンド。",
+              file=sys.stderr)
+        print("いま生成した記事に当てると、最新レシピで書いたのに v0 が刻まれてしまう。",
+              file=sys.stderr)
+        print(f'生成直後の記事はファイル名を指定する: python3 scripts/stamp_version.py "drafts/用語.md"',
+              file=sys.stderr)
+        print("本当に一括移行したいときだけ --yes を付ける。", file=sys.stderr)
+        return 1
 
     if args.backfill:
         done = 0

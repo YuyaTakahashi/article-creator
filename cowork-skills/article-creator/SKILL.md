@@ -1,7 +1,7 @@
 ---
 name: article-creator
 description: |
-  UX用語の解説記事をWeb検索→執筆→ファクトチェック→MDファイル保存まで実行するCoworkスキル。
+  UX用語の解説記事をWeb検索→執筆→ファクトチェック→MD保存→Googleドキュメント化→用語DB反映まで実行するCoworkスキル。
   WordPress投稿は別スキル article-post が担う。
 
   以下のリクエストで必ず使用する：
@@ -9,14 +9,15 @@ description: |
   - 「メンタルモデルの記事をMDで書いて」「アフォーダンスについて記事化して」
   - 「UX用語集に追加する記事を生成して」「用語解説をWP用に書いて」
   - 「article-creatorで○○を書いて」「/article-creatorしたい」
-  Web検索→初稿→整形→ファクトチェック→アイキャッチプロンプト生成→drafts/にMD保存まで一気通貫で行う。
+  Web検索→初稿→整形→ファクトチェック→アイキャッチプロンプト生成→drafts/にMD保存→Googleドキュメント化→用語DBへ「レビュー待ち」で反映まで一気通貫で行う。
+  「下書きだけ」「MDだけでいい」と言われたときはMD保存で止める。
 compatibility: "ユーザーの ~/workspace/article-creator フォルダがマウントされていること、または mcp__cowork__request_cowork_directory で要求可能であること"
 ---
 
 # article-creator スキル（Cowork版）
 
-指定されたUX用語の解説記事を生成し、`~/workspace/article-creator/drafts/` フォルダにMDファイルとして保存する。
-WordPressへの投稿は、人間がMDを確認・編集したあとに `article-post` スキルで行う。
+指定されたUX用語の解説記事を生成し、`~/workspace/article-creator/drafts/` にMDファイルとして保存したうえで、Googleドキュメント化して用語DB（スプレッドシート）に「レビュー待ち」として反映する（Step 10）。ここまで通すと、Slackの用語くんと月曜レポートが記事の存在を拾えるようになる。
+WordPressへの投稿は、人間がDocを確認・編集したあとに `article-post` スキル、または `@用語くん ◯◯ をWP下書きに` で行う。
 
 ---
 
@@ -362,15 +363,19 @@ eyecatch_prompt: "{Step 8で生成したプロンプト文字列（改行はス�
 
 ### レシピ版の刻印（保存したら必ず実行する）
 
-このスキルの執筆指示（レシピ）は継続的に直しているため、記事だけ見ると「いつの書き方で書かれたか」が分からなくなる。保存の直後にローカルで次を実行し、フロントマターへ `creator_version` / `recipe_hash` / `generated_at` を入れる。
+このスキルの執筆指示（レシピ）は継続的に直しているため、記事だけ見ると「いつの書き方で書かれたか」が分からなくなる。保存の直後に次を実行し、フロントマターへ `creator_version` / `recipe_hash` / `generated_at` を入れる。外部通信を伴わないので Cowork サンドボックスでも実行できる。
 
 ```bash
-python3 scripts/stamp_version.py "drafts/{ファイル名}.md"
+cd "${REPO_BASH:-$HOME/workspace/article-creator}" && python3 scripts/stamp_version.py "drafts/{ファイル名}.md"
 ```
+
+`REPO_BASH` は Cowork のとき Step 0-1 で解決したマウント先が入る。Claude Code のときは未設定なので `~/workspace/article-creator` にフォールバックする。
+
+**必ずファイル名を指定して実行する。`--backfill` は使わない。** `--backfill` はバージョン管理を始める前の記事を一括で `v0` にする移行専用で、いま生成した記事に当てると最新レシピで書いたのに `v0` が刻まれ、その記事が最初から作り直し対象になってしまう。
 
 古い版の記事を書き直したときは、元の版を添える：`python3 scripts/stamp_version.py "drafts/{ファイル名}.md" --regenerated-from v2`
 
-刻んだ `creator_version` は用語DBのS列にも入り、Slackの用語くんが「この記事は旧版だから作り直す？」と判断する材料になる。Coworkサンドボックスで実行できないときは、完了報告にこのコマンドを載せてユーザーに実行してもらう。
+刻んだ `creator_version` は用語DBのS列にも入り、Slackの用語くんが「この記事は旧版だから作り直す？」と判断する材料になる。何らかの理由で実行できなかったときは、完了報告にこのコマンドを載せてユーザーに実行してもらう。
 
 ### 本文の記法ルール（指摘反映・必ず守る）
 
@@ -391,6 +396,51 @@ python3 scripts/stamp_version.py "drafts/{ファイル名}.md"
 
 ---
 
+## Step 10: 用語DBへの反映（Doc化 → 書き戻し）
+
+`drafts/` に保存しただけでは用語DB（Googleスプレッドシート）は更新されず、Slackの用語くんも月曜レポートも記事の存在を知らない。ここまで通して初めて「下書きができた」状態になる。
+
+次のときはこのステップを飛ばす。
+
+- ユーザーが「下書きだけ」「MDだけでいい」「途中まででいい」と言った場合
+- 無人モード（月曜・金曜の生成バッチ）から呼ばれた場合。バッチは自分でDoc化と書き戻しを行う
+
+### 10-1. レビュー用MDを組み立てる
+
+フロントマターを取り除き、冒頭に次の2行を足す。
+
+```
+# {タイトル}
+
+*（レビュー用ドラフト：本文を直接編集してください。英字¥カタカナ¥ は読みがな記法、-- wp分割ライン-- は投稿時の区切りマーカーなので、そのまま残してください）*
+```
+
+古い版を作り直したときは、案内行の後ろにもう1行足す：`*（{新版} で作り直した版です。前の版はこちら: {旧DocのURL}）*`
+
+### 10-2. Googleドキュメントにする
+
+Drive連携の `create_file` で作る（Cowork・Claude Code のどちらでも動く）。
+
+- `contentMimeType`: `text/markdown`（これでGoogleドキュメントに自動変換される）
+- `parentId`: `1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS`（記事ドラフトフォルダ）
+- `name`: 用語名
+
+作り直しのときは**旧Docを消さず新しいDocを作る**。人が旧Docに入れた編集を残すため。作成されたDocのURLを控える。
+
+### 10-3. 用語DBに書き戻す
+
+```bash
+cd "${REPO_BASH:-$HOME/workspace/article-creator}" && python3 scripts/register_draft.py "drafts/{ファイル名}.md" --doc-url "{10-2のDocURL}"
+```
+
+作り直しのときは元の版と旧Docを添える：`--regenerated-from v0 --old-doc-url "{旧DocURL}"`
+
+このスクリプトがフロントマターを読み、用語DBのB列から行を探し（無ければ新しい行を作り）、ステータス・Docリンク・slug・excerpt・category_id・アイキャッチプロンプト・レシピ版をまとめて書き戻す。送る前に中身を確かめたいときは `--dry-run` を付ける。
+
+**Coworkのサンドボックスからは実行できない**（GASのwebhookが外部HTTPSで403になる）。Cowork では `mcp__Desktop_Commander__start_process` でこのコマンドを実行する。ユーザーのMac上で直接動くのでローカル実行にあたり、サンドボックス禁止ルールには反しない。Desktop Commander が使えないときは、コマンドをそのまま完了報告に載せてユーザーに実行してもらう。黙って飛ばさない。
+
+---
+
 ## 完了報告
 
 ```
@@ -398,6 +448,8 @@ python3 scripts/stamp_version.py "drafts/{ファイル名}.md"
 カテゴリ             : {カテゴリ名}（ID: {ID}）
 ファクトチェック修正 : {修正箇所のサマリー or "なし"}
 保存先              : drafts/{ファイル名}.md
+レシピ版             : {creator_version}（{recipe_hash}）
+用語DB              : {G-ID} / {ステータス} / {DocのURL}　※Step 10を飛ばした場合は「未反映（下書きのみ）」
 
 アイキャッチ用プロンプト:
 {Step 8で生成したプロンプト文字列}

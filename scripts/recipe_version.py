@@ -14,6 +14,9 @@
         版を1つ上げ、lock と CHANGELOG.md を更新する。
     python3 scripts/recipe_version.py files
         レシピ構成ファイルと個別ハッシュを一覧する。
+    python3 scripts/recipe_version.py relock --note "変更内容"
+        版番号を据え置いたまま lock だけ更新する。誤字・パス修正・書式直しなど
+        「記事の書きぶりを変えない修正」に使う。既存の記事が旧版扱いにならない。
 
 "+dirty" について:
     レシピを編集したのに bump していない状態を指す。この状態で生成された記事には
@@ -170,6 +173,52 @@ def cmd_files(args):
     return 0
 
 
+def cmd_relock(args):
+    """書きぶりを変えない修正のとき、版番号を据え置いたまま lock のハッシュだけ合わせる。
+
+    版を上げると既存の記事がまとめて旧版扱いになり、作り直しの判断が濁る。
+    誤字・パス修正・書式直しはそれに値しないので、この道を用意している。
+    """
+    synced = sync_skill_mirrors()
+    st = state()
+    if not st["initialized"]:
+        print("recipe.lock.json が無い。初回は bump を使う。", file=sys.stderr)
+        return 1
+    if not st["dirty"]:
+        print(f"レシピは {st['clean_version']}（{st['hash']}）から変わっていない。据え置く差分は無い")
+        return 0
+
+    missing = [rel for rel, h in st["files"].items() if h is None]
+    if missing:
+        print("レシピ構成ファイルが見つからない: " + ", ".join(missing), file=sys.stderr)
+        return 1
+
+    version = st["clean_version"]
+    today = date.today().isoformat()
+    files, combined = compute()
+    lock = load_lock() or {}
+    lock.update({"version": version, "hash": combined, "updated_at": today, "files": files})
+    LOCK.write_text(json.dumps(lock, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    if CHANGELOG.exists():
+        lines = CHANGELOG.read_text(encoding="utf-8").split("\n")
+        i = next((k for k, l in enumerate(lines) if l.startswith("## ")), None)
+        if i is not None:
+            j = i + 1
+            while j < len(lines) and lines[j].strip() == "":
+                j += 1
+            lines[j:j] = [f"- {today} 版を据え置いたまま lock を更新（{args.note}）"
+                          f" — 対象: {', '.join(st['changed'])}", ""]
+            CHANGELOG.write_text("\n".join(lines), encoding="utf-8")
+
+    if synced:
+        print("複製を同期した: " + ", ".join(synced))
+    print(f"{version} を据え置いたまま lock を更新した（{st['locked_hash']} → {combined[:12]}）")
+    for c in st["changed"]:
+        print(f"   - {c}")
+    return 0
+
+
 def cmd_bump(args):
     synced = sync_skill_mirrors()
     st = state()
@@ -232,6 +281,10 @@ def main():
 
     p = sub.add_parser("files", help="レシピ構成ファイルと個別ハッシュを一覧する")
     p.set_defaults(func=cmd_files)
+
+    p = sub.add_parser("relock", help="版番号を据え置いたまま lock だけ更新する（書きぶりを変えない修正用）")
+    p.add_argument("--note", required=True, help="何を直したかの1行説明")
+    p.set_defaults(func=cmd_relock)
 
     p = sub.add_parser("bump", help="版を1つ上げる")
     p.add_argument("--note", required=True, help="何を変えたかの1行説明")

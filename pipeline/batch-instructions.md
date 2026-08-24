@@ -101,7 +101,15 @@ python3 scripts/stamp_version.py "drafts/{topic}.md"
 
 ### Step 4: シート書き戻し
 
-GAS Webhook（`pipeline/gas-webhook.gs` をシートにデプロイしたもの）を **Desktop Commander経由のローカルcurl** で叩く：
+単発生成（`scripts/generate-term.sh`）や Cowork のスキル経由では、次の1コマンドで済む。
+フロントマターの読み取り・行の特定（無ければ新規追加）・全項目の書き戻しをまとめて行う。
+
+```bash
+python3 scripts/register_draft.py "drafts/{用語}.md" --doc-url "{DocURL}"
+# 作り直しのとき: --regenerated-from v0 --old-doc-url "{旧DocURL}"
+```
+
+バッチから複数件を処理するときは、次のように GAS Webhook（`pipeline/gas-webhook.gs` をシートにデプロイしたもの）を **Desktop Commander経由のローカルcurl** で直接叩いてもよい：
 
 ```bash
 curl -s -X POST "{GAS_WEBAPP_URL}" -H "Content-Type: application/json" -d '{

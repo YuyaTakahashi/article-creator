@@ -31,6 +31,7 @@ UX TIMES 用語集（uxdaystokyo.com/articles/glossary/）は、Slackの「用�
 ### Claude Code を持っている人（Yuya など）
 
 - 単発で今すぐ1本生成：`bash scripts/generate-term.sh "◯◯"` または `/generate-term ◯◯`
+- Slackで頼まれた分を今すぐ消化：`bash scripts/friday-glossary-batch.sh --quiet`（新規リクエストと作り直しをまとめて処理。`--quiet` を付けるとSlack告知を出さない。告知は月曜レポートがまとめて出す）
 - 画像入れ：`/glossary-wp-images G-xxx`（提唱者の顔写真・アイキャッチ・各章の挿絵を自動でWP下書きに入れる）
 - セットアップは下の「セットアップ」を参照。
 
@@ -150,7 +151,8 @@ cp .env.example .env
 
 Cowork での使い方の例：
 
-- 「メンタルモデルの解説記事を書いて」 → `article-creator` が発火し、対話で topic/context/difficulty/it を聞いてから drafts/ にMDを保存する
+- 「メンタルモデルの解説記事を書いて」 → `article-creator` が発火し、対話で topic/context/difficulty/it を聞いたあと、drafts/ にMDを保存 → Googleドキュメント化 → 用語DBに「レビュー待ち」で反映する（Step 10）。MDだけ欲しいときは「下書きだけ」と伝える
+- 用語DBへの書き戻しはGASのwebhookを叩くため、Coworkのサンドボックスからは届かない（外部HTTPSが403）。スキルは `mcp__Desktop_Commander__start_process` で `scripts/register_draft.py` をユーザーのMac上で実行する。Desktop Commander が繋がっていない場合はコマンドが完了報告に出るので、ターミナルで実行する
 - 「drafts/メンタルモデル.md をWordPressに下書き投稿して」 → `article-post` が発火し、WP REST API に POST する
 
 Claude Code 版（方法A / B）と Cowork 版は同じ `prompts/` ・ `.env` ・ `drafts/` を共有するため、どちらから実行しても同じ動作になる。

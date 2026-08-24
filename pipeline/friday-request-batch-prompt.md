@@ -3,7 +3,7 @@
 このバッチは **Slackの生成リクエスト（`@用語くん ◯◯ の下書き作って`）がある時だけ**走らせる金曜ジョブ。月曜バッチと違い、金曜は「今週たまったリクエストを消化して、その場でSlack告知する」ところまでやる。
 
 ## Step 1: リクエストを抽出する
-`gws sheets +read --spreadsheet 1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY --range "'UX TIMES 用語DB'!A1:V80" --format json` で用語DBを読む。対象は次の2種類。
+`gws sheets +read --spreadsheet 1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY --range "'UX TIMES 用語DB'!A1:V1000" --format json` で用語DBを読む。対象は次の2種類。
 
 1. **作り直しリクエスト**: 作り直し(U列)=TRUE。ID昇順で最大2件
 2. **新規生成リクエスト**: ステータス(H列)=「提案中」**かつ** 生成する(G列)=TRUE。ID昇順で残り枠ぶん
@@ -39,7 +39,13 @@
 
 作り直しの件は、これに加えて `"regen":false`・`"note":"旧版{旧版}: {旧DocURL}"`・`"regen_note":"{今日} {旧版} → {新版} で作り直し"` を送る。元のステータスが「公開済み」だった行は `status` を **`"作り直し済み"`** にする。それ以外は `"レビュー待ち"`。
 
-## Step 5: Slackで告知する（金曜はこのバッチが投稿する）
+## Step 5: Slackで告知する
+
+**このステップを実行するかは、プロンプト末尾の「Slack告知:」の指定で決まる。**
+
+- `Slack告知: しない` … Step 5 を**まるごと飛ばす**。notify webhook を叩かない。手元で急いで消化したいときの指定で、告知は月曜レポートがまとめて出す
+- `Slack告知: する` / 指定なし … 以下のとおり投稿する（金曜の定期実行はこちら）
+
 生成できた件が1件以上あれば、`@用語くん` 名義でチャンネル（.env の SLACK_DIGEST_CHANNEL）に notify webhook で投稿する。GAS_WEBAPP_URL に curl で POST:
 ```
 {"token":"<GAS_TOKEN>","action":"notify","channel":"<SLACK_DIGEST_CHANNEL>","text":"<投稿文>"}

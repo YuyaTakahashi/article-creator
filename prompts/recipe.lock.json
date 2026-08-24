@@ -1,13 +1,13 @@
 {
   "version": "v1",
-  "hash": "cf04c3f72083b22fd9d85654df55a318e4600f821245b64aa71a9c0722c95fed",
-  "updated_at": "2026-08-22",
+  "hash": "71af0547fe2bd099745b89fcc20ee95548f6b63f483b506bf63b87e3c1cb78c0",
+  "updated_at": "2026-08-24",
   "note": "初版。バージョン管理を始めた時点のレシピ（背景・目的／効果の前後対比／実務での使い方を必須化 まで反映済み）。生成時に scripts/stamp_version.py で版を刻む運用をここから開始する。",
   "files": {
     "prompts/01_information_gathering.md": "248fdcb5beee68a7fbb693d9e67eb2c099c3818b851c37b80c89b8b58996aa52",
     "prompts/02_polishing.md": "a273c67d2268f5082e4ae1534cd52e4e2184566f12d26047200f58fd3c87cc94",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
-    ".agent/skills/article-creator/SKILL.md": "7f27635349875def6c0b29aa9b608577213b9f646b2fd0078e6b73d27a22cbb6",
+    ".agent/skills/article-creator/SKILL.md": "6a60ad77e20b31c80a36994802448a8b17369213e1f323b5315dbd0bc8420fd8",
     ".agent/skills/article-review/SKILL.md": "305888ad410076b7b76c8ecbf6545f85d94e30e25e6ece562a147f956edb8fbf",
     "CLAUDE.md": "42cba4214b9f2c7c820725561fcfeed0a10dcdb8928610df1f425781b78dfb28"
   }
