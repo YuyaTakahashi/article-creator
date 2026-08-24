@@ -1,11 +1,11 @@
 {
-  "version": "v2",
-  "hash": "1d507a396a52d47d328de18aae7d00a75eeb346347591e5e8bdb64e1e88ce81d",
+  "version": "v3",
+  "hash": "bd2516dfe937e987f1e17c366ecb05847f3756d9728e3c38849730cc33446970",
   "updated_at": "2026-08-24",
-  "note": "編集差分からの学習を反映。①セクションをまたいだ内容の繰り返しを止める（実務の具体例は定義と別のタスク種類にする／セクション冒頭の結論文を次文の言い換えにしない）②改名された用語は現行語を優先し、関連用語は日本語のみで本文既出語を重ねない。",
+  "note": "編集差分からの学習を反映（CAGRへのフィードバック）。①1段落に結論をひとつだけ置き、似た締めの文を連ねない ②語源・提唱者では普及した事実だけでなく、なぜ普及したのかの理由を添える。",
   "files": {
     "prompts/01_information_gathering.md": "248fdcb5beee68a7fbb693d9e67eb2c099c3818b851c37b80c89b8b58996aa52",
-    "prompts/02_polishing.md": "b1e643eeb337fd50f206a5b6595240f5d083255af52d9f7a563d98f641836761",
+    "prompts/02_polishing.md": "c56794ff36b232b9281bda3802777fb332a1c9e4243646b21dfde056f249c1b7",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "6a60ad77e20b31c80a36994802448a8b17369213e1f323b5315dbd0bc8420fd8",
     ".agent/skills/article-review/SKILL.md": "305888ad410076b7b76c8ecbf6545f85d94e30e25e6ece562a147f956edb8fbf",
