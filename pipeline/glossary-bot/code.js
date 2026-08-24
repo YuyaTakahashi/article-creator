@@ -62,7 +62,15 @@ function doPost(e) {
   }
 
   // --- Slack: メンションイベント ---
+  // Slackは3秒以内に応答が返らないと同じイベントを再送してくる。WP下書き作成のように
+  // Doc取得→HTML変換→WP POST と十数秒かかる処理では毎回これに当たり、再送のぶんだけ
+  // 記事が二重三重に作られる。event_id だけでなくメッセージ自体（channel:ts）でも弾く。
+  const ev0 = data.event || {};
+  const msgKey = (ev0.channel && ev0.ts) ? 'msg_' + ev0.channel + '_' + ev0.ts : '';
   if (data.event_id && isAlreadyProcessed(data.event_id)) {
+    return ackOk();
+  }
+  if (msgKey && isAlreadyProcessed(msgKey)) {
     return ackOk();
   }
   if (data.event && data.event.type === 'app_mention' && !data.event.bot_id) {
@@ -87,7 +95,7 @@ function handleMention(event) {
 
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
-    postToSlack(event.channel, ':large_green_circle: 1q0O 用語くん v34（レシピ版管理・作り直し対応）が応答してるよ ✨', event.thread_ts || event.ts);
+    postToSlack(event.channel, ':large_green_circle: 1q0O 用語くん v35（Slack再送による二重作成の防止）が応答してるよ ✨', event.thread_ts || event.ts);
     return;
   }
 
@@ -1240,6 +1248,23 @@ function wpConfig_() {
 }
 
 function publishRowToWpDraft_(sheet, row) {
+  // 同じ行への同時実行を直列化する。再送で二重に走っても、待たされた側はロックの中で
+  // wp_post_id を読み直すので、新規作成ではなく既存投稿の更新に回る。
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(60000)) {
+    throw new Error('同じ記事の処理がまだ動いていました。少し待ってからもう一度お願いします');
+  }
+  try {
+    return publishRowToWpDraftLocked_(sheet, row);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 実体。必ず publishRowToWpDraft_ 経由（ロック内）で呼ぶこと。 */
+function publishRowToWpDraftLocked_(sheet, row) {
+  // 先行した実行の書き込みを確実に読むため、保留中の更新を吐き出してから読む
+  SpreadsheetApp.flush();
   const cfg = wpConfig_();
   const get = function (col) { return sheet.getRange(row, col).getValue(); };
   const term = get(COL.TERM);
