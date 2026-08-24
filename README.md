@@ -248,6 +248,25 @@ Slackで用語くんに頼む。
 
 ---
 
+## 編集差分から執筆ルールを学ぶ
+
+公開された記事は、AIの初稿に人が手を入れたもの。その差分には「いまの執筆ルールで防げていない弱点」が現れる。週次でそれを拾い、レシピの改訂材料として積む。
+
+```bash
+bash scripts/weekly-learn-batch.sh
+```
+
+1. `collect_edit_gaps.py` が、公開済み（`wp_post_id` あり・用語DBのW列が空）の記事について、初稿と公開版を段落単位で突き合わせ、`logs/gaps/{日付}/{用語}.md` に差分を出す
+2. 差分を読んで分類し、**既存ルールで防げたはず**か**ルール自体が無い**かに切り分けて `prompts/learned/observations.md` に積む
+3. 未反映の観測が**3本たまったら** `prompts/learned/proposal-{日付}.md` に改訂案が出る
+4. 採用したら `prompts/` を直して `recipe_version.py bump` → 旧版の記事が作り直し候補になる
+
+初稿の正本は `drafts/_baseline/{用語}_{版}.md`（`register_draft.py` がDoc化のときに自動で控える）。無い記事は `drafts/{用語}.md` で代用する。
+
+**プロンプトは自動で書き換えない。Slackにも投稿しない。** 言い回しの最終判断は人がする。詳細は [prompts/learned/README.md](prompts/learned/README.md) を参照。
+
+---
+
 ## プロンプトのカスタマイズ
 
 `prompts/` 以下のファイルを編集することで記事スタイルを調整できる。`SKILL.md` は触らなくてよい。

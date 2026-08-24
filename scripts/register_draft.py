@@ -108,6 +108,22 @@ def post(env, payload, dry_run=False):
     return json.loads(urllib.request.urlopen(req, timeout=90).read().decode("utf-8"))
 
 
+def save_baseline(md_path, term, version):
+    """Doc化した時点の本文を控える。
+
+    これが「AIの初稿」の正本になる。以降は人がDoc・WordPress側を直すので、
+    公開後にこの控えと突き合わせれば「人が何を直したか」が分かる。
+    drafts/ のMDは article-review の再実行や作り直しで上書きされうるため、別に残す。
+    """
+    d = BASE / "drafts" / "_baseline"
+    d.mkdir(parents=True, exist_ok=True)
+    dest = d / f"{term}_{version}.md"
+    if dest.exists():
+        return None
+    dest.write_text(md_path.read_text(encoding="utf-8"), encoding="utf-8")
+    return dest.relative_to(BASE)
+
+
 def main():
     ap = argparse.ArgumentParser(description="記事MDを用語DBに反映する")
     ap.add_argument("md", help="drafts/{用語}.md")
@@ -194,6 +210,11 @@ def main():
             payload["note"] = f"旧版{args.regenerated_from}: {args.old_doc_url}"
     else:
         payload["status"] = "レビュー待ち"
+
+    if not args.dry_run:
+        snap = save_baseline(path, term, fm.get("creator_version", "unknown"))
+        if snap:
+            print(f"初稿を控えた: {snap}")
 
     res = post(env, payload, args.dry_run)
     if not res.get("ok"):
