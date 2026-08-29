@@ -312,13 +312,17 @@ cat ~/.clasprc.json | pbcopy
 | `JSONとして不正: SyntaxError / 先頭が波括弧=true` | 途中で切れている | 全文をコピーし直す |
 | `JSONではあるが clasp の認証ファイルの形ではない` | 別のJSONが入っている | `~/.clasprc.json` の中身か確認する |
 | `clasp push` で認証エラー | トークンが失効した | Mac で `clasp login` をやり直して登録し直す |
+| `更新するデプロイを決められませんでした` | バージョン固定のデプロイが無い／複数ある | リポジトリ変数 `GAS_DEPLOYMENT_ID` にデプロイIDを設定する |
+
+ジョブが緑なのに Slack の用語くんの挙動が変わらないときは、`@用語くん version` を叩いて版を確かめる。古い版が返るならデプロイの更新に失敗している（コードは push されていてもウェブアプリが古いバージョンを向いたまま）。
 
 ### 仕様メモ
 
 - `clasp push -f` の `-f` は必須。`appsscript.json` に差分があると clasp は上書き確認を出すが、CI は非対話なので確認できず「Skipping push.」と表示して**終了コード0のまま何もせず**終わる。`-f` が無いと「ジョブは緑なのに反映されていない」事故になる。
 - clasp のバージョンは `3.4.1` に固定している。上げるときは、先に手元で同じバージョンの `clasp push` を通してから上げる。
 - 用語名の照合（表記ゆれ・英語名・見分けにくい字の吸収）は `node scripts/test-glossary-lookup.js` で確認できる。GASを介さずロジックだけ動かすので、`code.js` を直したらこれを通してから push する。
-- `clasp push` はコードを反映するだけ。月曜レポート（`sendMondayReport`）のような時間主導トリガーは常に最新コードで動くのでこれで足りる。一方 Slack の webhook は Web アプリなので、固定バージョンでデプロイしている場合は反映に別途 `clasp deploy` が要る。
+- `clasp push` はコードを置くだけ。月曜レポート（`sendMondayReport`）のような時間主導トリガーは常に最新コードで動くが、**Slack の webhook はウェブアプリなので、バージョン固定のデプロイを差し替えないと古いコードのまま動き続ける**。そのためワークフローは push のあとに `clasp update-deployment` でデプロイを新しいバージョンに更新する。
+- 更新するデプロイは、`@HEAD` ではないデプロイが1つだけならそれを自動で選ぶ。複数あって決められないときはジョブが落ちるので、リポジトリ変数（Settings → Secrets and variables → Actions → Variables）`GAS_DEPLOYMENT_ID` に、Slack のリクエストURLに対応するデプロイIDを入れる。デプロイIDは Apps Script の「デプロイを管理」か `clasp list-deployments` で確認できる。
 
 ---
 
