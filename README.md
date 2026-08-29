@@ -39,6 +39,10 @@ UX TIMES 用語集（uxdaystokyo.com/articles/glossary/）は、Slackの「用�
 
 これでも決められないとき（近い用語が複数ある／1文字違い）は、取り違えないように「もしかしてこれ？」と候補のG-IDを出して聞き返す。出てきたG-IDで言い直せば進む。
 
+### ルビ（読みがな）の書き方
+
+Docの本文で `Robert¥ロバート¥` のように書いた箇所は、WP下書きにするときに `<ruby>` へ変換される。区切りの円記号は **半角 `¥` でも全角 `￥` でもよい**（記事によって揺れるため、変換側で両方受ける）。ルビにしたい語の直前に空白を入れると変換されないので、英字とくっつけて書く。
+
 ### Claude Code を持っている人（Yuya など）
 
 - 単発で今すぐ1本生成：`bash scripts/generate-term.sh "◯◯"` または `/generate-term ◯◯`
@@ -320,7 +324,7 @@ cat ~/.clasprc.json | pbcopy
 
 - `clasp push -f` の `-f` は必須。`appsscript.json` に差分があると clasp は上書き確認を出すが、CI は非対話なので確認できず「Skipping push.」と表示して**終了コード0のまま何もせず**終わる。`-f` が無いと「ジョブは緑なのに反映されていない」事故になる。
 - clasp のバージョンは `3.4.1` に固定している。上げるときは、先に手元で同じバージョンの `clasp push` を通してから上げる。
-- 用語名の照合（表記ゆれ・英語名・見分けにくい字の吸収）は `node scripts/test-glossary-lookup.js` で確認できる。GASを介さずロジックだけ動かすので、`code.js` を直したらこれを通してから push する。
+- 用語名の照合（表記ゆれ・英語名・見分けにくい字の吸収）と Markdown→HTML 変換（ルビ）は `node scripts/test-glossary-bot.js` で確認できる。GASを介さずロジックだけ動かすので、`code.js` を直したらこれを通してから push する。
 - `clasp push` はコードを置くだけ。月曜レポート（`sendMondayReport`）のような時間主導トリガーは常に最新コードで動くが、**Slack の webhook はウェブアプリなので、バージョン固定のデプロイを差し替えないと古いコードのまま動き続ける**。そのためワークフローは push のあとに `clasp update-deployment` でデプロイを新しいバージョンに更新する。
 - 更新するデプロイは、`@HEAD` ではないデプロイが1つだけならそれを自動で選ぶ。複数あって決められないときはジョブが落ちるので、Secrets（Settings → Secrets and variables → Actions → Secrets）に `GAS_DEPLOYMENT_ID` を入れる。デプロイIDは Apps Script の「デプロイを管理」か `clasp list-deployments` で確認できる。
 - **デプロイIDはウェブアプリURLそのもの＝Slackのリクエスト先**なので、変数ではなく Secrets に置き、ログにも出さない（ワークフローは `::add-mask::` で伏せる）。Apps Script のウェブアプリはリクエストヘッダを読めずSlackの署名を検証できないため、このURLを知っている人は誰でも用語くんを操作できてしまう。URLが外に出てしまったときは、Apps Script で**新しいデプロイを作って**SlackアプリのリクエストURLを差し替え、古いデプロイをアーカイブする。
