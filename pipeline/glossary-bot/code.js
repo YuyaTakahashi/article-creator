@@ -324,7 +324,8 @@ function applyActionMarkers_(event, reply) {
     } else {
       try {
         const res = publishRowToWpDraft_(sheet, row);
-        results.push(':outbox_tray: WP下書きを作成したよ ✨ *' + res.term + '*\n' + res.link + '\nWP管理画面で確認・公開してね');
+        results.push(':outbox_tray: WP下書きを作成したよ ✨ *' + res.term + '*\n' + res.link + '\nWP管理画面で確認・公開してね' +
+          (res.note ? '\n（' + res.note + '）' : ''));
       } catch (e) { results.push('（WP下書き作成に失敗しちゃった💦 ' + e + '）'); }
     }
   }
@@ -1238,7 +1239,8 @@ function handleWpDraftCommand(event, userMessage) {
   try {
     const res = publishRowToWpDraft_(sheet, row);
     postToSlack(event.channel,
-      ':outbox_tray: WP下書きを作成したよ ✨ *' + res.term + '*（' + label + '）\n' + res.link + '\nWP管理画面で確認・公開してね',
+      ':outbox_tray: WP下書きを作成したよ ✨ *' + res.term + '*（' + label + '）\n' + res.link + '\nWP管理画面で確認・公開してね' +
+      (res.note ? '\n（' + res.note + '）' : ''),
       reply);
   } catch (e) {
     postToSlack(event.channel, 'WP下書き作成に失敗しちゃった💦 ' + e, reply);
@@ -1444,14 +1446,37 @@ function publishRowToWpDraftLocked_(sheet, row) {
   // 「-- wp分割ライン--」より後ろだけが本文。前段（フロントマター・最小限の説明・改ページ）は本文に入れない（post_to_wp.pyと同じ）
   const html = mdToHtml_(stripToBody_(stripTitle_(md)));
 
-  const payload = { title: title, content: html, status: 'draft' };
+  const payload = { title: title, content: html };
   if (excerpt) payload.excerpt = excerpt;
   if (slug) payload.slug = slug;
   if (categoryId !== '' && categoryId != null) payload[cfg.categoryField] = [Number(categoryId)];
   if (featuredMedia !== '' && featuredMedia != null) payload.featured_media = Number(featuredMedia);
 
+  // 更新先が本当にあるか先に見る。無いIDへそのままPOSTすると
+  // 「WP応答 404: rest_post_invalid_id」で止まるだけで、どうすればいいか分からないため。
+  let targetId = wpPostId;
+  let note = '';
+  if (targetId) {
+    const found = inspectWpPost_(cfg, targetId);
+    if (found.exists && found.status === 'trash') {
+      payload.status = 'draft';                    // ゴミ箱にあった記事は下書きに戻して更新する
+      note = '元の投稿（ID ' + targetId + '）がゴミ箱に入っていたから、下書きに戻して更新したよ';
+    } else if (!found.exists && found.otherType) {
+      // 別の投稿タイプで生きている → 作り直すと二重になるので、設定を直してもらう
+      throw new Error('用語DBのwp_post_id（' + targetId + '）は投稿タイプ「' + cfg.postType +
+        '」では見つからず、「' + found.otherType + '」として存在します。' +
+        'WP_POST_TYPEの設定か、用語DBのQ列（wp_post_id）を確認してください');
+    } else if (!found.exists) {
+      // WPから消えている → 新規下書きとして作り直し、用語DBのIDを差し替える
+      note = '用語DBにあった投稿ID ' + targetId + ' がWPに見つからなかったから、' +
+        '新しい下書きを作って用語DBのIDを差し替えたよ';
+      targetId = '';
+    }
+  }
+
   let endpoint = cfg.site + '/wp-json/wp/v2/' + cfg.postType;
-  if (wpPostId) { endpoint += '/' + wpPostId; delete payload.status; } // 更新時はWP側の公開状態を保持
+  if (targetId) { endpoint += '/' + targetId; }   // 更新時はWP側の公開状態を保つ（statusを送らない）
+  else { payload.status = 'draft'; }
 
   const resp = UrlFetchApp.fetch(endpoint, {
     method: 'post',
@@ -1473,7 +1498,41 @@ function publishRowToWpDraftLocked_(sheet, row) {
   sheet.getRange(row, COL.STATUS).setValue(j.status === 'publish' ? '公開済み' : '下書き作成済み');
   // WP下書き化したDocのファイル名頭に「【WP移行済み】」を付け、他の人が間違って着手しないようにする。
   try { markDocMigrated_(docUrl); } catch (e) { console.warn('Docタイトル更新失敗（WP下書きは成功済み）: ' + e); }
-  return { term: term, link: editUrl, id: j.id };
+  return { term: term, link: editUrl, id: j.id, note: note };
+}
+
+/**
+ * 更新先のWP投稿の状態を見る。{ exists, status, otherType } を返す。
+ * 404のときだけ「無い」と判断する（401/403などを無いと誤判定して新規作成すると、記事が二重になるため）。
+ * 設定と違う投稿タイプで生きている場合は otherType にその名前を入れて、呼び出し側で作り直しを止める。
+ */
+function inspectWpPost_(cfg, postId) {
+  const fetchOne = function (type) {
+    const resp = UrlFetchApp.fetch(cfg.site + '/wp-json/wp/v2/' + type + '/' + postId + '?context=edit', {
+      method: 'get',
+      headers: { Authorization: 'Basic ' + cfg.auth },
+      muteHttpExceptions: true,
+    });
+    return { code: resp.getResponseCode(), text: resp.getContentText() };
+  };
+
+  const mine = fetchOne(cfg.postType);
+  if (mine.code >= 200 && mine.code < 300) {
+    let status = '';
+    try { status = String(JSON.parse(mine.text).status || ''); } catch (e) { /* 形が読めなくても存在はしている */ }
+    return { exists: true, status: status, otherType: '' };
+  }
+  if (mine.code !== 404) {
+    throw new Error('WPの投稿ID ' + postId + ' を確認できませんでした（WP応答 ' + mine.code + '）: ' +
+      mine.text.slice(0, 200));
+  }
+
+  const others = ['posts', 'pages', 'glossary'].filter(function (t) { return t !== cfg.postType; });
+  for (let i = 0; i < others.length; i++) {
+    const r = fetchOne(others[i]);
+    if (r.code >= 200 && r.code < 300) return { exists: false, status: '', otherType: others[i] };
+  }
+  return { exists: false, status: '', otherType: '' };
 }
 
 /** WP下書き化したDocのファイル名の頭に「【WP移行済み】」を付ける（重複着手の防止）。documentsスコープで動く。 */

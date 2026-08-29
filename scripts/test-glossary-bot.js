@@ -13,6 +13,9 @@ const ctx = {
 vm.createContext(ctx);
 vm.runInContext(src, ctx);
 
+// セクション7でSlackコマンドを通すために publishRowToWpDraft_ を差し替えるので、本物を控えておく
+const realPublishRowToWpDraft = ctx.publishRowToWpDraft_;
+
 // A:ID B:用語 C:英語名 ... の22列を持つ行を作る
 function makeRow(id, term, termEn) {
   const r = new Array(22).fill('');
@@ -35,6 +38,7 @@ function makeSheet(rows) {
           return out;
         },
         getValue: function () { return (rows[row - 2] || [])[col - 1]; },
+        setValue: function (v) { (rows[row - 2] || [])[col - 1] = v; return this; },
       };
     },
   };
@@ -141,6 +145,106 @@ check('ルビ（見出し・箇条書きの中でも変換する）',
 check('ルビ記法でない円記号はそのまま',
   ruby('価格は1￥から。'),
   '<p>価格は1￥から。</p>');
+
+// 9. WP下書き：用語DBに記録した wp_post_id が使えないときの振る舞い
+//    「WP応答 404: rest_post_invalid_id」で止まるだけだった経路。
+const COL = { ID: 1, TERM: 2, STATUS: 8, DOC_URL: 9, WP_URL: 10, SLUG: 13, EXCERPT: 14, WP_POST_ID: 17 };
+function makeWpRow(postId) {
+  const r = new Array(22).fill('');
+  r[COL.ID - 1] = 'G-013';
+  r[COL.TERM - 1] = 'IaC';
+  r[COL.STATUS - 1] = '下書き作成済み';
+  r[COL.DOC_URL - 1] = 'https://docs.google.com/document/d/1QCqfWr9zSQKiwB5VjI0Fx5ONE4HUOfa-USUdbMU14gU/edit';
+  r[COL.SLUG - 1] = 'infrastructure-as-code';
+  r[COL.EXCERPT - 1] = 'インフラ構成をコードで書く仕組み';
+  r[COL.WP_POST_ID - 1] = postId;
+  return r;
+}
+
+// WPの応答を差し替えて1回分の「WP下書きに」を走らせる。responder(url, method) が {code, body} を返す。
+function runWpDraft(postId, responder) {
+  const rows = [makeWpRow(postId)];
+  const wpSheet = makeSheet(rows);
+  const calls = [];
+  ctx.SpreadsheetApp = { flush: function () {} };
+  ctx.LockService = { getScriptLock: function () { return { tryLock: function () { return true; }, releaseLock: function () {} }; } };
+  ctx.PropertiesService = {
+    getScriptProperties: function () {
+      const props = {
+        WP_SITE_URL: 'https://example.com', WP_USER: 'u', WP_APP_PASS: 'p',
+        WP_POST_TYPE: 'glossary', WP_CATEGORY_FIELD: 'glossary-category',
+      };
+      return { getProperty: function (k) { return props[k] || ''; } };
+    },
+  };
+  ctx.Utilities = { base64Encode: function () { return 'BASIC'; } };
+  ctx.fetchDocMarkdown_ = function () { return '# IaC\n\n-- wp分割ライン--\n\nKief￥キーフ￥ Morris￥モリス￥が著した。'; };
+  ctx.markDocMigrated_ = function () {};
+  ctx.UrlFetchApp = {
+    fetch: function (url, opts) {
+      const method = (opts && opts.method) || 'get';
+      calls.push({ url: url, method: method, payload: opts && opts.payload });
+      const r = responder(url, method);
+      return { getResponseCode: function () { return r.code; }, getContentText: function () { return r.body; } };
+    },
+  };
+  let result = null, error = null;
+  try { result = realPublishRowToWpDraft(wpSheet, 2); } catch (e) { error = String(e); }
+  return { result: result, error: error, calls: calls, row: rows[0] };
+}
+
+const NOT_FOUND = '{"code":"rest_post_invalid_id","message":"無効な投稿 ID です。","data":{"status":404}}';
+
+// 9-1. 記録済みIDが生きている → その投稿を更新する（statusは送らず公開状態を保つ）
+const alive = runWpDraft(39245, function (url, method) {
+  if (method === 'get') return { code: 200, body: '{"id":39245,"status":"draft"}' };
+  return { code: 200, body: '{"id":39245,"status":"draft"}' };
+});
+check('WP更新（IDが生きている）', (function () {
+  const post = alive.calls.filter(function (c) { return c.method === 'post'; });
+  return post.length === 1 && /\/glossary\/39245$/.test(post[0].url) &&
+    !('status' in JSON.parse(post[0].payload)) && !alive.result.note;
+})(), true);
+
+// 9-2. 記録済みIDがWPから消えている → 新規下書きを作り、用語DBのIDを差し替える
+const gone = runWpDraft(39245, function (url, method) {
+  if (method === 'get') return { code: 404, body: NOT_FOUND };
+  return { code: 201, body: '{"id":40001,"status":"draft"}' };
+});
+check('WP更新（IDが消えている→作り直し）', (function () {
+  const post = gone.calls.filter(function (c) { return c.method === 'post'; });
+  return post.length === 1 && /\/wp\/v2\/glossary$/.test(post[0].url) &&
+    JSON.parse(post[0].payload).status === 'draft' &&
+    gone.row[COL.WP_POST_ID - 1] === 40001 && /見つからなかった/.test(gone.result.note);
+})(), true);
+
+// 9-3. 別の投稿タイプで生きている → 二重投稿を避けて止め、設定を直すよう伝える
+const otherType = runWpDraft(39245, function (url, method) {
+  if (method !== 'get') return { code: 201, body: '{"id":40002,"status":"draft"}' };
+  return /\/posts\//.test(url) ? { code: 200, body: '{"id":39245,"status":"draft"}' } : { code: 404, body: NOT_FOUND };
+});
+check('WP更新（別の投稿タイプにあった→作らずに止める）',
+  otherType.result === null && /posts/.test(otherType.error) && /WP_POST_TYPE/.test(otherType.error) &&
+  otherType.calls.filter(function (c) { return c.method === 'post'; }).length === 0, true);
+
+// 9-4. ゴミ箱に入っていた → 下書きに戻して更新する
+const trashed = runWpDraft(39245, function (url, method) {
+  if (method === 'get') return { code: 200, body: '{"id":39245,"status":"trash"}' };
+  return { code: 200, body: '{"id":39245,"status":"draft"}' };
+});
+check('WP更新（ゴミ箱→下書きに戻す）', (function () {
+  const post = trashed.calls.filter(function (c) { return c.method === 'post'; });
+  return post.length === 1 && JSON.parse(post[0].payload).status === 'draft' && /ゴミ箱/.test(trashed.result.note);
+})(), true);
+
+// 9-5. 認証エラーなどは「無い」と誤判定しない（作り直すと記事が二重になる）
+const denied = runWpDraft(39245, function (url, method) {
+  if (method === 'get') return { code: 401, body: '{"code":"rest_not_logged_in"}' };
+  return { code: 201, body: '{"id":40003,"status":"draft"}' };
+});
+check('WP更新（401では作り直さない）',
+  denied.result === null && /401/.test(denied.error) &&
+  denied.calls.filter(function (c) { return c.method === 'post'; }).length === 0, true);
 
 console.log(fail === 0 ? '\nすべて通過' : '\n失敗 ' + fail + ' 件');
 process.exit(fail === 0 ? 0 : 1);
