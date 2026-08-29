@@ -1,5 +1,5 @@
-// 用語くんの用語照合（表記ゆれ吸収）の動作確認。
-// GASの外でロジックだけ動かすので `node scripts/test-glossary-lookup.js` で走る。
+// 用語くん（GAS）のロジックの動作確認。用語照合（表記ゆれ吸収）と、Markdown→HTML変換（ルビ）を見る。
+// GASの外でロジックだけ動かすので `node scripts/test-glossary-bot.js` で走る。
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
@@ -122,6 +122,25 @@ posted.length = 0;
 ctx.handleWpDraftCommand({ channel: 'C1', ts: '1' }, 'モータル をWP下書きに');
 check('WP下書きコマンド（候補を出して聞き返す）',
   /もしかしてこれ？/.test(posted[0]) && /G-001/.test(posted[0]) && !/WP下書きを作成した/.test(posted[0]), true);
+
+// 8. Markdown→HTML：ルビの区切りは半角¥・全角￥のどちらでも変換する
+//    記事によってどちらで書かれるか揺れる（実際に全角で書かれた回が素通りしていた）
+const ruby = function (md) { return ctx.mdToHtml_(md); };
+check('ルビ（半角¥）',
+  ruby('Robert¥ロバート¥ Cialdini¥チャルディーニ¥である。'),
+  '<p><ruby>Robert<rt>ロバート</rt></ruby> <ruby>Cialdini<rt>チャルディーニ</rt></ruby>である。</p>');
+check('ルビ（全角￥）',
+  ruby('Kief￥キーフ￥ Morris￥モリス￥が2016年に著した。'),
+  '<p><ruby>Kief<rt>キーフ</rt></ruby> <ruby>Morris<rt>モリス</rt></ruby>が2016年に著した。</p>');
+check('ルビ（半角と全角の混在）',
+  ruby('M.¥エム¥ Yerkes￥ヤーキズ￥'),
+  '<p><ruby>M.<rt>エム</rt></ruby> <ruby>Yerkes<rt>ヤーキズ</rt></ruby></p>');
+check('ルビ（見出し・箇条書きの中でも変換する）',
+  ruby('## Robert￥ロバート￥の法則\n\n- Amos¥エイモス¥ Tversky¥トベルスキー¥'),
+  '<h2><ruby>Robert<rt>ロバート</rt></ruby>の法則</h2>\n<ul>\n<li><ruby>Amos<rt>エイモス</rt></ruby> <ruby>Tversky<rt>トベルスキー</rt></ruby></li>\n</ul>');
+check('ルビ記法でない円記号はそのまま',
+  ruby('価格は1￥から。'),
+  '<p>価格は1￥から。</p>');
 
 console.log(fail === 0 ? '\nすべて通過' : '\n失敗 ' + fail + ' 件');
 process.exit(fail === 0 ? 0 : 1);

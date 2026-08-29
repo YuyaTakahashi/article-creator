@@ -1565,11 +1565,15 @@ function stripToBody_(md) {
   return s.replace(/^#{1,4}\s*最小限の説明[\s\S]*?(?=^#{1,4}\s)/m, '');
 }
 
-/** 最小限のMarkdown→HTML。ルビ(英字¥カナ¥)・wp分割ライン・見出し・箇条書き・引用・強調・リンク対応。 */
+/**
+ * 最小限のMarkdown→HTML。ルビ(英字¥カナ¥)・wp分割ライン・見出し・箇条書き・引用・強調・リンク対応。
+ * ルビの区切りは半角¥(U+00A5)と全角￥(U+FFE5)の両方を受ける。記事によってどちらで書かれるか揺れるため、
+ * 半角だけを見ていたころは全角で書かれた回だけ変換されずに素通りしていた。
+ */
 function mdToHtml_(md) {
   const inline = function (s) {
     return s
-      .replace(/([A-Za-z0-9.'’&-]+)¥([^¥]+)¥/g, '<ruby>$1<rt>$2</rt></ruby>')
+      .replace(/([A-Za-z0-9.'’&-]+)[¥￥]([^¥￥]+)[¥￥]/g, '<ruby>$1<rt>$2</rt></ruby>')
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   };

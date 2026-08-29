@@ -50,7 +50,8 @@ def load_env(env_path: Path) -> dict:
 
 # ---------- Markdown → HTML 変換 ----------
 
-RUBY_RE = re.compile(r"([A-Za-z0-9.\-]+)¥([^¥]+)¥")
+# ルビの区切りは半角¥(U+00A5)と全角￥(U+FFE5)の両方を受ける（記事によって書かれ方が揺れるため）
+RUBY_RE = re.compile(r"([A-Za-z0-9.\-]+)[¥￥]([^¥￥]+)[¥￥]")
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 BOLD_RE = re.compile(r"\*\*([^*]+)\*\*")
 EM_RE = re.compile(r"(?<!\*)\*([^*]+)\*(?!\*)")

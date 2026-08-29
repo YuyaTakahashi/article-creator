@@ -7,3 +7,7 @@ drafts/
 # OS
 .DS_Store
 pipeline/gas/
+
+# Python のキャッシュ
+__pycache__/
+*.pyc

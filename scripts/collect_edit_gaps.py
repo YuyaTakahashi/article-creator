@@ -36,7 +36,7 @@ TAB = "UX TIMES 用語DB"
 GAP_CHECKED_COL = "W"          # GAP確認日。空なら未確認
 SPLIT = "-- wp分割ライン--"
 
-RUBY_MD = re.compile(r"([A-Za-z0-9.\-]+)¥[^¥]+¥")      # 英字¥カナ¥ → 英字
+RUBY_MD = re.compile(r"([A-Za-z0-9.\-]+)[¥￥][^¥￥]+[¥￥]")  # 英字¥カナ¥ → 英字（区切りは半角¥・全角￥どちらも）
 RUBY_HTML = re.compile(r"<ruby>(.*?)<rt>.*?</rt></ruby>", re.S)
 FIGURE = re.compile(r"<figure.*?</figure>", re.S)
 TAG = re.compile(r"<[^>]+>")
