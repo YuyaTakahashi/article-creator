@@ -267,6 +267,37 @@ bash scripts/weekly-learn-batch.sh
 
 ---
 
+## 用語くん(GAS)のデプロイ
+
+`pipeline/glossary-bot/` が用語くん本体（Apps Script プロジェクト）のソース。ここを `main` にマージすると、GitHub Actions（`.github/workflows/deploy-glossary-bot.yml`）が `clasp push` して Apps Script 側へ反映する。手元の Mac から push する必要はない。
+
+Actions タブから手動実行（`workflow_dispatch`）もできる。
+
+### 初回だけ必要な設定
+
+リポジトリの Secrets に `CLASPRC_JSON` を登録する。中身は手元の clasp のトークンそのもの。
+
+```bash
+# Mac で（未ログインなら先に clasp login）
+cat ~/.clasprc.json | pbcopy
+```
+
+コピーしたものを Settings → Secrets and variables → Actions → New repository secret に、名前 `CLASPRC_JSON` で貼る。
+
+### 先に知っておくこと（重要）
+
+- **このリポジトリはパブリック。** Secrets 自体は非公開で、フォークからの PR では読めない（このワークフローは `push`/`workflow_dispatch` のみで動き、`pull_request` では動かさないため）。ただし置くのは Google アカウントのリフレッシュトークンで、Drive と Apps Script への広い権限を持つ。write 権限を持つ人と、ジョブ内で動く依存パッケージからは触れる状態になる。許容できない場合は、この自動デプロイを使わず手元から `clasp push` する。
+- **リスクを下げるなら**：用語くんの Apps Script プロジェクトだけを共有した専用の Google アカウントで `clasp login` し、そのトークンを登録する。yuya 個人アカウントのトークンを置かずに済む。
+- **トークンが失効したら**：デプロイが認証エラーで落ちる。Mac で `clasp login` をやり直して `CLASPRC_JSON` を登録し直す。
+
+### 仕様メモ
+
+- `clasp push -f` の `-f` は必須。`appsscript.json` に差分があると clasp は上書き確認を出すが、CI は非対話なので確認できず「Skipping push.」と表示して**終了コード0のまま何もせず**終わる。`-f` が無いと「ジョブは緑なのに反映されていない」事故になる。
+- clasp のバージョンは `3.4.1` に固定している。上げるときは、先に手元で同じバージョンの `clasp push` を通してから上げる。
+- `clasp push` はコードを反映するだけ。月曜レポート（`sendMondayReport`）のような時間主導トリガーは常に最新コードで動くのでこれで足りる。一方 Slack の webhook は Web アプリなので、固定バージョンでデプロイしている場合は反映に別途 `clasp deploy` が要る。
+
+---
+
 ## プロンプトのカスタマイズ
 
 `prompts/` 以下のファイルを編集することで記事スタイルを調整できる。`SKILL.md` は触らなくてよい。
