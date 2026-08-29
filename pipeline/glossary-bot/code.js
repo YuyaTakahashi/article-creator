@@ -95,7 +95,7 @@ function handleMention(event) {
 
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
-    postToSlack(event.channel, ':large_green_circle: 1q0O 用語くん v35（Slack再送による二重作成の防止）が応答してるよ ✨', event.thread_ts || event.ts);
+    postToSlack(event.channel, ':large_green_circle: 1q0O 用語くん v36（用語名の表記ゆれ・英語名での照合）が応答してるよ ✨', event.thread_ts || event.ts);
     return;
   }
 
@@ -226,6 +226,7 @@ function handleEyecatchPrompt_(event, userMessage) {
   const reply = event.thread_ts || event.ts;
   let row = -1;
   let specified = ''; // 指定された用語名／G-ID（見つからなかった時の明示メッセージ用）
+  let candidates = [];
   const idMatch = userMessage.match(/G-?\s*(\d+)/i);
   if (idMatch) {
     specified = 'G-' + idMatch[1].padStart(3, '0');
@@ -238,12 +239,19 @@ function handleEyecatchPrompt_(event, userMessage) {
       .replace(/[「」『』]/g, ' ')
       .replace(/[\s　の]*(アイキャッチ|eyecatch)[\s\S]*$/i, '')
       .replace(/\s+/g, ' ').trim();
-    if (specified) row = findRowByTerm_(sheet, specified);
+    if (specified) {
+      const found = lookupTermRow_(sheet, specified);
+      row = found.row;
+      candidates = found.candidates;
+    }
   }
   if (row === -1) {
     if (!specified) {
       // 用語が読み取れなかった → 聞き返す
       postToSlack(event.channel, 'どの用語のアイキャッチプロンプト？「@用語くん 人工的希少性のアイキャッチプロンプト教えて」みたいに用語名（かG-ID）を入れてね！', reply);
+    } else if (candidates.length) {
+      // 近い用語はある → 取り違えないように候補を出して聞き返す
+      postToSlack(event.channel, termNotFoundMessage_(specified, candidates), reply);
     } else {
       // 用語は指定されたがDBに無い → 「無い」と明示する
       postToSlack(event.channel, '「*' + specified + '*」は用語DBに登録が無いから、アイキャッチプロンプトも記録されてないよ💦（この仕組みで生成した用語だけ記録してるんだ）', reply);
@@ -275,18 +283,18 @@ function actionMarkerInstructions_() {
     '\n「↑」「これ」「この用語」などの指示語は、文脈から実際の用語名に解決して合図に書く。操作の依頼でなければ合図は出さず普通に会話する。合図行はコードが処理して結果に差し替えるので、合図に加えて自分でも同じ内容を書かない。';
 }
 
-/** 「G-023」や用語名を行番号に解決する。見つからなければ -1。 */
-function resolveRow_(sheet, idOrTerm) {
+/** 「G-023」や用語名を { row, candidates } に解決する。見つからなければ row: -1。 */
+function resolveTermRow_(sheet, idOrTerm) {
   const s = String(idOrTerm).trim();
   const m = s.match(/G-?\s*(\d+)/i);
   if (m) {
     const gid = 'G-' + m[1].padStart(3, '0');
     const ids = sheet.getRange(2, COL.ID, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
     const idx = ids.indexOf(gid);
-    if (idx !== -1) return idx + 2;
+    if (idx !== -1) return { row: idx + 2, candidates: [] };
   }
   const term = s.replace(/G-?\s*\d+/i, '').trim();
-  return findRowByTerm_(sheet, term || s);
+  return lookupTermRow_(sheet, term || s);
 }
 
 /** LLM返信に含まれる合図 [[ADD:]] [[WP_DRAFT:]] [[EYECATCH:]] を実行し、合図を結果テキストに差し替えて返す。 */
@@ -301,7 +309,7 @@ function applyActionMarkers_(event, reply) {
     try {
       const r = addToGlossaryIfNew(term, 'Slackから追加', '会話で追加依頼');
       results.push(r.status === 'exists'
-        ? '（*' + term + '* はもう候補リストに入ってたよ ✨）'
+        ? '（*' + (r.term || term) + '*（' + r.id + '）はもう候補リストに入ってたよ ✨）'
         : '（用語DBに *' + term + '*（' + r.id + '）を積んでおいたよ！🌟）');
     } catch (e) { results.push('（DB追加でエラーが出ちゃった💦: ' + e + '）'); }
   }
@@ -309,9 +317,10 @@ function applyActionMarkers_(event, reply) {
   const wpM = out.match(/\[\[WP_DRAFT:\s*(.+?)\]\]/);
   if (wpM) {
     const key = wpM[1].trim();
-    const row = resolveRow_(sheet, key);
+    const found = resolveTermRow_(sheet, key);
+    const row = found.row;
     if (row === -1) {
-      results.push('（WP下書き: 「*' + key + '*」が用語DBに見つからなかった💦 表記を確認するかG-IDで指定してね）');
+      results.push('（WP下書き: ' + termNotFoundMessage_(key, found.candidates) + '）');
     } else {
       try {
         const res = publishRowToWpDraft_(sheet, row);
@@ -323,9 +332,10 @@ function applyActionMarkers_(event, reply) {
   const ecM = out.match(/\[\[EYECATCH:\s*(.+?)\]\]/);
   if (ecM) {
     const key = ecM[1].trim();
-    const row = resolveRow_(sheet, key);
+    const found = resolveTermRow_(sheet, key);
+    const row = found.row;
     if (row === -1) {
-      results.push('（アイキャッチプロンプト: 「*' + key + '*」が用語DBに見つからなかった💦）');
+      results.push('（アイキャッチプロンプト: ' + termNotFoundMessage_(key, found.candidates) + '）');
     } else {
       const p = String(sheet.getRange(row, COL.EYECATCH_PROMPT).getValue() || '').trim();
       const nm = String(sheet.getRange(row, COL.TERM).getValue());
@@ -338,9 +348,10 @@ function applyActionMarkers_(event, reply) {
   const regenM = out.match(/\[\[REGEN:\s*(.+?)\]\]/);
   if (regenM) {
     const key = regenM[1].trim();
-    const row = resolveRow_(sheet, key);
+    const found = resolveTermRow_(sheet, key);
+    const row = found.row;
     if (row === -1) {
-      results.push('（作り直し: 「*' + key + '*」が用語DBに見つからなかった💦 表記を確認するかG-IDで指定してね）');
+      results.push('（作り直し: ' + termNotFoundMessage_(key, found.candidates) + '）');
     } else {
       try {
         results.push(requestRegen_(sheet, row, event.user, false).message);
@@ -444,7 +455,7 @@ function handleAddToGlossary(event, userMessage) {
   }
 
   const head = (r.status === 'exists')
-    ? '「*' + term + '*」はもう候補リストに入ってるよ ✨'
+    ? '「*' + (r.term || term) + '*」（' + r.id + '）はもう候補リストに入ってるよ ✨'
     : '用語DBに追加したよ ✨ *' + term + '*（' + r.id + '）。生成待ちに並べておいた！🌟';
   postToSlack(event.channel, check ? (head + '\n\n' + check) : head, event.ts);
 }
@@ -481,11 +492,20 @@ function addToGlossaryIfNew(term, context, note) {
   const t = String(term).trim();
   let maxNum = 0;
   if (last >= 2) {
-    const data = sheet.getRange(2, 1, last - 1, 2).getValues(); // A:ID, B:用語
-    for (let i = 0; i < data.length; i++) {
-      const m = String(data[i][0]).match(/^G-(\d+)$/);
+    const ids = sheet.getRange(2, COL.ID, last - 1, 1).getValues().flat();
+    for (let i = 0; i < ids.length; i++) {
+      const m = String(ids[i]).match(/^G-(\d+)$/);
       if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
-      if (String(data[i][1]).trim() === t) return { status: 'exists' };
+    }
+    // 重複判定も照合と同じ物差しにする（全角半角・英語名違いで同じ用語を二重に積まない）
+    const found = lookupTermRow_(sheet, t);
+    if (found.row !== -1) {
+      return {
+        status: 'exists',
+        id: String(sheet.getRange(found.row, COL.ID).getValue()).trim(),
+        term: String(sheet.getRange(found.row, COL.TERM).getValue()).trim(),
+        row: found.row,
+      };
     }
   }
   const nextId = 'G-' + String(maxNum + 1).padStart(3, '0');
@@ -525,18 +545,33 @@ function handleGenerateRequest(event, userMessage) {
       postToSlack(event.channel, 'どの用語の下書きを作る？「@用語くん ダークパターン の下書き作って」みたいに用語名を入れてね！✨', event.ts);
       return;
     }
-    const data = sheet.getRange(2, 1, Math.max(sheet.getLastRow() - 1, 1), COL.STATUS).getValues();
-    for (let i = 0; i < data.length; i++) {
-      if (String(data[i][COL.TERM - 1]).trim() === term) {
-        row = i + 2; gid = String(data[i][COL.ID - 1]); status = String(data[i][COL.STATUS - 1] || '').trim(); break;
-      }
+    // 表記ゆれ・英語名でも既存行に当てる（当たらないと同じ用語を二重に積んでしまう）
+    const found = lookupTermRow_(sheet, term);
+    if (found.row !== -1) {
+      row = found.row;
+      gid = String(sheet.getRange(row, COL.ID).getValue());
+      term = String(sheet.getRange(row, COL.TERM).getValue());
+      status = String(sheet.getRange(row, COL.STATUS).getValue() || '').trim();
+    } else if (found.candidates.length) {
+      // 近い用語がある → 二重登録を避けて聞き返す
+      postToSlack(event.channel,
+        termNotFoundMessage_(term, found.candidates) +
+        '\n別の用語なら「@' + BOT_NAME + ' ' + term + ' 追加して」で新しく積むよ ✨',
+        event.ts);
+      return;
     }
     if (row === -1) {
       const r = addToGlossaryIfNew(term, 'Slackから生成リクエスト', 'Slackで下書き作成を依頼');
       gid = r.id;
-      const ids = sheet.getRange(2, COL.ID, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
-      row = ids.indexOf(gid) + 2;
-      status = '提案中';
+      if (r.row) {
+        row = r.row;
+        term = r.term || term;
+        status = String(sheet.getRange(row, COL.STATUS).getValue() || '').trim();
+      } else {
+        const ids = sheet.getRange(2, COL.ID, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
+        row = ids.indexOf(gid) + 2;
+        status = '提案中';
+      }
     }
   }
 
@@ -697,9 +732,10 @@ function handleRegenRequest_(event, userMessage) {
     postToSlack(event.channel, 'どれを作り直す？「@' + BOT_NAME + ' モーダル を最新版で作り直して」みたいに用語名（かG-ID）を入れてね！✨', reply);
     return;
   }
-  const row = resolveRow_(sheet, key);
+  const found = resolveTermRow_(sheet, key);
+  const row = found.row;
   if (row === -1) {
-    postToSlack(event.channel, '「*' + key + '*」が用語DBに見つからなかった💦 表記を確認するか、G-IDで指定してみて！', reply);
+    postToSlack(event.channel, termNotFoundMessage_(key, found.candidates), reply);
     return;
   }
   const force = /(強制|それでも|とにかく|もう一度|もういちど)/.test(userMessage);
@@ -1190,9 +1226,10 @@ function handleWpDraftCommand(event, userMessage) {
       postToSlack(event.channel, 'どれをWP下書きにする？「@用語くん 人工的希少性 をWP下書きに」みたいに用語名（かG-ID）を入れてね！', reply);
       return;
     }
-    row = findRowByTerm_(sheet, term);
+    const found = lookupTermRow_(sheet, term);
+    row = found.row;
     if (row === -1) {
-      postToSlack(event.channel, '「*' + term + '*」が用語DBに見つからなかった💦 表記を確認するか、G-IDで指定してみて', reply);
+      postToSlack(event.channel, termNotFoundMessage_(term, found.candidates), reply);
       return;
     }
     label = String(sheet.getRange(row, COL.ID).getValue());
@@ -1218,17 +1255,143 @@ function extractWpTerm_(message) {
     .trim();
 }
 
-/** 用語名から行番号を返す（完全一致→記号・空白無視の一致の順）。見つからなければ -1。 */
-function findRowByTerm_(sheet, term) {
+// ============================================================
+// 用語名から行を引く（表記ゆれ・英語名・見分けにくい字を吸収する）
+//   B列（用語）の完全一致だけで引いていたころは、C列にしか無い英語名（「IaC」など）や
+//   全角／半角・大文字小文字・括弧つき表記の違い、l と I のような見分けにくい字の打ち間違いで
+//   「用語DBに見つからなかった」と返してしまっていた。段階的にゆるめて照合し、
+//   それでも決まらないときは「もしかして」の候補を返す。
+// ============================================================
+
+/** 全角英数・全角記号・全角スペースを半角に落とす。 */
+function toHalfWidth_(s) {
+  return String(s)
+    .replace(/[！-～]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); })
+    .replace(/　/g, ' ');
+}
+
+/** 照合キー：全角→半角、小文字化、記号・空白を落とす（「モーダル（Modal）」→「モーダルmodal」）。 */
+function termKey_(s) {
+  return toHalfWidth_(s)
+    .toLowerCase()
+    .replace(/[^0-9a-zぁ-ゖァ-ヺー一-鿿]/g, '');
+}
+
+/** ゆるい照合キー：長音の有無、カタカナ／ひらがな、l・1 と i、0 と o の見分けにくさを吸収する。 */
+function looseTermKey_(s) {
+  return termKey_(s)
+    .replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); })
+    .replace(/ー/g, '')
+    .replace(/[l1]/g, 'i')
+    .replace(/0/g, 'o');
+}
+
+/** 1行分の照合対象を集める。用語名・英語名に加えて、括弧の内と外、英語名の併記も個別に引けるようにする。 */
+function termAliases_(term, termEn) {
+  const out = [];
+  const push = function (raw, splitList) {
+    const s = toHalfWidth_(String(raw || '')).trim();
+    if (!s) return;
+    out.push(s);
+    out.push(s.replace(/\([^)]*\)/g, ' ').trim());               // 括弧の外（情報アーキテクチャ）
+    (s.match(/\(([^)]*)\)/g) || []).forEach(function (x) {       // 括弧の中（IA）
+      out.push(x.slice(1, -1).trim());
+    });
+    if (splitList) {                                             // 「IA / Information Architecture」
+      s.split(/[\/,、・]/).forEach(function (x) { out.push(x.trim()); });
+    }
+  };
+  push(term, false);
+  push(termEn, true);
+  return out.filter(Boolean);
+}
+
+/** 編集距離が1以下か（1文字の打ち間違い・入れ忘れを拾う）。 */
+function isNearMiss_(a, b) {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  if (a === b) return true;
+  const short = a.length <= b.length ? a : b;
+  const long = a.length <= b.length ? b : a;
+  let i = 0, j = 0, diff = 0;
+  while (i < short.length && j < long.length) {
+    if (short.charAt(i) === long.charAt(j)) { i++; j++; continue; }
+    if (++diff > 1) return false;
+    if (short.length === long.length) { i++; j++; } else { j++; }
+  }
+  return diff + (long.length - j) + (short.length - i) <= 1;
+}
+
+/** 用語DBの全行を照合用の形（行番号・G-ID・用語名・別名）で読む。 */
+function glossaryTermRows_(sheet) {
   const last = sheet.getLastRow();
-  if (last < 2) return -1;
-  const terms = sheet.getRange(2, COL.TERM, last - 1, 1).getValues().flat();
-  const t = String(term).trim();
-  let idx = terms.findIndex(function (x) { return String(x).trim() === t; });
-  if (idx !== -1) return idx + 2;
-  const norm = function (s) { return String(s).replace(/[\s　・（）()\/]/g, '').toLowerCase(); };
-  idx = terms.findIndex(function (x) { return norm(x) === norm(t); });
-  return idx === -1 ? -1 : idx + 2;
+  if (last < 2) return [];
+  const data = sheet.getRange(2, 1, last - 1, COL.TERM_EN).getValues(); // A:ID B:用語 C:英語名
+  return data.map(function (r, i) {
+    return {
+      row: i + 2,
+      id: String(r[COL.ID - 1] || '').trim(),
+      term: String(r[COL.TERM - 1] || '').trim(),
+      aliases: termAliases_(r[COL.TERM - 1], r[COL.TERM_EN - 1]),
+    };
+  }).filter(function (r) { return r.term !== ''; });
+}
+
+/**
+ * 用語名から行を引く。{ row, candidates } を返す（見つからなければ row: -1）。
+ * 完全一致 → 記号・全角半角・大小文字を無視した一致 → 長音や見分けにくい字も無視した一致、の順にゆるめる。
+ * ゆるめた段で複数に当たったときは、取り違えを避けて確定せず候補として返す。
+ */
+function lookupTermRow_(sheet, term) {
+  const q = String(term || '').trim();
+  if (!q) return { row: -1, candidates: [] };
+  const rows = glossaryTermRows_(sheet);
+  if (!rows.length) return { row: -1, candidates: [] };
+
+  const matchBy = function (keyFn) {
+    const k = keyFn(q);
+    if (!k) return [];
+    return rows.filter(function (r) {
+      return r.aliases.some(function (a) { return keyFn(a) === k; });
+    });
+  };
+
+  // B列（用語）そのものの完全一致が最優先。別の行の別名とかぶっても取り違えない。
+  const sameTerm = rows.filter(function (r) { return r.term === q; });
+  if (sameTerm.length) return { row: sameTerm[0].row, candidates: [] };
+
+  const exact = matchBy(function (s) { return String(s).trim(); });
+  if (exact.length) return { row: exact[0].row, candidates: [] };
+
+  let hits = matchBy(termKey_);
+  if (!hits.length) hits = matchBy(looseTermKey_);
+  if (hits.length === 1) return { row: hits[0].row, candidates: [] };
+  if (hits.length > 1) return { row: -1, candidates: hits.slice(0, 5) };
+
+  return { row: -1, candidates: nearTermRows_(rows, q) };
+}
+
+/** 「もしかして」用に、部分一致か1文字違いの行を集める（最大5件）。 */
+function nearTermRows_(rows, term) {
+  const k = looseTermKey_(term);
+  if (k.length < 2) return [];
+  return rows.filter(function (r) {
+    return r.aliases.some(function (a) {
+      const ak = looseTermKey_(a);
+      if (ak.length < 2) return false;
+      // 部分一致は3文字以上のときだけ見る（「IA」のような短い別名があちこちに引っかかるのを避ける）
+      if (ak.length >= 3 && k.length >= 3 && (ak.indexOf(k) !== -1 || k.indexOf(ak) !== -1)) return true;
+      return isNearMiss_(ak, k);
+    });
+  }).slice(0, 5);
+}
+
+/** 見つからなかったときの案内。近い候補があれば「もしかして」を添える。 */
+function termNotFoundMessage_(term, candidates) {
+  const head = '「*' + term + '*」が用語DBに見つからなかった💦';
+  if (!candidates || !candidates.length) return head + ' 表記を確認するか、G-IDで指定してみて！';
+  return head + ' もしかしてこれ？\n' +
+    candidates.map(function (c) { return '・*' + c.term + '*（' + c.id + '）'; }).join('\n') +
+    '\nこの中にあれば、G-IDで言い直してくれれば進めるよ ✨';
 }
 
 function wpConfig_() {
