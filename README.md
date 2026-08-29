@@ -322,7 +322,8 @@ cat ~/.clasprc.json | pbcopy
 - clasp のバージョンは `3.4.1` に固定している。上げるときは、先に手元で同じバージョンの `clasp push` を通してから上げる。
 - 用語名の照合（表記ゆれ・英語名・見分けにくい字の吸収）は `node scripts/test-glossary-lookup.js` で確認できる。GASを介さずロジックだけ動かすので、`code.js` を直したらこれを通してから push する。
 - `clasp push` はコードを置くだけ。月曜レポート（`sendMondayReport`）のような時間主導トリガーは常に最新コードで動くが、**Slack の webhook はウェブアプリなので、バージョン固定のデプロイを差し替えないと古いコードのまま動き続ける**。そのためワークフローは push のあとに `clasp update-deployment` でデプロイを新しいバージョンに更新する。
-- 更新するデプロイは、`@HEAD` ではないデプロイが1つだけならそれを自動で選ぶ。複数あって決められないときはジョブが落ちるので、リポジトリ変数（Settings → Secrets and variables → Actions → Variables）`GAS_DEPLOYMENT_ID` に、Slack のリクエストURLに対応するデプロイIDを入れる。デプロイIDは Apps Script の「デプロイを管理」か `clasp list-deployments` で確認できる。
+- 更新するデプロイは、`@HEAD` ではないデプロイが1つだけならそれを自動で選ぶ。複数あって決められないときはジョブが落ちるので、Secrets（Settings → Secrets and variables → Actions → Secrets）に `GAS_DEPLOYMENT_ID` を入れる。デプロイIDは Apps Script の「デプロイを管理」か `clasp list-deployments` で確認できる。
+- **デプロイIDはウェブアプリURLそのもの＝Slackのリクエスト先**なので、変数ではなく Secrets に置き、ログにも出さない（ワークフローは `::add-mask::` で伏せる）。Apps Script のウェブアプリはリクエストヘッダを読めずSlackの署名を検証できないため、このURLを知っている人は誰でも用語くんを操作できてしまう。URLが外に出てしまったときは、Apps Script で**新しいデプロイを作って**SlackアプリのリクエストURLを差し替え、古いデプロイをアーカイブする。
 
 ---
 

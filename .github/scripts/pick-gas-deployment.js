@@ -5,7 +5,11 @@
 // Slack 側の挙動は変わらない。
 //
 // 使い方: clasp list-deployments --json | node .github/scripts/pick-gas-deployment.js
-// 成功すると デプロイID を1行だけ標準出力に出す。決められないときは終了コード1と理由を stderr に出す。
+// 成功すると デプロイID を1行だけ標準出力に出す（呼び出し側が変数に取る）。
+// 決められないときは終了コード1と理由を stderr に出す。
+//
+// デプロイIDはウェブアプリURLそのもの（＝Slackのリクエスト先）なので、
+// エラーメッセージにも出さない。パブリックリポジトリのActionsログは誰でも読めるため。
 
 let raw = '';
 process.stdin.setEncoding('utf8');
@@ -31,12 +35,13 @@ process.stdin.on('end', () => {
     console.error(
       'バージョン固定のデプロイが見つかりません（@HEAD のみ）。' +
       'Apps Script の「デプロイを管理」でウェブアプリのデプロイを作るか、' +
-      'リポジトリ変数 GAS_DEPLOYMENT_ID に対象のデプロイIDを設定してください。');
+      'Secrets の GAS_DEPLOYMENT_ID に対象のデプロイIDを設定してください。');
     process.exit(1);
   }
   console.error(
-    'バージョン固定のデプロイが複数あります。どれを更新するか決められません: ' +
-    versioned.map((d) => d.deploymentId + ' @' + d.versionNumber).join(', ') +
-    ' / リポジトリ変数 GAS_DEPLOYMENT_ID に、Slack が叩いているデプロイのIDを設定してください。');
+    'バージョン固定のデプロイが ' + versioned.length + ' 件あり、どれを更新するか決められません' +
+    '（バージョン: ' + versioned.map((d) => '@' + d.versionNumber).join(', ') + '）。' +
+    'Apps Script の「デプロイを管理」でSlackのリクエストURLに対応するデプロイIDを確認し、' +
+    'Secrets の GAS_DEPLOYMENT_ID に設定してください。');
   process.exit(1);
 });
