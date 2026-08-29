@@ -1644,7 +1644,7 @@ function buildMondayReportSystemPrompt() {
     '【使う言葉】「合間で」「ふと書きたくなったら」「無理せず」「待ってるよ」「歓迎」「素敵」「おめでとう」\n' +
     '【出力の構成】\n' +
     '1. ヘッダー「今週の用語レポート ✨」\n' +
-    '2. 【今週新しく公開された用語】公開ごとに「🎉 <@Uxxx> が『XXX』をMM/DDに公開！おめでとう！」。0件なら「今週は公開0件だけど来週が楽しみ ✨」\n' +
+    '2. 【今週新しく公開された用語】公開ごとに「🎉 <@Uxxx> が『XXX』をMM/DDに公開！おめでとう！ → <公開URL|記事を読む>」。公開URLは渡された「今週公開された記事」の公開URLをそのまま使い、勝手に組み立てない。URLが「未取得」の記事はリンク部分ごと省く。0件なら「今週は公開0件だけど来週が楽しみ ✨」\n' +
     '3. 【みんなの状況】各スタッフを一行ずつ「📝 <@Uxxx>（前回公開からN日）：[文面]」。0〜7日「先週の用語、素敵だったね ✨」／8〜21日「読書で気になった用語あったかな？」／22〜45日「みんなで応援したいね 🌟」／46日以上「ふと書きたくなったら、いつでも歓迎！」／実績なし「これから一緒に育てていこう ✨」\n' +
     '4. 【未公開ドラフト】「作成済みだけどまだ公開されてない記事が N件あるよ」と件数を伝える。Nが0なら省略\n' +
     '5. 【WPに下書きのまま眠ってる記事（公開待ち）】渡された「WP下書き一覧」を各行「・XXX → <wpUrl|WPで公開>」で列挙し「あとは公開ボタンを押すだけ！合間にぜひ ✨」と促す。0件ならこの節は省略\n' +
@@ -1663,7 +1663,9 @@ function buildMondayReportUserPrompt(recent, staffStatus, summary, allArticles) 
         const author = staffStatus.find(function (s) { return s.wordpress_author_id === a.author; });
         const mention = author ? author.slack_mention : ('（著者ID' + a.author + '）');
         const dateLabel = a.date ? a.date.substring(5, 10).replace('-', '/') : '?';
-        return '- ' + mention + ' が「' + a.title + '」を ' + dateLabel + ' に公開';
+        const url = String(a.url || '').trim();
+        return '- ' + mention + ' が「' + a.title + '」を ' + dateLabel + ' に公開' +
+          '（公開URL: ' + (url || '未取得') + '）';
       }).join('\n')
     : '(今週公開された用語は0件)';
   const statusLines = staffStatus.map(function (s) {
@@ -1685,7 +1687,7 @@ function buildMondayReportUserPrompt(recent, staffStatus, summary, allArticles) 
     : '(WPに下書きのまま残っている記事は0件)';
 
   return '' +
-    '【今週公開された記事】\n' + recentLines + '\n\n' +
+    '【今週公開された記事（著者 → 用語 → 公開日 → WPの公開ページURL）】\n' + recentLines + '\n\n' +
     '【スタッフ各員の状況（slack_mention と 前回公開からの経過日数）】\n' + statusLines + '\n\n' +
     '【未公開ドラフト数】未公開合計 ' + unpublished + '件（レビュー待ち ' + summary.reviewWaiting + '件／公開OK ' + summary.publishOk + '件／WP下書きのまま ' + summary.draftCreated.length + '件）\n\n' +
     '【WP下書き一覧（WPに下書きのまま眠ってる記事。用語 → WP管理画面URL）】\n' + wpDraftLines + '\n\n' +
