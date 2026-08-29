@@ -21,6 +21,10 @@ const CACHE_SECONDS = 600;
 const GLOSSARY_SHEET_ID = '1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY';
 const GLOSSARY_TAB = 'UX TIMES 用語DB';
 const BOT_NAME = '用語くん';
+
+// デプロイ時にコミットSHAへ置き換わる（GitHub Actionsの「ビルド識別子を埋め込む」ステップ）。
+// 版の文字列（下の version 応答）を手で上げ忘れても、いま動いているコードがどれか分かるようにする。
+const BUILD_REV = '__BUILD_REV__';
 const REPORT_CHANNEL = 'C024GJ0H3LG'; // 週末レポートの投稿先チャンネル
 
 // 用語DBの列番号（1始まり）。webhook（add_term / update_row）で使う。
@@ -95,7 +99,9 @@ function handleMention(event) {
 
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
-    postToSlack(event.channel, ':large_green_circle: 1q0O 用語くん v36（用語名の表記ゆれ・英語名での照合）が応答してるよ ✨', event.thread_ts || event.ts);
+    postToSlack(event.channel,
+      ':large_green_circle: 1q0O 用語くん v37（ルビの全角￥・WP更新先の作り直し）が応答してるよ ✨\n' + buildLabel_(),
+      event.thread_ts || event.ts);
     return;
   }
 
@@ -156,6 +162,16 @@ function handleMention(event) {
 
   // 通常処理（サジェスト・既存有無確認・URL照会）
   handleDefault(event, userMessage);
+}
+
+/**
+ * いま動いているコードがどれかを示す1行。
+ * 置き換え前の値と比べたいが、その文字列自体もデプロイ時の置換に巻き込まれるので、
+ * 実行時に組み立てて sed の対象にならないようにしている。
+ */
+function buildLabel_() {
+  const placeholder = '__BUILD' + '_REV__';
+  return BUILD_REV === placeholder ? '（まだデプロイされていない手元のコードだよ）' : 'ビルド ' + BUILD_REV;
 }
 
 // ============================================================
