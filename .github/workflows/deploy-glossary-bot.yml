@@ -65,6 +65,29 @@ jobs:
         working-directory: pipeline/glossary-bot
         run: clasp push -f
 
+      # push はコードを置くだけ。Slack が叩いているのはバージョン固定のウェブアプリのデプロイなので、
+      # 新しいバージョンを作ってそのデプロイに差し替えないと Slack 側は古いコードのまま動き続ける。
+      # （「ジョブは緑なのに @用語くん version が古い版を返す」のがこの状態）
+      - name: ウェブアプリのデプロイを更新
+        working-directory: pipeline/glossary-bot
+        env:
+          GAS_DEPLOYMENT_ID: ${{ vars.GAS_DEPLOYMENT_ID }}
+        run: |
+          set -euo pipefail
+
+          target="${GAS_DEPLOYMENT_ID:-}"
+          if [ -z "${target}" ]; then
+            # 未設定なら、@HEAD ではないデプロイが1つだけならそれを使う。
+            # 複数あって決められないときは、どれを指定すべきかを示して落とす。
+            if ! target="$(clasp list-deployments --json | node "${GITHUB_WORKSPACE}/.github/scripts/pick-gas-deployment.js")"; then
+              echo "::error::更新するデプロイを決められませんでした（上のメッセージを参照）。リポジトリ変数 GAS_DEPLOYMENT_ID に、Slack のリクエストURLに対応するデプロイIDを設定してください。"
+              exit 1
+            fi
+          fi
+
+          echo "デプロイ ${target} を更新します"
+          clasp update-deployment "${target}" -d "GitHub Actions ${GITHUB_SHA:0:7}"
+
       - name: 認証情報を消す
         if: always()
         run: rm -f "${HOME}/.clasprc.json"
