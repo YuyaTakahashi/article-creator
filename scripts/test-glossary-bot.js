@@ -246,5 +246,21 @@ check('WP更新（401では作り直さない）',
   denied.result === null && /401/.test(denied.error) &&
   denied.calls.filter(function (c) { return c.method === 'post'; }).length === 0, true);
 
+// 10. version応答：デプロイ時に埋め込むビルド識別子
+//     版の文字列を手で上げ忘れても、動いているコードがどれか分かるようにするための仕掛け。
+function versionReply(source) {
+  const c = { console };
+  vm.createContext(c);
+  vm.runInContext(source, c);
+  const posted = [];
+  c.postToSlack = function (channel, text) { posted.push(text); };
+  c.handleMention({ channel: 'C1', ts: '1', text: '<@U1> version' });
+  return posted[0] || '';
+}
+check('version（デプロイ前は未デプロイと分かる）',
+  /まだデプロイされていない/.test(versionReply(src)), true);
+check('version（デプロイ後はコミットSHAが出る）',
+  /ビルド 74978dd/.test(versionReply(src.replace(/__BUILD_REV__/g, '74978dd'))), true);
+
 console.log(fail === 0 ? '\nすべて通過' : '\n失敗 ' + fail + ' 件');
 process.exit(fail === 0 ? 0 : 1);
