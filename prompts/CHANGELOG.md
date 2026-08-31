@@ -3,6 +3,19 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v4 — 2026-09-01
+
+実務セクションの4点を重要度順にし、裏づけのない項目は落としてよい形に緩和。article-critic を Step 5.5 / 8.5 の必須ゲートとして SKILL に復帰。reviewed_at は scripts/mark_reviewed.py だけが刻む形に変更。
+
+レシピhash: `89d40f87026e`
+
+変更されたファイル:
+  - .agent/skills/article-creator/SKILL.md
+  - .agent/skills/article-review/SKILL.md
+  - CLAUDE.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
 ## v3 — 2026-08-24
 
 編集差分からの学習を反映（CAGRへのフィードバック）。①1段落に結論をひとつだけ置き、似た締めの文を連ねない ②語源・提唱者では普及した事実だけでなく、なぜ普及したのかの理由を添える。
