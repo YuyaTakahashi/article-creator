@@ -124,6 +124,27 @@ def save_baseline(md_path, term, version):
     return dest.relative_to(BASE)
 
 
+CRITIC_LOG_DIR = Path.home() / "workspace" / "agentic-solution" / "AGENT_REPORTS" / "article-critic-logs"
+
+
+def warn_if_critic_skipped(term):
+    """article-critic を通した痕跡が無ければ警告する。
+
+    critic は article-creator の Step 5.5 / 8.5 で必ず通す取り決めだが、LLM が黙って
+    飛ばしても記事は出来てしまう（2026-08-31 の生成で実際に起きた）。ログの有無を
+    ここで見ておけば、冗長さのゲートが働かないまま用語DBに載った記事に気づける。
+    """
+    today = date.today().isoformat()
+    day_dir = CRITIC_LOG_DIR / today
+    logs = sorted(day_dir.glob("*.json")) if day_dir.exists() else []
+    if logs:
+        return
+    print("警告: article-critic の当日ログが見つからない "
+          f"（{day_dir}）。", file=sys.stderr)
+    print(f'  「{term}」の生成で品質ゲート（Step 5.5 / 8.5）を飛ばした可能性がある。'
+          " 冗長さ・繰り返しの確認をしていないまま登録される。", file=sys.stderr)
+
+
 def main():
     ap = argparse.ArgumentParser(description="記事MDを用語DBに反映する")
     ap.add_argument("md", help="drafts/{用語}.md")
@@ -147,6 +168,7 @@ def main():
 
     fm = read_frontmatter(path)
     term = args.term or path.stem
+    warn_if_critic_skipped(term)
     stamped = fm.get("creator_version", "")
     if not stamped:
         print("警告: レシピ版が刻まれていない。先に stamp_version.py を実行しておくこと", file=sys.stderr)

@@ -67,7 +67,8 @@ article-creator の Step 1〜6 を以下の差分つきで実行する：
 - 対話質問（AskUserQuestion）は一切行わない。topic=シートの用語、context=補足・文脈、difficulty/it=0.3
 - Step 0-b のディープリサーチ（NotebookLM/Chrome）は無人実行では壊れやすいため、**WebSearchによるソース収集で代替**する。重要用語は後から手動でディープリサーチつき再生成できる
 - WP重複チェックで既存記事が見つかったら、生成せず**ステータス=見送り**＋備考に既存記事URLを書いて次へ進む
-- article-critic の往復・article-review の自動推敲まで内部で完結させ、`reviewed_at` を付与する（人間レビュー前のAI品質ゲート）
+- article-critic の往復（Step 5.5 と Step 8.5）を内部で完結させる。これが人間レビュー前のAI品質ゲートにあたる
+- **`reviewed_at` は付与しない。** これは article-review を実際に通した証跡であり、`scripts/mark_reviewed.py` だけが刻む。生成段で書くと、推敲していない記事が投稿ゲートを通ってしまう
 - critic が escalate になった記事は**Doc化せず**、yuyaへの報告にのみ出す
 
 `drafts/{topic}.md` への保存は従来どおり行う（フロントマター・アイキャッチプロンプトはWP投稿時に使うため、MDが正式なアーカイブとなる）。

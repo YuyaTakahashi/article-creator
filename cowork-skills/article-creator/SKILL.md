@@ -261,6 +261,37 @@ WebSearch / WebFetch ツールが未ロードの場合は `ToolSearch` で先に
 
 ---
 
+## Step 5.5: article-critic でレビュー（必須・内部処理）
+
+Step 5 のリライト直後の記事を `article-critic` スキルに渡し、テンプレ準拠 / 文章スタイル / 読み手目線 / 読みやすさ の4軸で採点する。**このスキルを飛ばして Step 6 へ進んではいけない。** 冗長さ・繰り返し・専門語の置き換え漏れを機械的に止める唯一のゲートがここにある。
+
+サイクルは内部処理として扱い、中間のスコアや指摘はユーザーに見せない。ユーザーが見るのは最終的に保存される記事1本だけにする。Critic は「自動リライトのための指示」として使う。
+
+**呼び出しパラメータ:**
+
+```
+article_type: ux_glossary
+topic: {Step 1で受け取ったtopic}
+difficulty: {Step 1で受け取ったdifficulty（default 0.3）}
+it: {Step 1で受け取ったit（default 0.3）}
+proposed_article: <Step 5 完成稿の全文>
+attempt_count: {1回目=1, 2回目=2, 3回目=3}
+caller: article-creator (step5.5)
+```
+
+**判定の取り扱い:**
+
+- `verdict: regenerate`（1軸でも10点以下） → `regenerate_points` を読み、該当箇所を Step 5 のリライトに戻ってピンポイント修正し、再度 article-critic を呼ぶ。往復は最大2回まで
+- `verdict: pass` かつ 12〜14点の軸あり → `regenerate_points` を1回だけ反映してから再度 Critic に通す。トータル3回で打ち切る
+- `verdict: pass` かつ改善点なし → Step 6 に進む
+- `verdict: escalate`（3回で通過しない、または評価不能） → 「要人間判断」として記録し、**Doc化・用語DB反映には進まない**。この場合に限り Critic の最終ログをユーザーに提示する
+
+**冗長さの扱い（読み手目線Critic）:** 冗長性の指摘が出たら、文をこねて短くするのではなく「その段落を消したとき読者が失う情報は何か」を確かめ、言えない段落を落とす。実務セクションの4点は重要度の低いほうから落としてよい（CLAUDE.md 記事の書き方ルール11）。
+
+Critic のスコア・指摘は完了報告に出さない。ログJSONは `~/workspace/agentic-solution/AGENT_REPORTS/article-critic-logs/` に残す。
+
+---
+
 ## Step 6: ファクトチェックと自動修正
 
 以下の事実を検証し、誤りは自動修正して続行する。
@@ -331,6 +362,28 @@ WebSearch / WebFetch ツールが未ロードの場合は `ToolSearch` で先に
 
 ---
 
+## Step 8.5: article-critic で最終ゲート（必須・内部処理）
+
+Step 6 のファクトチェック修正と Step 7 のメタデータ追加で本文が変わっているため、**保存直前の最終稿をもう一度 `article-critic` に通す**。Step 5.5 と同じく内部で完結させ、中間出力はしない。
+
+**呼び出しパラメータ:**
+
+```
+article_type: ux_glossary
+topic: {Step 1で受け取ったtopic}
+difficulty: {Step 1で受け取ったdifficulty（default 0.3）}
+it: {Step 1で受け取ったit（default 0.3）}
+proposed_article: <保存直前の最終稿の全文>
+attempt_count: final
+caller: article-creator (final-gate)
+```
+
+判定の処理は Step 5.5 と同じルールに従う。`escalate` のときだけユーザーに見せ、Doc化・用語DB反映には進まない。
+
+**このゲートを通していない記事を保存しない。** 通したかどうかは `article-critic-logs/` にログが残るかで後から確かめられる（`scripts/register_draft.py` が当日ログの有無を確認して警告を出す）。
+
+---
+
 ## Step 9: MDファイルへの保存
 
 記事本文・メタデータ・アイキャッチプロンプトをひとつのMDファイルにまとめて `/Users/takahashi_yuya/workspace/article-creator/drafts/` に保存する。
@@ -360,6 +413,7 @@ eyecatch_prompt: "{Step 8で生成したプロンプト文字列（改行はス�
 
 - フロントマターの値にダブルクォーテーションを含む場合はシングルクォーテーションで囲む
 - 記事本文は `-- wp分割ライン--` 行の次の行から末尾までをそのままコピーする（変換・加工しない）
+- **`reviewed_at` はここで書かない。** これは `article-review` を実際に通した証跡であり、`scripts/mark_reviewed.py` だけが刻む。生成段で自分で書き足すと、推敲していない記事が投稿ゲートを通ってしまう
 
 ### レシピ版の刻印（保存したら必ず実行する）
 

@@ -17,7 +17,7 @@
 - 対話質問（AskUserQuestion）は一切しない。topic=用語、context=補足文脈(D列)、difficulty/it=0.3
 - ディープリサーチは使わず WebSearch でソース収集
 - WP重複チェックで既存記事が見つかったら生成せず「見送り」とし、Step 4 の update_row で status=「見送り」＋備考に既存URLを書く
-- article-critic / article-review を内蔵で通し reviewed_at を付与。escalate ならDoc化せず記録
+- article-critic を Step 5.5（リライト直後）と Step 8.5（保存直前）の2回とも必ず通す。escalate ならDoc化せず記録する。**`reviewed_at` は書かない**（article-review を実際に通したときだけ `scripts/mark_reviewed.py` が刻む印なので、生成段では付けない）
 - drafts/{用語}.md に保存（frontmatter・アイキャッチプロンプト含む）
 - UX TIMESは外部公開の一般記事。特定企業名（OPENLOGI等）に寄せない中立な解説にする
 - drafts/{用語}.md に保存したら `python3 scripts/stamp_version.py "drafts/{用語}.md"` を実行し、レシピ版（creator_version / recipe_hash）をフロントマターに刻む

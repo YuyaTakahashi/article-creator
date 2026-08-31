@@ -6,7 +6,7 @@ description: drafts/ のMD記事を投稿前にレビューするスキル。事
 # article-review スキル
 
 `drafts/{ファイル名}.md` を頭から通して読み直し、(A) 事実関係・情報の正確性・公開リスクの評価と修正、(B) 文章の通し推敲を、この順で行う。
-最後にフロントマターへ実施印 `reviewed_at` を書き込み、`article-post` が投稿前ゲートで実施を確認できるようにする。
+最後に `scripts/mark_reviewed.py` で実施印 `reviewed_at` と実施ログを残し、`article-post` が投稿前ゲートで実施を確認できるようにする。印を手書きしないのは、生成側が推敲していない初稿に自己申告で印を付けられないようにするためである。
 
 ## このスキルの位置づけ
 
@@ -91,13 +91,19 @@ Phase A で事実を直したあとの本文を、全体を1回通して整え�
 ### Phase C: 仕上げと実施印
 
 1. 大きく構成を変える必要が出たら、その旨をyuyaに1行で伝えてから整える。
-2. 修正が終わったら、フロントマターに実施印を書き込む。
+2. 修正が終わったら、**`reviewed_at` を手で書かず、次のスクリプトで刻む。**
 
-   ```yaml
-   reviewed_at: {YYYY-MM-DD}
+   ```bash
+   cd "${REPO_BASH:-$HOME/workspace/article-creator}" && python3 scripts/mark_reviewed.py "drafts/{ファイル名}.md" \
+       --critic-verdict {pass / regenerate / escalate} \
+       --note "{推敲・事実修正の要点を1〜2行}" \
+       --fixed "{直した項目}"
    ```
 
-3. 保存したMDをもう一度Readで読み返し、フロントマターに `reviewed_at` が入ったことを確認する。
+   このスクリプトが `reviewed_at` をフロントマターに入れ、同時に `logs/review/{slug}-{YYYY-MM-DD}.json` へ実施ログを残す。
+   `article-post` の投稿前ゲートは、この印と実施ログの両方がそろっているかを確認する。手で `reviewed_at` を書いた記事は「自己申告」として投稿を止められる。
+
+3. 出力に `reviewed_at: {日付} を刻みました` と実施ログのパスが出たことを確認する。
 
 ---
 

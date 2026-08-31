@@ -377,14 +377,24 @@ def process_media(env: dict, md_path: Path, md_text: str) -> str:
 
 # ---------- main ----------
 
+def verify_reviewed(md_path):
+    """article-review の実施印と実施ログの整合を確かめる（scripts/mark_reviewed.py に委譲）。"""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from mark_reviewed import verify
+
+    return verify(md_path)
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     flags = [a for a in sys.argv[1:] if a.startswith("-")]
     media_only = "--media-only" in flags
+    skip_review_gate = "--skip-review-gate" in flags
 
     if len(args) < 1:
         sys.stderr.write(
-            "usage: python3 scripts/post_to_wp.py drafts/{filename}.md [--media-only]\n"
+            "usage: python3 scripts/post_to_wp.py drafts/{filename}.md "
+            "[--media-only] [--skip-review-gate]\n"
         )
         sys.exit(2)
 
@@ -402,6 +412,25 @@ def main():
         sys.exit(1)
 
     md_text = md_path.read_text(encoding="utf-8")
+
+    # 投稿前ゲート: article-review を実際に通したかを機械的に確かめる。
+    # WordPress への反映もメディアアップロードも巻き戻しづらいので、どちらより前に置く。
+    ok, gate_message = verify_reviewed(md_path)
+    if ok:
+        print(f"レビュー確認: {gate_message}\n")
+    elif skip_review_gate:
+        sys.stderr.write(
+            "警告: レビュー確認を飛ばして投稿します（--skip-review-gate）\n"
+            f"  {gate_message}\n\n"
+        )
+    else:
+        sys.stderr.write(
+            "投稿を中止しました。article-review の実施が確認できません。\n"
+            f"  {gate_message}\n"
+            "  どうしても今すぐ投稿する必要があるときだけ --skip-review-gate を付けてください。\n"
+        )
+        sys.exit(1)
+
     # 挿絵・アイキャッチをWPメディアへアップロードし、本文URLとfeatured_mediaを反映
     md_text = process_media(env, md_path, md_text)
     fm, body = parse_frontmatter(md_text)
