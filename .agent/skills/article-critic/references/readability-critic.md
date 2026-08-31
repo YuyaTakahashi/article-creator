@@ -1,0 +1,1 @@
+/Users/takahashi_yuya/.claude/skills/article-critic/references/readability-critic.md

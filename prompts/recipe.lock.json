@@ -1,14 +1,19 @@
 {
-  "version": "v4",
-  "hash": "89d40f87026e3f78dccc85976d45435b6977423b3f1cf0fefe519a1965f0dc8a",
+  "version": "v5",
+  "hash": "d93b0cce0791ac43e7f3572a138b220a4f5bf1d38c7403ad9f493f1bd957c850",
   "updated_at": "2026-09-01",
-  "note": "実務セクションの4点を重要度順にし、裏づけのない項目は落としてよい形に緩和。article-critic を Step 5.5 / 8.5 の必須ゲートとして SKILL に復帰。reviewed_at は scripts/mark_reviewed.py だけが刻む形に変更。",
+  "note": "article-criticスキルを新規追加。Step5.5/8.5の品質ゲートが自己採点の代用ではなく実体のスキルとして動くようになる（テンプレ準拠/文章スタイル/読み手目線/読みやすさの4軸ルーブリック）",
   "files": {
     "prompts/01_information_gathering.md": "5efa07c6fbdf67f1f95e9fd401f4e4ad0ae7b6c89278644ec470eac27c553076",
     "prompts/02_polishing.md": "a5e711b2df5cee9d7c95ac44b4999fb51cd337c7fd8bba40057b9a84c5fa10b9",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
+    ".agent/skills/article-critic/SKILL.md": "d28bd02dbd63b40ff5f2a6ad370edcd063e0dabecb5323b383bfa6d01e87be8e",
+    ".agent/skills/article-critic/references/template-critic.md": "485b54112c7f0b96b644ce2c2b0116b3784d284919afb26b0054050d61c1e85f",
+    ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
+    ".agent/skills/article-critic/references/reader-critic.md": "a9669fc8a8845dc407582e241bb29facd7aa9563ce68fc23287b5a747a1a39fb",
+    ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
     "CLAUDE.md": "99f08c3a86dad3a3c9518080a234da83c57c2d5b53ab4a6ce2c214caeb3403ea"
   }
 }
