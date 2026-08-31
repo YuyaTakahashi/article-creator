@@ -3,6 +3,19 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v5 — 2026-09-01
+
+article-criticスキルを新規追加。Step5.5/8.5の品質ゲートが自己採点の代用ではなく実体のスキルとして動くようになる（テンプレ準拠/文章スタイル/読み手目線/読みやすさの4軸ルーブリック）
+
+レシピhash: `d93b0cce0791`
+
+変更されたファイル:
+  - .agent/skills/article-critic/SKILL.md（レシピに追加）
+  - .agent/skills/article-critic/references/readability-critic.md（レシピに追加）
+  - .agent/skills/article-critic/references/reader-critic.md（レシピに追加）
+  - .agent/skills/article-critic/references/style-critic.md（レシピに追加）
+  - .agent/skills/article-critic/references/template-critic.md（レシピに追加）
+
 ## v4 — 2026-09-01
 
 実務セクションの4点を重要度順にし、裏づけのない項目は落としてよい形に緩和。article-critic を Step 5.5 / 8.5 の必須ゲートとして SKILL に復帰。reviewed_at は scripts/mark_reviewed.py だけが刻む形に変更。

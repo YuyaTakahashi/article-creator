@@ -22,4 +22,9 @@ prompts/02_polishing.md
 prompts/03_eyecatch.md
 .agent/skills/article-creator/SKILL.md
 .agent/skills/article-review/SKILL.md
+.agent/skills/article-critic/SKILL.md
+.agent/skills/article-critic/references/template-critic.md
+.agent/skills/article-critic/references/style-critic.md
+.agent/skills/article-critic/references/reader-critic.md
+.agent/skills/article-critic/references/readability-critic.md
 CLAUDE.md
