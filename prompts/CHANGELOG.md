@@ -3,6 +3,18 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v7 — 2026-09-01
+
+語源・提唱者のあとに続く内容セクションを効果/実務でどう使われるかの2つに絞るルールを追加(仕組み・原理は定義セクションへ、対比・反論は効果セクションへ統合)。CLAUDE.md/01_information_gathering.md/02_polishing.mdとarticle-criticのtemplate-critic.mdのH2構成順序ルーブリックに反映
+
+レシピhash: `525ad6c873d4`
+
+変更されたファイル:
+  - .agent/skills/article-critic/references/template-critic.md
+  - CLAUDE.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
 ## v6 — 2026-09-01
 
 提唱の根拠になった実験(心理学実験など)がある場合、実験の内容(仮説・対象・方法・結果)を提唱者の経歴・動機を語る段落と混ぜず独立した段落/セクションとして書くルールを追加。CLAUDE.md/01_information_gathering.md/02_polishing.mdと、article-criticのtemplate-critic.mdの評価基準に反映

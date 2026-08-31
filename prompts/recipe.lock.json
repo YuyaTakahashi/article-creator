@@ -1,19 +1,19 @@
 {
-  "version": "v6",
-  "hash": "9cf6c322f97fb9e912cef610a14da14bb65a196581f9f666a68478cdf657d736",
+  "version": "v7",
+  "hash": "525ad6c873d4a32a4b7c25519fb18c38f3e63599fe1b13d07202c29a994da614",
   "updated_at": "2026-09-01",
-  "note": "提唱の根拠になった実験(心理学実験など)がある場合、実験の内容(仮説・対象・方法・結果)を提唱者の経歴・動機を語る段落と混ぜず独立した段落/セクションとして書くルールを追加。CLAUDE.md/01_information_gathering.md/02_polishing.mdと、article-criticのtemplate-critic.mdの評価基準に反映",
+  "note": "語源・提唱者のあとに続く内容セクションを効果/実務でどう使われるかの2つに絞るルールを追加(仕組み・原理は定義セクションへ、対比・反論は効果セクションへ統合)。CLAUDE.md/01_information_gathering.md/02_polishing.mdとarticle-criticのtemplate-critic.mdのH2構成順序ルーブリックに反映",
   "files": {
-    "prompts/01_information_gathering.md": "3979e275f7c01d36467806ba199dad31aa31f7283f7032a1c1f40fb492aa40b5",
-    "prompts/02_polishing.md": "236395b09dba4adf42ac288927586544dc78aeeb0abb8e3699656af3068b5855",
+    "prompts/01_information_gathering.md": "1836857e6b4bf3bdc4fde26ef11e1c3b582fa13af604956f3ef083f4a5cac7dd",
+    "prompts/02_polishing.md": "4542749dcedb8ca379a1461f903a607884bb186531e2630916cb13bd9ab3e79e",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
     ".agent/skills/article-critic/SKILL.md": "d28bd02dbd63b40ff5f2a6ad370edcd063e0dabecb5323b383bfa6d01e87be8e",
-    ".agent/skills/article-critic/references/template-critic.md": "90fd674e155e1520f257a5364a98ecdef571a65d3680ba84e93482b6ace4a4b3",
+    ".agent/skills/article-critic/references/template-critic.md": "d6af7482b97c44369d99862821d29fc39b3af67edbdaf1cbe8a969e0b75594c4",
     ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
     ".agent/skills/article-critic/references/reader-critic.md": "a9669fc8a8845dc407582e241bb29facd7aa9563ce68fc23287b5a747a1a39fb",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
-    "CLAUDE.md": "e6e7ec542429e1789d5149cc1701f61bc3297739677ba105d25d86a66c34870e"
+    "CLAUDE.md": "74a3959c58ddbe4c6345b37d54dfd247f9e970806682e178debe402fdb8eb6d8"
   }
 }
