@@ -1,0 +1,30 @@
+[Mon Aug 17 01:28:43 JST 2026] 週次バッチ開始（week 2026-W34）
+シートへの反映を確認しました。3件すべて `レビュー待ち`・生成日 2026-08-17・Doc URL・slug・category_id・excerpt・R列アイキャッチプロンプトが正しく入っています。
+
+Step 5（Slack投稿）は月曜レポートに委譲のため実施なし。バッチ完了です。
+
+---
+
+## ✅ 週次ドラフト生成バッチ 完了（2026-08-17）
+
+**対象選定**：提案中60件のうち、G列=TRUE と 提案元=Slack はゼロ。全件「公開記事N本」がN=1で並ぶため、ID昇順の上位3件を採用（G-013／G-014／G-015）。
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-013 | IaC（Infrastructure as Code） | レビュー待ち | [Doc](https://docs.google.com/document/d/1v7Y02HNsW-3JD-xbKApGQ2qHdel4tf056CH3Ce8H5C0/edit) |
+| G-014 | OOUX（Object-Oriented UX） | レビュー待ち | [Doc](https://docs.google.com/document/d/1agm91fI9k2W983UQ0hhqmTXUXFHVBRvXZraqja2sb28/edit) |
+| G-015 | SQLインジェクション | レビュー待ち | [Doc](https://docs.google.com/document/d/1hBerdM6FGytFINrWqLR8Y6ClGzws8Iv_1iHK2Eseolw/edit) |
+
+**重複チェック**：3件とも `check_duplicate.py` はあいまい一致でヒットしたが、いずれも対象語そのものの記事ではなく（IaC→現在バイアス等／OOUX→OOUIのみ／SQLi→プロンプトインジェクションのみ）、実際の重複記事なしと判断して生成。**見送り・escalate はゼロ**。
+
+**主なファクト（一次情報で確認）**
+- IaC：CFEngine 1993（Burgess）/ Puppet 2005（Kanies）/ Chef 2009（Jacob）/ Terraform 2014（HashiCorp）、体系化=Kief Morris 2016
+- OOUX：Sophia Prater、2015年 A List Apart 記事で普及、ORCAプロセス
+- SQLi：Jeff Forristal（rain.forest.puppy）が1998年 Phrack 第54号で報告
+
+**書き戻し**：3件とも update_row webhook `ok:true`（row 14/15/16）。シート再読込で 状態=レビュー待ち・生成日・Doc・slug・excerpt・category_id・R列アイキャッチプロンプトの反映を確認。`flag:false` で生成リクエスト消化。
+
+**Slack**：投稿なし（月曜レポート `sendMondayReport` に委譲。書き戻しは11時前に完了）。
+
+- 保存先MD：`drafts/IaC.md` / `drafts/OOUX.md` / `drafts/SQLインジェクション.md`（`reviewed_at: 2026-08-17` 付与、中立性・定義文ルール・ルビ記法を適用済み）
+[Mon Aug 17 01:41:41 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W34.marker

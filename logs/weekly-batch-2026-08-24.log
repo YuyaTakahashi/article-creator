@@ -1,0 +1,36 @@
+[Mon Aug 24 00:30:21 JST 2026] 週次バッチ開始（week 2026-W35）
+OK: レシピは v1（cf04c3f72083）のまま
+[Mon Aug 24 00:30:25 JST 2026] レシピ版を用語くんに通知: v1 → {"ok":true,"version":"v1","previous":"v1","changed":false}
+すべて反映を確認しました。Step 5（Slack投稿）はこのバッチでは行わない指定（月曜レポートに委譲）なのでスキップし、完了報告します。
+
+---
+
+## サマリー
+
+週次ドラフト生成バッチ完了。今回は**作り直し2件＋新規1件（重複で見送り）**の計3件を処理。作り直し2件は最新レシピ v1 でゼロから書き直し、Doc化・用語DB書き戻しまで完了。Slack告知は指定どおり月曜レポートに委譲（本バッチでは投稿せず）。
+
+## 処理結果
+
+✅ **G-013 IaC（作り直し v0→v1）** — status: レビュー待ち
+- 旧稿を `drafts/_archive/IaC_v0_2026-08-24.md` へ退避 → 最新レシピで再執筆 → v1刻印（hash `cf04c3f72083`）
+- 新Doc: https://docs.google.com/document/d/1QCqfWr9zSQKiwB5VjI0Fx5ONE4HUOfa-USUdbMU14gU/edit （旧Docは保持）
+- 主な改稿点: 用語の起源を「Kief Morris が命名」から史実（DevOps界隈で自然発生、Morris は2016年の書籍で体系化）へ是正。snowflake server／設定ドリフトの当時の課題を追記
+
+✅ **G-014 OOUX（作り直し v0→v1）** — status: レビュー待ち
+- 旧稿を `_archive/OOUX_v0_2026-08-24.md`・`OOUX_v2-alt_v0_2026-08-24.md` へ退避 → 再執筆 → v1刻印
+- 新Doc: https://docs.google.com/document/d/1yAvo8xzpEfw84AYbSY-6fbjRAuaROjCvcbKtPz32qqI/edit （旧Docは保持）
+- 主な改稿点: 旧稿の「2013年ごろ提唱」の**誤りを訂正**（実際は2015年 A List Apart 初出）。語源を年表から、Sophia Prater が CNN 2012選挙特番UXで直面した"フランケンシュタイン設計"の具体エピソードで書き起こし
+
+✅ **G-075 誤差逆伝播法** — status: 見送り（WP重複）
+- WP に既存下書きあり（id=39205 slug `backpropagation`）。備考の「すでにWPには追加してあるよ」通り重複確定 → 生成せず見送り、備考に既存URL記録
+
+## 書き戻し（update_row）
+
+3件とも `ok:true` を確認（row 14 / 15 / 75）。作り直し2件は S列=v1・T列=hash・U列(作り直しフラグ)=FALSE で消化、I列を新Docに差し替え、L列に旧Docリンク、V列に作り直しメモを記録済み。
+
+⚠️ **共有事項**（次アクションの判断材料）
+- G-075 の「用語」セル値が Slackコマンドの文がそのまま入り `誤差逆伝播法を追加して すでにWPには追加してあるよ` と壊れています。見送り処理は済みましたが、この行はセル値を整えるか非表示にすると一覧が読みやすくなります。
+- 生成ドラフト（`drafts/IaC.md` `OOUX.md` ほか）と `pipeline/doc-ready/` は git 未コミットのまま置いています。アーカイブとして commit するか、このセッションで残すか、ご希望あれば対応します。
+
+Slack告知は不要（月曜11時 `sendMondayReport` が今週分をまとめて投稿）。escalate はなし。
+[Mon Aug 24 00:44:55 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W35.marker

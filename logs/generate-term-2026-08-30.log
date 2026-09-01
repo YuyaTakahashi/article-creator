@@ -1,0 +1,67 @@
+[Sun Aug 30 09:54:35 JST 2026] 単発生成: ループエンジニアリング
+OK: レシピは v3（bd2516dfe937）のまま
+[Sun Aug 30 09:54:37 JST 2026] レシピ版を用語くんに通知: v3 → {"ok":true,"version":"v3","previous":"v3","changed":false}
+Not logged in · Please run /login
+[Sun Aug 30 09:54:39 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-08-30.log
+[Sun Aug 30 10:03:36 JST 2026] 単発生成: ループエンジニアリング
+OK: レシピは v3（bd2516dfe937）のまま
+[Sun Aug 30 10:03:38 JST 2026] レシピ版を用語くんに通知: v3 → {"ok":true,"version":"v3","previous":"v3","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
+**ループエンジニアリング / レビュー待ち / https://docs.google.com/document/d/1kYKtEt3oIe6I6GQ6vm3tENdEr_HQ-LCZEjuQACQh-BE/edit**
+
+---
+
+## サマリー
+G-077「ループエンジニアリング」のドラフトを生成し、Doc化・用語DB書き戻しまで完了した。ただし本日 09:50 の実行が途中で落ちており、その残骸（事実誤りを含むDoc）が残っていたので作り直した。
+
+## 状態
+- ✅ ドラフト: `drafts/ループエンジニアリング.md`（v3 / bd2516dfe937 / reviewed_at 2026-08-30）
+- ✅ Doc: 新規作成（上記URL）／用語DB G-077 = レビュー待ち、slug・excerpt・category_id 22・アイキャッチプロンプト・生成バージョンまで反映済み
+- ✅ WP重複チェック: 同タイトル・同slugの既存記事なし（本文に語が出るだけの `llm-design-system` が1件）
+
+## ⚠️ 前回実行の残骸を直した点
+09:50 の実行が生成物を残したまま失敗しており、次の欠陥があった。すべて直した。
+
+- **提唱者の記述が誤り**。旧版は swyx が命名したとしていたが、実際は Peter Steinberger の X投稿（2026年6月、「エージェントにプロンプトを打つループを設計すべきだ」）が発端で、名前と骨格を与えたのは Addy Osmani の記事。swyx は「Loopcraft: The Art of Stacking Loops」で積み重ねる捉え方を広めた側、LangChain が4層の設計パターンに整理した側。裏づけは Osmani 本人の記事と LangChain のブログを直接取得して確認した。
+- 4層の出典が個人のMedium記事だったので、一次にあたる LangChain のブログに差し替えた。
+- IBM Bob の「人手なしで遂行」は言い過ぎなので、IBM が自社製品をこの考え方の実装として位置づけている、という記述に落とした。
+- 「理解の負債」を Osmani の言葉として明示し、彼が並べて挙げている「検証の負債」「思考の明け渡し」も足した。
+- 検証できなかった Karpathy の引用は落とした。
+- ルール違反の修正: タイトルの英語併記を削除、`slug: loop-engineering` を追加、`category_field` を `glossary-category` に訂正、ルビを単語ごと（`Shawn¥ショーン¥ Wang¥ワン¥` 形式）に、アイキャッチプロンプトを `prompts/03_eyecatch.md` の定型に、関連用語を引用ブロックからリストに。
+- 旧Docは削除せず、タイトルを `【旧版・レビュー不要】…` に変更した（レビュアーが誤って開かないようにするため）。消してよければ言ってください。
+
+Slackへの投稿はしていません（告知は月曜レポート）。
+[Sun Aug 30 10:14:07 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-08-30.log
+[Sun Aug 30 16:43:19 JST 2026] 単発生成: agentic RAG
+OK: レシピは v3（bd2516dfe937）のまま
+[Sun Aug 30 16:43:23 JST 2026] レシピ版を用語くんに通知: v3 → {"ok":true,"version":"v3","previous":"v3","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
+[Sun Aug 30 16:44:30 JST 2026] 単発生成: agentic RAG
+OK: レシピは v3（bd2516dfe937）のまま
+[Sun Aug 30 16:44:33 JST 2026] レシピ版を用語くんに通知: v3 → {"ok":true,"version":"v3","previous":"v3","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+All steps completed and verified against the sheet.
+
+```
+対象用語   : agentic RAG（記事タイトル: エージェンティックRAG）
+用語DB     : G-078 / status=レビュー待ち
+Doc        : https://docs.google.com/document/d/1vhmEMJCi4r99-U8X8mgGy7c2OZ9J3VJZF95Dx5eFqPU/edit
+保存先     : drafts/agentic RAG.md（初稿控え: drafts/_baseline/agentic RAG_v3.md）
+カテゴリ   : テクノロジー・技術（418） / slug: agentic-rag
+レシピ版   : v3（bd2516dfe937）
+重複チェック: 重複なし（check_duplicate.py 終了コード0）
+```
+
+記事の内容:
+
+- 出典はディープリサーチではなくWebSearch＋WebFetch（無人モードの規定どおり）。一次情報は RAG原論文（arXiv:2005.11401）、RAGの7つの失敗点（arXiv:2401.05856）、Self-RAG（arXiv:2310.11511）、Agentic RAGサーベイ（arXiv:2501.09136）、3方式の比較実験（arXiv:2601.07711）、Weaviate・LlamaIndex・Anthropic の技術ブログ。
+- 語源セクションは「一本道のRAGが実運用で何に詰まったか（ディーキン大学の3システムでの失敗報告）→ AI自身に引き直させる狙い → 2024年の命名と2025年の体系化」で構成。
+- 効果・つまずきは実験値で裏づけ（NDCG@10 +2.8ポイント、再検索時に53%が同じ文書、広い話題ではF1 64.6対87.9、処理時間1.5倍・入力トークン3.3倍）。
+- 特定企業への寄せはなし。関連用語は日本語のみ4件。
+
+⚠️ 1点報告: `register_draft.py` の初回実行が GAS webhook のリダイレクト先で HTTP 404 を返して落ちました。ただし行追加（G-078）はサーバー側で成功していたため、update_row を同じペイロードで再送して `{"ok":true,"row":78}` を確認済みです。初稿控え（`_baseline`）はスクリプトが到達しなかったので手動でコピーしました。同じ404が再発するようなら post 側のリダイレクト処理を直したほうがいいですが、今回の再送は素通りしたので単発の可能性が高いです。
+
+Slackへの投稿はしていません（告知は月曜レポート）。
+[Sun Aug 30 16:54:42 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-08-30.log

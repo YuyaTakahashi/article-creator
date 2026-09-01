@@ -1,0 +1,130 @@
+---
+name: article-post
+description: drafts/ フォルダのMDファイルをWordPressに新規下書き投稿または既存投稿の更新を行うスキル。article-creator で生成したMDを人間が確認・編集したあとに呼び出す。
+---
+
+# article-post スキル
+
+`drafts/` フォルダに保存されたMDファイルを、WordPress（uxdaystokyo.com）に投稿する。
+
+- **新規作成モード**: フロントマターに `wp_post_id` が無い場合、新しい下書きをPOSTする
+- **更新モード**: フロントマターに `wp_post_id` がある場合、その投稿を更新する
+
+---
+
+## 最重要ルール：WordPress へのアクセスは必ずローカルの Python で行う（厳守）
+
+WordPress への投稿・更新・メディアアップロード・GET 確認・タクソノミー検出は、**すべて**ユーザーのローカルターミナルで次のスクリプトを実行して行う。
+
+```
+cd ~/workspace/article-creator
+python3 scripts/post_to_wp.py drafts/{ファイル名}.md
+```
+
+このスクリプトが、HTML変換・本文/アイキャッチ画像のアップロード・新規/更新の判定・POST・成功時の `wp_post_id` 追記まで、すべて一気通貫で行う。
+
+### 絶対にやってはいけないこと（再発防止）
+
+- Cowork のサンドボックス（`mcp__workspace__bash`）から uxdaystokyo.com へ **一切アクセスしない**。POST はもちろん、GET・疎通確認・カテゴリ/タクソノミーの自動検出・`/wp/v2/media` へのアップロードも全部ローカルの py に任せる。
+- サンドボックスから外部 HTTPS は 403（Tunnel connection failed）でブロックされる。試すこと自体が無駄なので、**接続テストすらしない**。
+- `web_fetch` で WP REST API を叩いて代用しようとしない。
+- このSKILL.md内に過去あった「サンドボックスで urllib.request を使って POST する Python」は廃止した。復活させない。
+
+### Claude（サンドボックス側）がやってよいこと
+
+- `drafts/{ファイル名}` の Read と、フロントマター・本文の編集
+- フロントマターの確認・修正（`glossary` 投稿タイプの `category_field` は `glossary-category`）
+- **投稿前チェック（中立性）**：MD本文・`title`・`excerpt`・関連用語に特定企業名（OPENLOGI 等）やその企業固有の物流・EC 文脈が混ざっていないかを確認し、混ざっていれば中立的な一般表現に直す。UX TIMES は外部向けの一般記事のため、ユーザー個人設定の「会社名は OPENLOGI 表記」ルールはここでは適用しない（例外）
+- 提唱者ポートレートの検索（WebSearch / WebFetch は Wikipedia 等への参照であり、WP へのアクセスではないので可）と、本文への `<figure>` 挿入
+- ローカル実行コマンドをユーザーに案内する
+
+---
+
+## 実行手順
+
+### Step 1: MDファイルの読み込みとパース
+
+`drafts/{filename}` を Read ツールで読み込む。存在しない場合は `drafts/` の一覧を提示して再選択させる。
+
+YAMLフロントマターから以下を確認する：
+
+| フィールド | 必須 | 用途 |
+|---|---|---|
+| `title` | ○ | WP投稿タイトル |
+| `excerpt` | ○ | WP投稿抜粋（`## 最小限の説明` と完全一致） |
+| `category_id` | ○ | カテゴリID |
+| `category_field` | ○ | タクソノミーフィールド名。`glossary` では `glossary-category` |
+| `wp_post_id` | △ | あれば更新モード、無ければ新規作成モード |
+| `eyecatch_image` | - | あればローカル py が featured_media としてアップロードする |
+| `eyecatch_prompt` | - | 完了報告に出力（WP投稿には使わない） |
+
+`category_field` が `categories` のままになっていたら、`glossary` 投稿タイプ用に `glossary-category` へ修正する。
+
+### Step 2: 本文の整え（任意・サンドボックスで可）
+
+HTML変換はローカルの `scripts/post_to_wp.py`（`md_to_html`）が行うため、Claude は HTML を作らない。MD のまま整える。
+
+- `-- wp分割ライン--` の前に `## 最小限の説明`、直後に見出しなしのリード文がある構造を確認する。
+- ルビは `英字¥カタカナ¥` 記法のまま残す（py 側が `<ruby>` に変換する）。
+
+### Step 3: 提唱者の顔画像挿入（毎回必須・デフォルト）
+
+**ユーザーから毎回指示されなくても必ず実行する。** `## 語源・提唱者` セクションの `¥` ルビ記法から人物名（英語）を抽出し、各人物のポートレートを Wikipedia から探して挿入する。
+
+画像URLの取得手順（サンドボックスの WebFetch が JSON で空を返す場合は、Desktop Commander でローカル実行する）：
+
+```
+curl -s "https://en.wikipedia.org/w/api.php?action=query&titles={人物名}&prop=pageimages&piprop=original&format=json" \
+  | python3 -c "import sys,json; p=list(json.load(sys.stdin)['query']['pages'].values())[0]; print(p.get('original',{}).get('source','NONE'))"
+```
+
+`NONE` が返った人物（肖像が存在しない）はスキップする。企業名・製品名は対象外。
+
+挿入位置は、その人物名（英語ルビ）が最初に登場する段落の直後。**顔写真は小さめ・中央寄せ**にし、**キャプションに引用元URLを必ず入れる**。次の形で MD に挿入する（外部 Wikimedia/Wikipedia の URL はそのまま残す。py のメディアアップロード対象は `src="drafts/..."` のローカル画像だけ）。
+
+```html
+<figure style="text-align:center;margin:1.5em auto;"><img src="{image_url}" alt="{name_katakana}" style="width:200px;max-width:45%;height:auto;display:block;margin:0 auto;"><figcaption style="font-size:0.85em;color:#666;">{name_katakana}（出典：{引用元URL}）</figcaption></figure>
+```
+
+### Step 4: ローカル実行コマンドをユーザーに渡す（POSTはしない）
+
+Claude 自身は投稿しない。整えた MD を案内して、ユーザーにローカル実行してもらう。
+
+```
+cd ~/workspace/article-creator
+python3 scripts/post_to_wp.py drafts/{filename}.md
+```
+
+スクリプトの挙動：
+- フロントマターに `wp_post_id` が無ければ新規下書き（status=draft）を作成し、成功時に `wp_post_id` をフロントマターへ自動追記する（次回から更新モード）。
+- `wp_post_id` があれば、その投稿を更新する（status は変更しない）。
+- `eyecatch_image` と本文中の `src="drafts/..."` 画像を `/wp/v2/media` へアップロードする。
+- HTTP エラー時は本文をそのまま標準エラーへ出すので、ユーザーに結果を貼ってもらって対応する。
+
+実行後、ユーザーから返ってきた投稿ID・WP編集URL・HTTPステータスをもとに結果を確認する。401 が出たら `.env` の `WP_USER` / `WP_APP_PASS` を、404 が出たら `WP_POST_TYPE` または `wp_post_id` を確認するよう案内する。**サンドボックスから勝手にリトライしない。**
+
+---
+
+## 完了報告
+
+### 新規作成時（ユーザーのローカル実行が成功したあと）
+
+```
+モード        : 新規作成
+記事タイトル  : {title}
+カテゴリ      : {category_name}（ID: {category_id}）
+WP下書きURL   : {WP管理画面のedit URL}
+wp_post_id    : {id}（py がフロントマターに追記済み）
+
+アイキャッチ用プロンプト:
+{eyecatch_prompt}
+```
+
+### 更新時
+
+```
+モード        : 更新
+記事タイトル  : {title}
+wp_post_id    : {wp_post_id}
+WP編集URL     : {WP管理画面のedit URL}
+```

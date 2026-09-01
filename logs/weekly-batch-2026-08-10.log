@@ -1,0 +1,24 @@
+[Mon Aug 10 10:14:01 JST 2026] 週次バッチ開始（week 2026-W33）
+✅ 週次ドラフト生成バッチ完了（Slack投稿はStep 5どおり月曜レポートに委譲）。
+
+## サマリー
+「提案中」63件から優先度で上位3件を選定（G列=TRUE・Slack由来はゼロ、全件「公開記事1本」なのでID昇順で G-010/011/012）。重複チェックの結果、1件は見送り、2件を生成→Doc化→用語DB書き戻し（すべて `ok:true`、11時前に完了）。
+
+## 処理結果
+
+| ID | 用語 | 結果 | Doc / 備考 |
+|---|---|---|---|
+| G-010 | Chain-of-Thoughtプロンプティング | ⚠ 見送り | 既存公開記事「Chain-of-Thought」と重複（https://uxdaystokyo.com/articles/glossary/chain-of-thought/ ）→ status=見送り・備考に既存URL記入 |
+| G-011 | Few-shotプロンプティング | ✅ レビュー待ち | https://docs.google.com/document/d/1OFhwheBkwx9Vsv1tfGWewEkmPQC_102Qux3eHzvQrmo/edit （cat22・slug=few-shot-prompting） |
+| G-012 | GUI | ✅ レビュー待ち | https://docs.google.com/document/d/1PAAIgSB21l01V8V22el5oOO1oiS_CyPdsy2tVxtmK2Q/edit （cat347・slug=gui-graphical-user-interface） |
+
+## 各ステップの状態
+- **Step2 生成**: 無人モード・WebSearch/WebFetchでソース収集（Few-shot＝Brown et al. 2020 GPT-3論文・in-context learning／GUI＝Sutherland 1963・Engelbart 1968・Xerox Alto 1973・icon命名 David Canfield Smith 1975・Star 1981・Lisa 1983/Mac 1984・Shneiderman 直接操作 1982）。ファクトチェック済み・中立記述・ルビ記法適用。内蔵レビューを通し `reviewed_at:2026-08-10` を付与。escalateなし。
+- **Step3 Doc化**: フロントマター除去＋タイトル＋レビュー案内行を付け、UX用語フォルダ（1tQU3-…）に text/markdown で作成（Google Doc変換を確認済み、本文2,494字）。
+- **Step4 書き戻し**: `update_row` を3件POST → 全件 `ok:true`（rows 11/12/13）。シート再読で status・DocURL・slug・excerpt・category_id・eyecatch(R列) の反映を確認。生成リクエストは `flag:false` で消化。
+- **Step5**: Slack投稿なし（月曜レポート `sendMondayReport` に委譲）。
+
+⚠ **懸念（軽微）**: G-010の見送りにより今週の新規ドラフトは2本。トップ3が全て同一優先度（公開記事1本）だったため、次点を繰り上げず選定3件をそのまま処理する仕様どおりの挙動です。3本揃えたい場合は次回以降、見送り時に次点を繰り上げる運用に変える余地があります（要MTG合意）。
+
+ローカルの `drafts/Few-shotプロンプティング.md`・`drafts/GUI.md` もアーカイブとして保存済みです。
+[Mon Aug 10 10:41:20 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W33.marker

@@ -1,0 +1,31 @@
+[Fri Aug  7 17:00:04 JST 2026] 月次トレンド開始（第1金曜）
+`ok:true`, `ts:1786089805.588569` — Slack投稿完了。
+
+## ✅ 月次トレンド探索ジョブ完了（2026-08-07 第1金曜）
+
+**用語DBに追加した5件**（proposer:トレンド探索 / context:月次トレンド探索 / 提案中で登録）
+
+| ID | 用語 | 英語 | なぜ今か |
+|---|---|---|---|
+| G-069 | エージェンティックUX | Agentic UX | AIに複雑タスクを委任する前提の設計論。2026年最大のUXシフト |
+| G-070 | 生成UI | Generative UI | UIをその場でAIが生成する新パラダイム(GenUI) |
+| G-071 | アダプティブUI | Adaptive UI | 文脈で構造ごと変わるUI。DBの「レスポンシブWD」と対比可 |
+| G-072 | 空間インターフェース | Spatial Interface | XR/空間コンピューティングの一般化で浮上 |
+| G-073 | アンビエントインテリジェンス | Ambient Intelligence | 環境が先回りして応える「操作させないUX」 |
+
+**除外した候補と理由**
+- マルチモーダル・インタラクション → DBに同名あり（クロスモーダル/モダリティも既存）
+- プロンプトデザイン → 既存の Chain-of-Thought / Few-shotプロンプティング と近接
+- Machine Experience(MX)/Vibe Coding/グラスモーフィズム → 候補として拾ったが、上位5件（AI時代のインターフェース系で一貫）を優先し今回は見送り
+
+**Slack通知**: SLACK_DIGEST_CHANNEL（C024GJ0H3LG）へ用語くん名義で投稿（ts 1786089805）。追加分は翌週以降の金曜DM・月曜レポートに自然に載る。
+
+補足: 既存DBは67件を照合済み。WP公開済みとの重複は後段の記事生成時のWP重複チェックで弾かれる想定（今回は用語DB重複のみ厳密に確認）。
+
+Sources:
+- [The most popular experience design trends of 2026 — UX Collective](https://uxdesign.cc/the-most-popular-experience-design-trends-of-2026-3ca85c8a3e3d)
+- [Agentic Experience (AX) — Notch](https://wearenotch.com/blog/what-is-agentic-experience/)
+- [The GenUI Study (arXiv)](https://arxiv.org/pdf/2501.13145)
+- [The Future of UI Design: Adaptive, Agentic, and Ambient — Medium](https://medium.com/@springmusk/the-future-of-ui-design-past-2026-adaptive-agentic-and-ambient-c1b652d5e941)
+- [UX design trends 2026 — Lyssna](https://www.lyssna.com/blog/ux-design-trends/)
+[Fri Aug  7 17:03:50 JST 2026] 月次トレンド終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/monthly-trend-2026-08-07.log

@@ -1,0 +1,27 @@
+[Thu Jul 30 19:47:49 JST 2026] 週次バッチ開始（week 2026-W31）
+全ステップ完了しました。シート読み直しで反映も確認済みです。
+
+## 週次ドラフト生成バッチ 完了報告（2026-07-30）
+
+**Step 1 選定（提案中64件から優先度順に3枠）**
+- 優先① 生成する=TRUE: 0件
+- 優先② 提案元にSlack: G-068
+- 優先③ 公開記事N本降順: G-005（N=9）, G-006（N=2）
+
+**処理結果**
+
+| ID | 用語 | 判定 | ステータス | Doc / 備考 |
+|---|---|---|---|---|
+| G-068 | トゥーピーの誤謬 | ✅生成 | レビュー待ち | [Doc](https://docs.google.com/document/d/14YFD6k2BgxggUSvu8ThfM5lOZMx-qpgoi2SkW40muYs/edit)（cat_id=20 思考・マインド・バイアス, slug=toupee-fallacy） |
+| G-006 | モーダル | ✅生成 | レビュー待ち | [Doc](https://docs.google.com/document/d/1-qLSLBzec4Zdx1s1QcjcG5Hcb3kVOekKggEhWKZhZD0/edit)（cat_id=347 デザイン・情報設計, slug=modal） |
+| G-005 | ゼロショット／ワンショット | ⏭️見送り | 見送り | 既存記事と重複: `zero-shot-learning-one-shot-learning`（ゼロショット学習・ワンショット学習） |
+
+**各ステップ**
+- Step 2 生成: WebSearchで一次情報を収集（NN/g・MDN・Wikipedia等）。無人モードで対話質問なし、difficulty/it=0.3。ファクトチェックと内部レビュー（リード順＝定義→たとえば、平易化、中立性、ルビ記法）を通し `reviewed_at:2026-07-30` を付与。`drafts/トゥーピーの誤謬.md` `drafts/モーダル.md` に保存。escalate該当なし。
+  - 事実面の注意点を記事に反映済み: トゥーピーの誤謬は命名者を断定せず「Rebecca Watsonに広く帰属されるが正式には未特定」と両論併記／確証バイアスと同一視しない。モーダルは「特定の提唱者なし＝モード概念史（Tesler/Raskin）」として記述、NOMODES開始年は断定回避。
+- Step 3 Doc化: frontmatter除去＋`# タイトル`＋レビュー案内行を付与し、記事ドラフトフォルダにGoogle Doc化（本文取り込み・ルビ・wp分割ライン保持を読み直しで確認）。
+- Step 4 書き戻し: `update_row` を3件POST、いずれも `ok:true`。シート再読で status/Doc/生成日/slug/excerpt/category_id/R列eyecatch_prompt・見送りの備考が反映済みを確認。
+- Step 5 Slack: バッチからは告知投稿せず（月曜レポート `sendMondayReport` に委譲）。
+
+⚠️ 補足1点: 用語DBのGAS `updateRow` は status=「レビュー待ち」書き込み時に、Webhook URL設定があると「記事ドラフトができました」を個別通知する実装が骨格に残っています。デプロイ版の設定次第でG-006/G-068の個別通知が飛んだ可能性があります（バッチ自身は`notify`を呼んでいません）。月曜の統合レポートと重複させたくない場合は、デプロイ版updateRowの個別通知を確認してください。
+[Thu Jul 30 20:06:37 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W31.marker

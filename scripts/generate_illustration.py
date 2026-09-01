@@ -34,25 +34,28 @@ from generate_eyecatch import call_gemini_image, load_env  # noqa: E402
 # セクション・インフォグラフィック用テンプレート。NotebookLM の動画オーバービューのような
 # 白背景・幾何学フラット・こども向けキャッチーなテイストに統一する（アイキャッチには寄せない）。
 # 短い日本語ラベルのみ可。サービス名・ロゴ・ウォーターマーク・cite 注釈は禁止。横長（16:9）構図。
-SECTION_PROMPT_TEMPLATE = """A clean, modern infographic that visualizes the key point of one section of a Japanese UX glossary article, in a minimal explainer style like a NotebookLM video-overview illustration. Compose as a horizontal banner (roughly 16:9).
+SECTION_PROMPT_TEMPLATE = """Create an infographic that visualizes the key point of one section of a Japanese article, in the visual style of NotebookLM's video-overview illustrations — simple, friendly, catchy, easy enough for a child to understand at a glance. Compose as a horizontal banner (roughly 16:9).
 
 STYLE — strict:
-- Background: pure white (#FFFFFF), flat, with generous whitespace; never beige, never cream, no texture
-- Flat modern design built from simple abstract geometric shapes (circles, rounded rectangles, arrows); clean, refined vector look
-- Minimal, modern, understated — not childish, not cartoonish, not cute
-- Restrained color: mostly neutral with only one or two gentle accent colors, used sparingly
-- No heavy gradients, no drop shadows, no photorealism, no neon, no harsh colors
+- Background: clean solid white (#FFFFFF), flat, with generous whitespace; never beige, never cream, no texture
+- Flat design built from simple shapes with thin clean outlines and rounded, friendly forms
+- Restrained accent colors on a mostly white canvas: soft blue as the main color, plus a little warm yellow / soft coral / soft green. No heavy gradients, no drop shadows, no 3D, no photorealism, no neon
 - One main concept diagram centered, with plenty of breathing room around it
 
+CONCRETENESS — the most common failure, avoid it:
+- Draw RECOGNIZABLE EVERYDAY OBJECTS, not abstract dots, bars or generic tokens. A reader must grasp the point without reading the body text
+- Prefer familiar things (a vending machine, a capsule-toy machine, a slot machine, a smartphone, a stamp card, a treasure chest) over featureless geometric markers
+- Keep the objects simple and iconic, like friendly pictograms — cute and approachable is fine here, but never a mascot with a big-eyed face
+
 TEXT — Japanese only, minimal:
-- You MAY place a few very short Japanese words as labels, but ONLY the exact Japanese words specified in SUBJECT below — no other text
-- ABSOLUTELY NO English words, NO service names or brand logos (never write "NotebookLM", "Google", etc.), NO watermarks, NO signatures, NO "cite" or citation-style annotations anywhere
-- Keep any text to single short words; never full sentences
+- Place a few very short Japanese words as labels, using ONLY the exact Japanese words specified in SUBJECT below — no other text
+- ABSOLUTELY NO English or Latin letters, NO service names or brand logos (never write "NotebookLM", "Google", etc.), NO watermarks, NO signatures, NO "cite" or citation-style annotations anywhere
+- Keep any text to single short words or phrases; never full sentences
 
 SUBJECT — visualize this key point as a simple centered infographic (do not draw literal UI screens):
 {metaphor}
 
-OUTPUT: clean, balanced, white-background infographic, child-friendly."""
+OUTPUT: clean, balanced, white-background infographic, catchy and child-friendly."""
 
 
 def main():

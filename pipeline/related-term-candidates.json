@@ -1,0 +1,879 @@
+{
+  "generated_at": "2026-07-19",
+  "published_count": 601,
+  "candidate_count": 61,
+  "removed_published_count": 39,
+  "candidates": [
+    {
+      "term": "ゼロショット／ワンショット",
+      "english": "",
+      "count": 9,
+      "sources": [
+        "プロンプトエンジニアリング",
+        "ゼロショット学習・ワンショット学習",
+        "ナレッジディスティレーション",
+        "インコンテキストラーニング",
+        "トランスファーラーニング",
+        "ファインチューニング",
+        "RAG",
+        "LLM",
+        "ディープラーニング"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": [
+        "https://uxdaystokyo.com/articles/glossary/zero-shot-learni…ne-shot-learning/"
+      ]
+    },
+    {
+      "term": "モーダル",
+      "english": "",
+      "count": 2,
+      "sources": [
+        "オブジェクト指向ユーザーインターフェース（OOUI）",
+        "マイクロインタラクション"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "モードレス",
+      "english": "",
+      "count": 2,
+      "sources": [
+        "オブジェクト指向ユーザーインターフェース（OOUI）",
+        "マイクロインタラクション"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "黄金比",
+      "english": "",
+      "count": 2,
+      "sources": [
+        "自己相似性",
+        "フィボナッチ数列"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": [
+        "https://uxdaystokyo.com/articles/glossary/golden-ratio/"
+      ]
+    },
+    {
+      "term": "API戦略",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロプライエタリ・テクノロジー"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "Chain-of-Thoughtプロンプティング",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロンプト"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "Few-shotプロンプティング",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロンプト"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "GUI",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "オブジェクト指向ユーザーインターフェース（OOUI）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "IaC",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロビジョニング"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "OOUX",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "オブジェクト指向ユーザーインターフェース（OOUI）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "SQLインジェクション",
+      "english": "SQL Injection",
+      "count": 1,
+      "sources": [
+        "プロンプトインジェクション"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "Sales Engineer",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "FDE（Forward Deployed Engineer）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "Server-Sent Events",
+      "english": "SSE",
+      "count": 1,
+      "sources": [
+        "ストリーミングレスポンス"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "Solutions Architect",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "FDE（Forward Deployed Engineer）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "TTFB",
+      "english": "Time To First Byte",
+      "count": 1,
+      "sources": [
+        "ストリーミングレスポンス"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "WebSocket",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "ストリーミングレスポンス"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "アクティブラーニング",
+      "english": "Active Learning",
+      "count": 1,
+      "sources": [
+        "ヒューマン・イン・ザ・ループ"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "エコシステム戦略",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロプライエタリ・テクノロジー"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "エッジAI",
+      "english": "Edge AI",
+      "count": 1,
+      "sources": [
+        "モデル蒸留"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "オブジェクト指向",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "オブジェクト指向ユーザーインターフェース（OOUI）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "オープンソース",
+      "english": "Open Source",
+      "count": 1,
+      "sources": [
+        "プロプライエタリ・テクノロジー"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "カスタマーサクセス",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "FDE（Forward Deployed Engineer）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "クロスモーダル",
+      "english": "Cross-modal",
+      "count": 1,
+      "sources": [
+        "マルチモーダル"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "コンテキスト汚染攻撃",
+      "english": "Context Poisoning Attack",
+      "count": 1,
+      "sources": [
+        "プロンプトインジェクション"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "サイモン効果",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "ストループ効果"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "サービスデザイン",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "ステークホルダーマップ"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "シグニファイア",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "アフォーダンス"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "システムインテグレーター",
+      "english": "SI",
+      "count": 1,
+      "sources": [
+        "FDE（Forward Deployed Engineer）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "ジェイルブレイク",
+      "english": "Jailbreaking",
+      "count": 1,
+      "sources": [
+        "プロンプトインジェクション"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "スタイルガイド",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "スタイルタイル"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "ソフト・ラベリング",
+      "english": "Soft Labeling",
+      "count": 1,
+      "sources": [
+        "モデル蒸留"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "テリトリーマップ",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "ステークホルダーマップ"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "デザイン思考",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "How Might We"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": [
+        "https://uxdaystokyo.com/articles/glossary/design-thinking/"
+      ]
+    },
+    {
+      "term": "デプロビジョニング",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロビジョニング"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "ナレッジグラフ",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "オントロジー"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": [
+        "https://uxdaystokyo.com/articles/glossary/knowledge-graph/"
+      ]
+    },
+    {
+      "term": "バイアスと誤謬の違い",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "代表性ヒューリスティック"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": [
+        "https://uxdaystokyo.com/articles/difference-between-bias-and-error/"
+      ]
+    },
+    {
+      "term": "ヒューマン・アウト・オブ・ザ・ループ",
+      "english": "Human-out-of-the-Loop",
+      "count": 1,
+      "sources": [
+        "ヒューマン・イン・ザ・ループ"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "ヒューマン・オン・ザ・ループ",
+      "english": "Human-on-the-Loop",
+      "count": 1,
+      "sources": [
+        "ヒューマン・イン・ザ・ループ"
+      ],
+      "in_sheet_already": true,
+      "sample_hrefs": []
+    },
+    {
+      "term": "ファインマン・テクニック",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロテジェ効果"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "プロブレムステートメント",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "How Might We"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": [
+        "https://uxdaystokyo.com/articles/glossary/problem-statement/"
+      ]
+    },
+    {
+      "term": "ベンダーロックイン",
+      "english": "Vendor Lock-in",
+      "count": 1,
+      "sources": [
+        "プロプライエタリ・テクノロジー"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "ホットハンド現象",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "クラスター錯視"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "マルチモーダル・インタラクション",
+      "english": "Multimodal Interaction",
+      "count": 1,
+      "sources": [
+        "マルチモーダル"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "メタ思考",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "ミルトンモデル心理学"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": [
+        "https://uxdaystokyo.com/articles/glossary/meta-thinking/"
+      ]
+    },
+    {
+      "term": "モダリティ",
+      "english": "Modality",
+      "count": 1,
+      "sources": [
+        "マルチモーダル"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "モラル信任効果",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "ペルツマン効果"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "ラーニング・バイ・ティーチング",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プロテジェ効果"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "リスクコミュニケーション",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "正常性バイアス"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "レスポンシブウェブデザイン",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "スタイルタイル"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "レーティング",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "5ハットラックス（5つの帽子掛け）"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "回避行動",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "正常性バイアス"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "報酬モデル",
+      "english": "RM",
+      "count": 1,
+      "sources": [
+        "RLHF"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "帰属理論",
+      "english": "Attribution Theory",
+      "count": 1,
+      "sources": [
+        "根本的な帰属の誤り"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "強化学習",
+      "english": "RL",
+      "count": 1,
+      "sources": [
+        "RLHF"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "感情バイアス",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "6つの帽子思考法"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "教師あり微調整",
+      "english": "SFT",
+      "count": 1,
+      "sources": [
+        "RLHF"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "知的財産権",
+      "english": "IP / Intellectual Property",
+      "count": 1,
+      "sources": [
+        "プロプライエタリ・テクノロジー"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "自己防衛機制",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "正常性バイアス"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "行為者-観察者バイアス",
+      "english": "Actor-Observer Bias",
+      "count": 1,
+      "sources": [
+        "根本的な帰属の誤り"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "連続性の法則",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プレグナンツの法則"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    },
+    {
+      "term": "類似性の法則",
+      "english": "",
+      "count": 1,
+      "sources": [
+        "プレグナンツの法則"
+      ],
+      "in_sheet_already": false,
+      "sample_hrefs": []
+    }
+  ],
+  "removed_published": [
+    {
+      "term": "ピグマリオン効果",
+      "english": "",
+      "count": 5,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "エスノグラフィー調査",
+      "english": "",
+      "count": 4,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "チャンクキング",
+      "english": "",
+      "count": 4,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "マズローの欲求段階説",
+      "english": "",
+      "count": 4,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "Narrow AI",
+      "english": "",
+      "count": 3,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "コンテクスチュアル・インクワイアリ",
+      "english": "",
+      "count": 3,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "埋没費用",
+      "english": "",
+      "count": 3,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "記憶の二重貯蔵モデル",
+      "english": "",
+      "count": 3,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "CTA",
+      "english": "call to action",
+      "count": 2,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "NLP",
+      "english": "",
+      "count": 2,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "アンカリング効果",
+      "english": "",
+      "count": 2,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "ゲシュタルト",
+      "english": "",
+      "count": 2,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "フレーミング",
+      "english": "",
+      "count": 2,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "ポライトネス",
+      "english": "",
+      "count": 2,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "記憶の2重貯蔵モデル",
+      "english": "",
+      "count": 2,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "5つの帽子掛け",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "HEARTメトリクス",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "OOUI",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "UI設計のユーザビリティヒューリスティック",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "エスノグラフィ",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "カクテルパーティー効果",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "システム１・システム２",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "シンプソンのパラドックス",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "ダブルバインド効果",
+      "english": "エリクソニアン・ダブルバインド",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "ツァイガルニクス効果",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "ネット・プロモーター・スコア",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "バーナム効果",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "ヒューリスティック",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "プライミング",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "プローピング",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "マズローの欲求階層説",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "モーメント・オブ・トゥルース",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "共感マップ・エンパシーマップ",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "埋没コスト",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "大規模言語モデル",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "損失回避",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "期待効果",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "機能は形態に従う",
+      "english": "Form Follows Function",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    },
+    {
+      "term": "汎用人工知能",
+      "english": "",
+      "count": 1,
+      "reason": "リンク先が公開ページ"
+    }
+  ]
+}

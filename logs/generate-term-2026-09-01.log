@@ -1,0 +1,99 @@
+[Tue Sep  1 01:00:24 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v4（89d40f87026e）のまま
+[Tue Sep  1 01:00:30 JST 2026] レシピ版を用語くんに通知: v4 → {"ok":true,"version":"v4","previous":"v3","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+✅ 完了
+
+```
+対象用語   : 行為者-観察者バイアス（G-062 / Actor-Observer Bias）
+ステータス : レビュー待ち
+Doc URL   : https://docs.google.com/document/d/1hykiw4roACUohBczr4r1lfN6beyNtSTgDAQNYGMokSU/edit
+保存先     : drafts/行為者-観察者バイアス.md
+レシピ版   : v4（89d40f87026e）／ v3 から作り直し
+カテゴリ   : 思考・マインド・バイアス（ID: 20）
+```
+
+## 新規生成ではなく「作り直し」として処理した
+
+この用語は 8/31 に v3 で生成済みで、すでにレビュー待ちでした。今日 01:00:19（`generate-term.sh` のログ開始 01:00:24 の直前）に v3 の下書きが `drafts/_archive/行為者-観察者バイアス_v3_2026-09-01.md` へ退避されており、レシピも v3 → v4 に上がっていたため、`pipeline/batch-instructions.md` の作り直し手順に従いました。前の Doc は消さず、備考（L列）に `旧版v3: <旧DocURL>` を残しています。旧稿は参照せず v4 レシピでゼロから書き直しました。
+
+## 中身の判断
+
+数値は Malle (2006) の原文PDFを `pdftotext` で開いて直接照合しています（173件／参加者14,686人／全体 d = −0.016〜0.095／負の出来事61件で d ≈ 0.24／正の出来事45件で d ≈ −0.15／親密 0.245 対 見知らぬ 0.072／引用1,500件超）。この用語は 2006年のメタ分析で「全体としてはほぼ効果なし、まずいことが起きた場面に限って現れる」と修正されているので、語源セクションで再検証の結論だけ先に置き、条件は独立セクション（「効くのは、まずいことが起きた場面」）で詰める構成にしました。
+
+実務セクションは Nielsen Norman Group（Amy Schade, 2013）の「所見をユーザーではなく設計の要素で書く」という指摘を軸にひとつに絞り、v4 で緩和された「裏づけのない項目は落としてよい」に従って「誰と使うか」は落としています。
+
+⚠️ 懸念: article-critic のスキル定義が見つからない
+
+`article-creator` の Step 5.5 / 8.5 が必須ゲートとして指定している `article-critic` は、`~/.claude/skills/` にも `agentic-solution/skills/` にも実体がありません（あるのは `agent-critic`）。Skill ツールでは起動できないため、直近ログ（`article-critic-logs/2026-08-24/cagr_*.json`）に残っていた4軸×5項目×3点のルーブリックを本体が内部適用し、今日付でログを書きました（template 15 / style 15 / readability 14 / reader 14 → pass）。初稿からの修正は受動態4箇所、80字超の長文2箇所、「効果量」の未説明です。
+
+スキル経由の評価ではないので、`register_draft.py` の当日ログ確認は通りますが、ゲートの実体は自己採点です。`article-critic` の SKILL.md を作るか、article-creator 側の参照を実在するスキル名に直すか、どちらにしますか？
+[Tue Sep  1 01:21:44 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-09-01.log
+[Tue Sep  1 07:39:00 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v5（d93b0cce0791）のまま
+[Tue Sep  1 07:39:04 JST 2026] レシピ版を用語くんに通知: v5 → {"ok":true,"version":"v5","previous":"v4","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+✅ 完了
+
+```
+対象用語   : 行為者-観察者バイアス（G-062）
+ステータス : レビュー待ち
+Doc URL   : https://docs.google.com/document/d/1Bw9iBKKQwosuqqCUkeyIFC_gXc2Cd5w1C10Icbvin9s/edit
+```
+
+**実行内容**
+
+| 項目 | 結果 |
+|---|---|
+| 用語DB | B列に既存（G-062）。補足・文脈は「関連用語ギャップから自動抽出」 |
+| WP重複チェック | 重複なし（`check_duplicate.py` exit 0）。本文に語が出る既存記事「根本的な帰属の誤り」は本文からリンク |
+| ソース | Malle (2006) メタ分析PDF・Jones & Nisbett (1971)・Wikipedia・EBSCO・User Interviews。PDFは `pdftotext` で本文抽出して数値を直接参照 |
+| article-critic | Step 5.5 = pass（template 15 / style 13.75 / reader 13 / readability 12、指摘3件）→ 反映 → Step 8.5 = pass（15 / 13.75 / 14 / 14）。escalateなし |
+| 保存 | `drafts/行為者-観察者バイアス.md` / `stamp_version.py` で `v5`（`d93b0cce0791`） |
+| 書き戻し | `完了: G-062 / status=レビュー待ち` を確認。S列 v5・V列「2026-09-01 v4 → v5 で作り直し」も反映済み |
+
+**この用語は今朝01:19に v4 で生成済みでした。** レシピが v5（article-critic 追加）に上がっていたため、作り直しとして扱っています。v4 の本文は `drafts/_archive/行為者-観察者バイアス_v4_2026-09-01.md` に退避し、旧Docは消さずL列に `旧版v4:` として残しました。
+
+⚠️ 懸念1件（ブロッカーではない）
+
+Doc変換で提唱者（リチャード・ニスベット）の `<figure>` が画像なしのテキストに潰れ、次の段落と連結しました。MD側には画像タグが残っているのでWP投稿時には正しく出ます。Docのレビューでは写真が見えない点だけ、あかねさんに伝わっているとよさそうです。
+
+なお本文中の外部URL2件（Malle論文の `(2006)`、MIT PDFの `&`）は、`post_to_wp.py` の `LINK_RE = \[([^\]]+)\]\(([^)]+)\)` がカッコで途切れるため `%28/%29`・`%26` にエンコードしています。5URLすべて200を確認済みです。
+
+Slackへは投稿していません（月曜レポートがまとめて出す運用のため）。
+[Tue Sep  1 07:57:35 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-09-01.log
+[Tue Sep  1 08:26:19 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v7（525ad6c873d4）のまま
+[Tue Sep  1 08:26:24 JST 2026] レシピ版を用語くんに通知: v7 → {"ok":true,"version":"v7","previous":"v5","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+[Tue Sep  1 08:34:34 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v7（525ad6c873d4）のまま
+[Tue Sep  1 08:34:37 JST 2026] レシピ版を用語くんに通知: v7 → {"ok":true,"version":"v7","previous":"v7","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+## サマリー
+
+「行為者-観察者バイアス」のドラフトを生成し、Doc化と用語DB書き戻しまで完了した。
+
+```
+対象用語 : 行為者-観察者バイアス（G-062）
+ステータス: レビュー待ち
+Doc URL  : https://docs.google.com/document/d/1p45AJMQO2Yv88egupNEtscP5RkAJUgG-otlGkIYN0wk/edit
+```
+
+**✅ 完了した内容**
+
+- 保存先 `drafts/行為者-観察者バイアス.md` / レシピ版 `v7`（`525ad6c873d4`）、`v5` からの作り直しとして刻印
+- 重複チェックは `check_duplicate.py` で「重複なし」（本文に語が出るだけの既存記事 `fundamental-attribution-error` は重複扱いにせず、本文から参照リンクを張った）
+- article-critic は 5.5 と 8.5 の2回とも通過。1回目 template 15 / style 14 / reader 13 / readability 13 → 指摘5件を反映 → 最終ゲートは4軸すべて15点満点
+- `reviewed_at` は付けていない（article-review 未通過のため）
+
+**⚠️ 事前に確認した点**
+
+この用語は本日すでに v3 → v4 → v5 と生成されていて、DBのステータスも「レビュー待ち」だった。ただしレシピは現行が **v7** で、直近2コミット（語源のあとの章を2つに絞る／実験を提唱者の段落から独立させる）が v5 の本文に反映されていなかったため、作り直しとして扱った。旧 v5 は `drafts/_archive/` に退避済み、旧DocのURLは備考とDoc冒頭の案内行に残している。
+
+**今回の構成の変更点**
+
+v5 は語源のあとに4セクション（効果／仕組み／実務／メタ分析）が並んでいた。v7 ルールに合わせ、仕組み（情報の差・視線の向き）は定義セクションへ、マレ2006年のメタ分析による反証は効果セクションの中へ畳み、語源のあとを2章に絞った。提唱の根拠実験（ニスベットら1973年の専攻・交際相手、ストームズ1973年のビデオ視点反転）は提唱者の動機を語る段落から分けて独立段落にしている。
+
+数値は Malle (2006) の PDF を直接取得して確認した（173本・d = −0.016〜0.095・視線反転は6件中2件のみ支持・理由説明で測り直すと d > 0.50）。Slackへの投稿はしていない。
+[Tue Sep  1 08:49:39 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-09-01.log

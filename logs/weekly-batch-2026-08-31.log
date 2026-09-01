@@ -1,0 +1,30 @@
+[Mon Aug 31 01:19:32 JST 2026] 週次バッチ開始（week 2026-W36）
+OK: レシピは v3（bd2516dfe937）のまま
+[Mon Aug 31 01:19:36 JST 2026] レシピ版を用語くんに通知: v3 → {"ok":true,"version":"v3","previous":"v3","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次バッチ完了。生成3件・見送り0件・escalate 0件。
+
+## 処理結果
+
+| 用語 | ステータス | Doc |
+|---|---|---|
+| G-016 セールスエンジニア | レビュー待ち | [Doc](https://docs.google.com/document/d/1e2OkFBZ964oB7FUTmWWUZEhiA_d8g30ofSLCJE9r7_A/edit) |
+| G-017 SSE（Server-Sent Events） | レビュー待ち | [Doc](https://docs.google.com/document/d/1BNbpgd2_QKmgTKdLAZGp7JWCnIXHYDsI9eBxkUoD4Qk/edit) |
+| G-018 ソリューションアーキテクト | レビュー待ち | [Doc](https://docs.google.com/document/d/1S1q4Ocr3U8oi_EjbAh5PPW3nu7LoWtcwMv0ilqa0iI8/edit) |
+
+## 選定の根拠
+
+作り直しリクエスト（U列）は0件。生成リクエスト（G列=TRUE）は G-001 のみだが、ステータスが「公開済み」で提案中の対象外だったため見送り（フラグは立ったまま残っている）。提案元に「Slack」を含む行も0件。残る57件はすべて備考が「公開記事1本」で同数のため、ID昇順で G-016 / G-017 / G-018 の3件を選定した。
+
+## 各件の状態
+
+- WP重複チェック（`check_duplicate.py`）は3件とも exit 0。タイトル・slug が一致する既存記事なし
+- ディープリサーチは使わず WebSearch / WebFetch でソース収集。一次情報は O*NET、WHATWG HTML仕様、MDN、The Open Group（Wikipedia経由）、AWS公式アナウンス、NN/g、Anthropic APIドキュメントなど
+- BLS（bls.gov）とGartnerの直接取得は403で失敗。BLS由来の数値は取得できた O*NET（41-9031.00）に差し替え、Gartnerの「77%が購買を複雑と回答」は一次確認できなかったため本文に入れていない
+- 3件とも `reviewed_at: 2026-08-31` を付与、`stamp_version.py` で v3 / bd2516dfe937 を刻印済み
+- 初稿の控えを `drafts/_baseline/` に保存済み
+
+Slack投稿はバッチでは行わない（月曜レポートの `sendMondayReport` が拾う）。書き戻しは11時前に完了している。
+
+⚠ 1点だけ確認したい: `drafts/` のファイル名は用語DBのB列（英語名）に合わせて `Sales Engineer.md` などにしたが、記事タイトルは日本語（セールスエンジニア）。次回の作り直しでDB用語からファイルを引けるようこの形にしたが、日本語ファイル名に寄せたい場合は言ってほしい。
+[Mon Aug 31 01:39:53 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W36.marker

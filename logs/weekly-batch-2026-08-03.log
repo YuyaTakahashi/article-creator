@@ -1,0 +1,32 @@
+[Mon Aug  3 09:21:33 JST 2026] 週次バッチ開始（week 2026-W32）
+All four columns confirmed in the sheet — status=レビュー待ち, Doc URLs present, slug/category_id/excerpt/eyecatch_prompt all written, and G列(生成する)=FALSE consumed for the three rows.
+
+**Step 5:** Slackには投稿しない（月曜レポート `sendMondayReport` に委譲）— 書き戻しは11:00より前（現在 約09:38 JST）に完了。
+
+---
+
+## ✅ 週次ドラフト生成バッチ 完了
+
+**Step 1 選定**（提案中・G列TRUE/Slack提案元なし → 備考の公開記事本数で決定）:
+G-007 モードレス(N=2) / G-008 黄金比(N=2) / G-009 API戦略(N=1)
+
+**Step 2 生成**（無人・WebSearchリサーチ・内部review済 reviewed_at=2026-08-03）:
+
+| ID | 用語 | slug | カテゴリ | Doc |
+|---|---|---|---|---|
+| G-007 | モードレス | modeless | デザイン・情報設計(347) | [Doc](https://docs.google.com/document/d/1UDgdybI6Szs6RwC65fSzOoapQORW1pEKPsRto4KUj1U/edit) |
+| G-008 | 黄金比 | golden-ratio | デザイン・情報設計(347) | [Doc](https://docs.google.com/document/d/1rzIUuWD_Bhffp9xOLh3gPNTnrchSjTsevdVbM3j1cyE/edit) |
+| G-009 | API戦略 | api-strategy | マーケティング・ビジネス(358) | [Doc](https://docs.google.com/document/d/13UmtaTGgzbWkJI46SS23-xFRb9WTowRn3E0e_mZe4Iw/edit) |
+
+**Step 3 Doc化**: 3件とも「UX用語」フォルダに作成（frontmatter除去・タイトル＋レビュー案内行付き・markdown→Googleドキュメント変換確認済み）
+**Step 4 書き戻し**: 3件とも `update_row` → `ok:true`（row 8/9/10、G-008は初回GAS 404を1回リトライで成功）。M–R列（slug/excerpt/category_id/eyecatch_prompt）反映済み、生成リクエストflag消化。
+
+**見送り**: なし（重複チェックは既存の同名記事なし=全件生成。full-text一致した既存記事は関連リンク先のみ）
+**escalate**: なし
+
+**執筆上の申し送り（レビュアー向け）**:
+- 黄金比: デザインでの黄金比は「万能の美の公式ではない」批判（Markowsky 1992 / Devlin / Fechner追試）を1セクション設けて中立に両論併記。
+- API戦略: 「Bezos API命令」は一次資料未確認の逸話として留保付きで記載。UX接続はDX（開発者体験）で橋渡し。中立性のため特定企業に寄せずStripe/Twitterを一般例として使用。
+
+**drafts/** に3本のMD（frontmatter・アイキャッチプロンプト含む）をアーカイブ保存済み。Slack告知は月曜レポートに委譲。
+[Mon Aug  3 09:40:51 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W32.marker

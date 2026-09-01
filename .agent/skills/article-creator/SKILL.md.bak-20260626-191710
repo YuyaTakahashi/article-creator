@@ -1,0 +1,319 @@
+---
+name: article-creator
+description: UX用語の解説記事をWeb検索→執筆→ファクトチェック→MDファイル保存まで実行するスキル。WordPress投稿は article-post スキルが担う。
+---
+
+# article-creator スキル
+
+指定されたUX用語の解説記事を生成し、`drafts/` フォルダにMDファイルとして保存する。
+WordPressへの投稿は、人間がMDを確認・編集したあとに `article-post` スキルで行う。
+
+## 引数
+
+引数はすべて対話形式で収集する。スキル起動後、以下の順に `AskUserQuestion` ツールで1問ずつ聞く。
+引数が起動時に渡されていた場合は、その値を使い該当の質問をスキップしてよい。
+
+### 質問1: topic（必須）
+
+```
+記事にするUX用語を入力してください。
+例: メンタルモデル、ユーザビリティ、アフォーダンス
+```
+
+空欄のまま送信された場合は再度聞く。
+
+### 質問2: context（任意）
+
+```
+同名異義語や補足したい文脈があれば入力してください。
+（不要な場合はそのままEnter）
+```
+
+空欄の場合は context = "" として扱う。
+
+### 質問3: difficulty（任意）
+
+```
+記事の難易度を 0.0〜1.0 で指定してください。
+  0.0 = 中学生レベル（専門用語なし、身近な例え話中心）
+  0.5 = 一般向け（デフォルト）
+  1.0 = 専門教授レベル（学術的定義、背景理論まで網羅）
+（未入力の場合は 0.5）
+```
+
+数値以外が入力された場合、または範囲外の場合は 0.5 にフォールバックする。
+
+### 質問4: it（任意）
+
+```
+読者のITリテラシーを 0.0〜1.0 で指定してください。
+  0.0 = 一般ユーザー（「サーバー」「API」等も噛み砕く）
+  0.5 = ビジネスパーソン（デフォルト）
+  1.0 = 熟練エンジニア（実装詳細・業界標準用語を多用）
+（未入力の場合は 0.5）
+```
+
+数値以外が入力された場合、または範囲外の場合は 0.5 にフォールバックする。
+
+---
+
+## 事前設定（初回のみ）
+
+リポジトリルートにある `.env.example` をコピーして `.env` を作成し、値を入力する。
+
+```bash
+cp .env.example .env
+```
+
+```
+WP_SITE_URL=https://your-site.com
+WP_USER=your-wordpress-username
+WP_APP_PASS=xxxx xxxx xxxx xxxx xxxx xxxx
+WP_POST_TYPE=posts
+```
+
+`WP_APP_PASS` はWordPress管理画面の「ユーザー → プロフィール → アプリケーションパスワード」で発行する。
+
+---
+
+## 実行手順
+
+### Step 0: リポジトリルートの特定と設定読み込み
+
+以下のBashコマンドで、このスキルのルートディレクトリを特定する。
+シンボリックリンク経由か直接コピーかを自動判別する。
+
+```bash
+CMD_FILE=~/.claude/commands/article-creator.md
+if [ -L "$CMD_FILE" ]; then
+  # シンボリックリンクの場合: リンク先からリポジトリルートを逆引き
+  SKILL_DIR=$(dirname "$(readlink "$CMD_FILE")")
+  REPO_ROOT=$(cd "$SKILL_DIR/../../.."; pwd)
+else
+  # 直接コピーの場合: ~/.claude/article-creator/ を使用
+  REPO_ROOT="$HOME/.claude/article-creator"
+fi
+echo "REPO_ROOT: $REPO_ROOT"
+```
+
+取得した `REPO_ROOT` を以降のすべてのパスのベースとして使用する：
+- `.env` は `$REPO_ROOT/.env`
+- プロンプトは `$REPO_ROOT/prompts/`
+
+`.env` が存在しない、または必須キーが空の場合はユーザーに作成を促して中断する。
+
+`.env` から以下を読み込む（`WP_POST_TYPE` 未設定時は `posts` をデフォルト値とする）：
+
+```bash
+source "$REPO_ROOT/.env"
+WP_PASS_CLEAN=$(echo "$WP_APP_PASS" | tr -d ' ')
+WP_AUTH=$(echo -n "${WP_USER}:${WP_PASS_CLEAN}" | base64)
+```
+
+カテゴリのタクソノミーフィールド名（`CATEGORY_FIELD`）は固定値で決める。**サンドボックスから WP REST API へアクセスして検出してはいけない**（外部HTTPSは403でブロックされ、リポジトリの再発防止ルールにも反する）。
+
+- `glossary` 投稿タイプ → `glossary-category`
+- `posts` → `categories`
+
+以降のステップでは `CATEGORY_FIELD` をカテゴリフィールド名として使用する。
+
+---
+
+### Step 0-b: ディープリサーチ実行（必須・デフォルト）
+
+NotebookLM Deep Research を Chrome 経由で動かし、Web を広範にクロールして信頼できるソース一覧を収集する。実際の処理は別スキル `notebooklm-deep-research`（または同等の `web-deep-research`）に委譲する。
+
+リサーチプロンプトは英語で組み立て、海外の一次情報を中心に集めるよう明示する。
+
+```
+Conduct a comprehensive deep research on '{topic_en}' (Japanese: '{topic}').
+Cover: definition, historical background, the original proponent and their affiliation,
+core principles, practical application in UX / product design, and concrete case studies.
+
+Prioritize trustworthy English-language primary sources: academic papers, the proponent's
+own publications or blog, books, peer-reviewed journals, official documentation from
+established design / UX institutions (e.g. Nielsen Norman Group, IDEO, IxDA, ACM, IEEE),
+and major English-language professional media. Japanese sources may be added only as
+supplementary references; do not rely on them as primary evidence.
+
+Context (if any): {context}
+```
+
+保存先は `$REPO_ROOT/research/research_{topic_slug}_{YYYYMMDD}.md`。事前に `mkdir -p "$REPO_ROOT/research"` で作成する。
+
+完了後、保存されたMDの「ソース一覧（INDEX）」セクションを Read で読み込み、番号付きリスト部分を `{sources}` 変数として保持する。
+
+**フォールバック**: Chrome が起動できない、ログインが必要、Deep Research UI が見つからない、10分以上経過しても結果が出ない、ユーザーが明示的にスキップを指示した場合は、`{sources}` を `ディープリサーチ未実施: Web検索で補完してください` の1行とし、その理由を1行報告してから先に進む。
+
+---
+
+### Step 1: 重複チェック
+
+重複チェックで WP へ問い合わせる場合も、**サンドボックスから uxdaystokyo.com へアクセスしない**。確認が必要なら、ユーザーのローカル（Desktop Commander 経由）で実行するか、ユーザーに既存記事の有無を尋ねる。サンドボックスからの `curl` / `urllib` での疎通は禁止する。
+
+---
+
+### Step 2: 情報収集
+
+`$REPO_ROOT/prompts/01_information_gathering.md` を Read ツールで読み込む。
+ファイル内の以下のプレースホルダーを置換し、その指示に従って記事の初稿を生成する。
+
+| プレースホルダー | 値 |
+|---|---|
+| `{topic}` | 引数で受け取ったtopic |
+| `{context}` | 引数で受け取ったcontext（省略時は空文字） |
+| `{sources}` | Step 0-bで抽出したソース一覧の番号付きリスト全文。ディープリサーチ未実施時は `ディープリサーチ未実施: Web検索で補完してください` |
+
+`{sources}` に実ソースがある場合は、各URLに対して WebFetch を実行して本文を取得し、それを一次情報として執筆する。`{sources}` が「未実施」表記の場合のみ WebSearch で独自にソースを集める。
+
+---
+
+### Step 3: 整形・リライト
+
+`$REPO_ROOT/prompts/02_polishing.md` を Read ツールで読み込む。
+ファイル内の以下のプレースホルダーを置換し、その指示に従ってStep 2の初稿をリライトする。
+
+| プレースホルダー | 値 |
+|---|---|
+| `{difficulty}` | 引数で受け取ったdifficulty（default 0.5） |
+| `{it}` | 引数で受け取ったit（default 0.5） |
+| `{draft}` | Step 2で生成した初稿の全文 |
+
+---
+
+### Step 4: ファクトチェックと自動修正
+
+以下の事実を検証し、**誤りは自動修正して続行する**。
+
+検証の優先順位:
+
+1. Step 0-bで取得したソース一覧の各URLを WebFetch で再度参照する（ディープリサーチで集めた信頼性の高い一次情報なので、まずこちらから当たる）
+2. ソース内に該当事実の記載がない、または曖昧な場合のみ WebSearch で追加検証する
+
+検証対象:
+
+- 人名の表記・スペル
+- 提唱者・提唱年・所属機関
+- 数値・統計データ
+- 因果関係・歴史的事実の主張
+
+修正した箇所は `[ファクトチェック修正]` としてコンソールに出力する。
+修正がない場合は「ファクトチェック: 問題なし」と出力する。
+
+---
+
+### Step 5: メタデータ抽出
+
+記事本文から以下を抽出・生成する。
+
+#### カテゴリID（1つだけ選択）
+
+| カテゴリ | ID |
+|---|---|
+| ツール・フレームワーク・方法論・分類 | 22 |
+| テクノロジー・技術 | 418 |
+| デザイン・情報設計 | 347 |
+| マーケティング・ビジネス | 358 |
+| リサーチ・分析・テスト | 369 |
+| 心理学・行動経済学・脳科学 | 21 |
+| 思考・マインド・バイアス | 20 |
+| 組織・ファシリテーション | 262 |
+
+#### 同義語辞書（JSON形式）
+
+```json
+{
+  "記事内の単語A": ["単語A", "正式名称A", "EnglishA"],
+  "記事内の単語B": ["単語B", "別名B"]
+}
+```
+
+---
+
+### Step 5-b: アイキャッチ用プロンプト生成
+
+`$REPO_ROOT/prompts/03_eyecatch.md` を Read ツールで読み込む。
+以下のプレースホルダーを置換し、その指示に従って画像生成プロンプトを生成する。
+
+| プレースホルダー | 値 |
+|---|---|
+| `{topic}` | 引数で受け取ったtopic |
+| `{article}` | Step 4完了後の記事本文全文 |
+
+生成したプロンプト文字列を変数に保持し、完了報告で出力する（ファイル保存・WP投稿は行わない）。
+
+---
+
+### Step 6: MDファイルへの保存
+
+記事本文・メタデータ・アイキャッチプロンプトをひとつのMDファイルにまとめて `$REPO_ROOT/drafts/` に保存する。
+
+#### 記事の書き方ルール（保存前に必ず守る・再発防止）
+
+過去に何度も外したので、保存する MD は必ず以下を満たす。
+
+1. **ルビ（外国人名・外国語の固有名詞）**: カタカナ＋括弧英語（例: `ロバート・M・ヤーキズ（Robert M. Yerkes）`）に **しない**。必ずルビ記法 `英字¥カタカナ¥` で書く（py が `<ruby>` に変換）。英単語ごとに `¥カタカナ¥` を付ける。
+   - 正: `Robert¥ロバート¥ M.¥エム¥ Yerkes¥ヤーキズ¥`
+   - 誤: `ロバート・M・ヤーキズ（Robert M. Yerkes）`
+   - 論文名・雑誌名・製品名（Duolingo 等）は対象外でそのまま英語表記にする。
+2. **タイトルに英語を入れない**: `title` は日本語のみ。「日本語 + 英語名」併記は **しない**。
+   - 正: `title: "ヤーキズ＝ドッドソンの法則"` / 誤: `title: "ヤーキズ＝ドッドソンの法則 Yerkes-Dodson Law"`
+3. **パーマリンク（slug）に日本語を入れない**: フロントマターに英語（ローマ字）の `slug` を **必ず** 付ける。無いと WordPress が日本語パーマリンクを自動生成する（例: `slug: "yerkes-dodson-law"`）。
+4. **最小限の説明 / excerpt は用語の品詞に合わせて名詞で締める**: 解説対象が「法則」なら「〜という法則」、傾向なら「〜する傾向」、現象なら「〜という現象」で言い切る。動詞締めは定義文として不自然。20〜35文字・句点なし。
+   - 正（法則）: `適度な緊張で能力が最も高まり、強すぎても弱すぎても下がるという法則`
+   - これは本文の「体言止め禁止」ルールの例外（最小限の説明は用語を定義する一句のため）。
+5. 本文（最小限の説明を除く）は従来どおり **体言止め禁止・受動態回避・OPENLOGI表記** を守る。
+
+#### ファイル名の決定
+
+topic をファイル名に使えるスラッグに変換する（カタカナ・スペースはハイフン区切りのローマ字で代替してもよいが、日本語のままでも可）。
+
+```
+{topic}.md  （例: プロプライエタリ・テクノロジー.md）
+```
+
+同名ファイルが既に存在する場合は上書き前にユーザーに確認する。
+
+#### ファイルフォーマット
+
+以下のYAMLフロントマターと本文を組み合わせたMarkdownファイルとして保存する。
+
+```markdown
+---
+title: "{日本語呼称のみ・英語を入れない}"
+excerpt: "{最小限の説明と完全一致・用語の品詞で名詞締め・20〜35文字}"
+category_id: {category_id}
+category_name: "{カテゴリ名}"
+category_field: "{CATEGORY_FIELD}"
+slug: "{英語ローマ字スラッグ}"
+eyecatch_prompt: "{Step 5-bで生成したプロンプト文字列（改行はスペースに置換）}"
+---
+
+{-- wp分割ライン-- 以降の記事本文をそのままMarkdownで記載}
+```
+
+- フロントマターの値にダブルクォーテーションを含む場合はシングルクォーテーションで囲む
+- 記事本文は `-- wp分割ライン--` 行の**次の行から末尾まで**をそのままコピーする（変換・加工しない）
+- `excerpt` は本文の `## 最小限の説明` と完全一致させる
+
+#### 保存後の確認
+
+ファイルが正常に書き込まれたことを確認し、パスを出力する。保存後、上記「記事の書き方ルール」各項目を1つずつ照合し、違反があれば直してから完了報告する。
+
+特に **外部公開記事の中立性** を必ず照合する：本文・タイトル・excerpt・関連用語に特定企業名（OPENLOGI 等）やその企業固有の物流・EC 文脈が入っていないかを確認し、入っていれば中立的な一般表現に直す（詳細は prompts/02_polishing.md 執筆ルール6・CLAUDE.md 記事の書き方ルール6）。
+
+---
+
+## 完了報告
+
+```
+記事タイトル         : {日本語呼称のみ}
+カテゴリ             : {カテゴリ名}（ID: {ID}）
+ファクトチェック修正 : {修正箇所のサマリー or "なし"}
+保存先              : drafts/{ファイル名}.md
+
+アイキャッチ用プロンプト:
+{Step 5-bで生成したプロンプト文字列}
+
+次のステップ: MDを確認・編集したら /article-post {ファイル名}.md を実行してください。
+```

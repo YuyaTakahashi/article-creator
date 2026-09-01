@@ -1,0 +1,32 @@
+[Mon Aug 31 22:38:07 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v3（bd2516dfe937）のまま
+[Mon Aug 31 22:38:11 JST 2026] レシピ版を用語くんに通知: v3 → {"ok":true,"version":"v3","previous":"v3","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
+[Mon Aug 31 22:39:17 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v3（bd2516dfe937）のまま
+[Mon Aug 31 22:39:19 JST 2026] レシピ版を用語くんに通知: v3 → {"ok":true,"version":"v3","previous":"v3","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
+完了しました。Slackには投稿していません。
+
+```
+対象用語   : 行為者-観察者バイアス（G-062 / Actor-Observer Bias）
+ステータス : レビュー待ち
+Doc URL   : https://docs.google.com/document/d/1A9rcX1SBTuNKOwi1IyHfPYiXcRx9CuTPZEOmbRT9l3I/edit
+保存先     : drafts/行為者-観察者バイアス.md
+レシピ版   : v3（bd2516dfe937）
+カテゴリ   : 思考・マインド・バイアス（ID: 20）
+```
+
+## 実行内容
+
+- **重複チェック**: `check_duplicate.py` は終了コード0（重複なし）。本文に語が出る既存記事「根本的な帰属の誤り」（id=37458）は別記事として扱い、続行しました。
+- **ソース**: ディープリサーチは使わず WebSearch/WebFetch。中心に据えたのは Malle (2006) *Psychological Bulletin* 132(6) の原文PDF（Brown大公開版）で、数値はそこから直接引いています（173件・参加者14,686人・効果量0.095／負の出来事61件で0.243／正の出来事45件で-0.149／親密0.245対見知らぬ0.072）。補助に PubMed 抄録、Wikipedia、EBSCO Research Starters、十文字学園「錯思コレクション100」、Looppanel（UX調査での帰属バイアス）。
+
+## 判断としてお伝えしたい点
+
+この用語は**2006年のメタ分析で「全体としてはほぼ効果なし、まずいことが起きた場面に限って現れる」と修正されている**ため、古い教科書的な説明（「人は常に自分は状況・他人は性格のせいにする」）をそのまま書くと不正確になります。そこで語源セクションを「提唱 → 定説化 → 2006年の再検証」まで通し、実務セクションもメタ分析で残った「失敗の場面」に絞って書きました。あかねさんのレビューで論旨が重いと感じられた場合は、数値の一部を落として要旨だけ残す形に削れます。
+
+なお提唱者の顔写真は入れていません（v1〜v3の他ドラフトと同様、WP投稿段階の `glossary-wp-images` で入れる想定）。
+[Mon Aug 31 22:51:57 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-08-31.log
