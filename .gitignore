@@ -11,3 +11,6 @@ pipeline/gas/
 # Python のキャッシュ
 __pycache__/
 *.pyc
+
+# OMS課金 調整額の作業ファイル（荷主名・荷主コード・金額を含むためコミットしない）
+work/
