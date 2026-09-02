@@ -3,6 +3,18 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v8 — 2026-09-02
+
+統計値の密度を難易度に依らず抑制し、既存概念の改良・発展形はベース概念との対比を導入部に含める。見出しの主語省略は一意に推測できる場合に限定。reader-criticの数値評価とtemplate-criticのタイトル形式ルールを実際の生成ルール（日本語のみ）に整合させた
+
+レシピhash: `e2f29ce6fc95`
+
+変更されたファイル:
+  - .agent/skills/article-critic/references/reader-critic.md
+  - .agent/skills/article-critic/references/template-critic.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
 ## v7 — 2026-09-01
 
 語源・提唱者のあとに続く内容セクションを効果/実務でどう使われるかの2つに絞るルールを追加(仕組み・原理は定義セクションへ、対比・反論は効果セクションへ統合)。CLAUDE.md/01_information_gathering.md/02_polishing.mdとarticle-criticのtemplate-critic.mdのH2構成順序ルーブリックに反映
