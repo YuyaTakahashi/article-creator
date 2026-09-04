@@ -1,11 +1,11 @@
 {
-  "version": "v9",
-  "hash": "2aae07fd178673e22a508a7fc9ac59e8e6d33b79eb2bb5988b684ed96727ad60",
+  "version": "v10",
+  "hash": "c9c41403167dbe6c787ae34f70771fd01a0d6a5b1c1789ae3f06f3cef62eebb7",
   "updated_at": "2026-09-04",
-  "note": "excerptの語彙具体性・専門用語の言い換え・具体例の粒度・つまり要約・箇条書きの条件付き許可・主語補完・読みやすさ優先の明文化を追加(v9)",
+  "note": "リード文を対比用語は4段落構成(定義→対比→例→つまり)に分け、対比はAIの自問を疑問文で引用、文を短く区切るルールを追加。excerptのOK例も文字数内に修正",
   "files": {
-    "prompts/01_information_gathering.md": "433c2feec418fd487ab47ab1126bc9e79bbead42c19b9b4e32f31a4e520f79c3",
-    "prompts/02_polishing.md": "a64edd5c2793a690cd0e4899a48e80278160bad384ee588f821d9d03f76fbf86",
+    "prompts/01_information_gathering.md": "55274e4ac13e57170b857a29b7990caeb5ac5bf9e8d1ee260051182662b53ee3",
+    "prompts/02_polishing.md": "2cafefcd3e8b4fba3be4b4da553897a05ae386198e33c5139af7377734ba4e6d",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
