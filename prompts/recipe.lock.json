@@ -1,11 +1,11 @@
 {
-  "version": "v11",
-  "hash": "806391a73b6220d51f3001ecca18d8b3e0f1222504b8c31687940ae8132e729b",
+  "version": "v12",
+  "hash": "cb5b00bd72c1955195ed85782402f80173025a0f5967667e352b5823422bef77",
   "updated_at": "2026-09-04",
-  "note": "評価語（〜に効く、〜に十分か等）を判断基準なしで使わないルールを追加。あかねさんの指摘（正確性よりイメージしやすさを優先）を反映。",
+  "note": "「答え／回答」を判断対象にした評価表現（答えるための材料が揃っているか、等）も禁止対象に追加。あかねさんの指摘を受けた別セッションでのブラインド再生成テストで、v11ルールだけでは同じ問題が別の言い回しで再発することを確認したため。",
   "files": {
     "prompts/01_information_gathering.md": "55274e4ac13e57170b857a29b7990caeb5ac5bf9e8d1ee260051182662b53ee3",
-    "prompts/02_polishing.md": "37dcedfa3e1b4a03a8e73dfa334d1c3521e5fcd5f7583204cb35af7f4cce2395",
+    "prompts/02_polishing.md": "52ae9c4fc85e16e38d9bdf28fd465d216d7b325f5dff74cf5ea2a9606d2b6701",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
