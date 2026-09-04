@@ -1,19 +1,19 @@
 {
-  "version": "v7",
-  "hash": "525ad6c873d4a32a4b7c25519fb18c38f3e63599fe1b13d07202c29a994da614",
-  "updated_at": "2026-09-01",
-  "note": "語源・提唱者のあとに続く内容セクションを効果/実務でどう使われるかの2つに絞るルールを追加(仕組み・原理は定義セクションへ、対比・反論は効果セクションへ統合)。CLAUDE.md/01_information_gathering.md/02_polishing.mdとarticle-criticのtemplate-critic.mdのH2構成順序ルーブリックに反映",
+  "version": "v14",
+  "hash": "1a46ec573567dec1f26da3b69c215c06f77fbbc90dc88aecf70fcf50a5961758",
+  "updated_at": "2026-09-04",
+  "note": "語源・提唱者の対比構造用語向け例外に、当時の課題を裏づける具体的な研究・失敗事例（エピソード）が独立した段落として①の言い換えになるのを塞ぐ条項を追加。ブラインドテスト1回目でこの抜け穴により課題段落が再発したため。2回目の再検証で解消を確認。",
   "files": {
-    "prompts/01_information_gathering.md": "1836857e6b4bf3bdc4fde26ef11e1c3b582fa13af604956f3ef083f4a5cac7dd",
-    "prompts/02_polishing.md": "4542749dcedb8ca379a1461f903a607884bb186531e2630916cb13bd9ab3e79e",
+    "prompts/01_information_gathering.md": "55274e4ac13e57170b857a29b7990caeb5ac5bf9e8d1ee260051182662b53ee3",
+    "prompts/02_polishing.md": "b9c7f4b6cbcfa161442a54aa7f86639d41eed8702b478b0920b1579e65c48e32",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
     ".agent/skills/article-critic/SKILL.md": "d28bd02dbd63b40ff5f2a6ad370edcd063e0dabecb5323b383bfa6d01e87be8e",
-    ".agent/skills/article-critic/references/template-critic.md": "d6af7482b97c44369d99862821d29fc39b3af67edbdaf1cbe8a969e0b75594c4",
+    ".agent/skills/article-critic/references/template-critic.md": "22391b49379ce7be3070d60f662452ed59c3614ea9a003a759e22fe2ffe84abb",
     ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
-    ".agent/skills/article-critic/references/reader-critic.md": "a9669fc8a8845dc407582e241bb29facd7aa9563ce68fc23287b5a747a1a39fb",
+    ".agent/skills/article-critic/references/reader-critic.md": "1cb7b6f1c7193b43d04be9c617fb4baa666ec7ae6c5f312b3cd57d7f982d1435",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
-    "CLAUDE.md": "74a3959c58ddbe4c6345b37d54dfd247f9e970806682e178debe402fdb8eb6d8"
+    "CLAUDE.md": "1a4b50bf49e66bcc44b49841bf6eba15b21c75d61f087ce76c159d84aca8cb32"
   }
 }

@@ -3,6 +3,77 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v14 — 2026-09-04
+
+語源・提唱者の対比構造用語向け例外に、当時の課題を裏づける具体的な研究・失敗事例（エピソード）が独立した段落として①の言い換えになるのを塞ぐ条項を追加。ブラインドテスト1回目でこの抜け穴により課題段落が再発したため。2回目の再検証で解消を確認。
+
+レシピhash: `1a46ec573567`
+
+変更されたファイル:
+  - CLAUDE.md
+  - prompts/02_polishing.md
+
+## v13 — 2026-09-04
+
+対比構造を持つ用語は、語源・提唱者で『当時の課題・狙い』を繰り返さず、帰属と普及経緯の2点に絞れる例外を追加。定義セクションの対比と重複していたため。心理学的効果・法則など対比構造を持たない用語は従来どおり3点必須。
+
+レシピhash: `05fad1a6876f`
+
+変更されたファイル:
+  - CLAUDE.md
+  - prompts/02_polishing.md
+
+## v12 — 2026-09-04
+
+「答え／回答」を判断対象にした評価表現（答えるための材料が揃っているか、等）も禁止対象に追加。あかねさんの指摘を受けた別セッションでのブラインド再生成テストで、v11ルールだけでは同じ問題が別の言い回しで再発することを確認したため。
+
+レシピhash: `cb5b00bd72c1`
+
+変更されたファイル:
+  - prompts/02_polishing.md
+
+## v11 — 2026-09-04
+
+評価語（〜に効く、〜に十分か等）を判断基準なしで使わないルールを追加。あかねさんの指摘（正確性よりイメージしやすさを優先）を反映。
+
+レシピhash: `806391a73b62`
+
+変更されたファイル:
+  - prompts/02_polishing.md
+
+## v10 — 2026-09-04
+
+リード文を対比用語は4段落構成(定義→対比→例→つまり)に分け、対比はAIの自問を疑問文で引用、文を短く区切るルールを追加。excerptのOK例も文字数内に修正
+
+レシピhash: `c9c41403167d`
+
+変更されたファイル:
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
+## v9 — 2026-09-04
+
+excerptの語彙具体性・専門用語の言い換え・具体例の粒度・つまり要約・箇条書きの条件付き許可・主語補完・読みやすさ優先の明文化を追加(v9)
+
+レシピhash: `2aae07fd1786`
+
+変更されたファイル:
+  - CLAUDE.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
+## v8 — 2026-09-02
+
+統計値の密度を難易度に依らず抑制し、既存概念の改良・発展形はベース概念との対比を導入部に含める。見出しの主語省略は一意に推測できる場合に限定。reader-criticの数値評価とtemplate-criticのタイトル形式ルールを実際の生成ルール（日本語のみ）に整合させた
+
+レシピhash: `e2f29ce6fc95`
+
+変更されたファイル:
+  - .agent/skills/article-critic/references/reader-critic.md
+  - .agent/skills/article-critic/references/template-critic.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
 ## v7 — 2026-09-01
 
 語源・提唱者のあとに続く内容セクションを効果/実務でどう使われるかの2つに絞るルールを追加(仕組み・原理は定義セクションへ、対比・反論は効果セクションへ統合)。CLAUDE.md/01_information_gathering.md/02_polishing.mdとarticle-criticのtemplate-critic.mdのH2構成順序ルーブリックに反映
