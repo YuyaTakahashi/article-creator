@@ -1,11 +1,11 @@
 {
-  "version": "v10",
-  "hash": "c9c41403167dbe6c787ae34f70771fd01a0d6a5b1c1789ae3f06f3cef62eebb7",
+  "version": "v11",
+  "hash": "806391a73b6220d51f3001ecca18d8b3e0f1222504b8c31687940ae8132e729b",
   "updated_at": "2026-09-04",
-  "note": "リード文を対比用語は4段落構成(定義→対比→例→つまり)に分け、対比はAIの自問を疑問文で引用、文を短く区切るルールを追加。excerptのOK例も文字数内に修正",
+  "note": "評価語（〜に効く、〜に十分か等）を判断基準なしで使わないルールを追加。あかねさんの指摘（正確性よりイメージしやすさを優先）を反映。",
   "files": {
     "prompts/01_information_gathering.md": "55274e4ac13e57170b857a29b7990caeb5ac5bf9e8d1ee260051182662b53ee3",
-    "prompts/02_polishing.md": "2cafefcd3e8b4fba3be4b4da553897a05ae386198e33c5139af7377734ba4e6d",
+    "prompts/02_polishing.md": "37dcedfa3e1b4a03a8e73dfa334d1c3521e5fcd5f7583204cb35af7f4cce2395",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
