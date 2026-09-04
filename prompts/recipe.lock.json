@@ -1,11 +1,11 @@
 {
-  "version": "v8",
-  "hash": "e2f29ce6fc955d287ed85431ae3adec726296eb6e407ef3ac45d06e4b6026d5e",
-  "updated_at": "2026-09-02",
-  "note": "統計値の密度を難易度に依らず抑制し、既存概念の改良・発展形はベース概念との対比を導入部に含める。見出しの主語省略は一意に推測できる場合に限定。reader-criticの数値評価とtemplate-criticのタイトル形式ルールを実際の生成ルール（日本語のみ）に整合させた",
+  "version": "v9",
+  "hash": "2aae07fd178673e22a508a7fc9ac59e8e6d33b79eb2bb5988b684ed96727ad60",
+  "updated_at": "2026-09-04",
+  "note": "excerptの語彙具体性・専門用語の言い換え・具体例の粒度・つまり要約・箇条書きの条件付き許可・主語補完・読みやすさ優先の明文化を追加(v9)",
   "files": {
-    "prompts/01_information_gathering.md": "04bf6bf4b0b81ec98b4d6372c0703d882fde2f22a9c2b225ae8680f352893f1a",
-    "prompts/02_polishing.md": "3c95e0a44f3afbcf7f1f125eb45b760c758cde5bd707c55854bb536262c335b8",
+    "prompts/01_information_gathering.md": "433c2feec418fd487ab47ab1126bc9e79bbead42c19b9b4e32f31a4e520f79c3",
+    "prompts/02_polishing.md": "a64edd5c2793a690cd0e4899a48e80278160bad384ee588f821d9d03f76fbf86",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
@@ -14,6 +14,6 @@
     ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
     ".agent/skills/article-critic/references/reader-critic.md": "1cb7b6f1c7193b43d04be9c617fb4baa666ec7ae6c5f312b3cd57d7f982d1435",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
-    "CLAUDE.md": "74a3959c58ddbe4c6345b37d54dfd247f9e970806682e178debe402fdb8eb6d8"
+    "CLAUDE.md": "cee68bde2c02945f36893737dc4da310e9cfcf4489978c0fc222a13e0549da15"
   }
 }

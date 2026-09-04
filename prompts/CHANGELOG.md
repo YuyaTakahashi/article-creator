@@ -3,6 +3,17 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v9 — 2026-09-04
+
+excerptの語彙具体性・専門用語の言い換え・具体例の粒度・つまり要約・箇条書きの条件付き許可・主語補完・読みやすさ優先の明文化を追加(v9)
+
+レシピhash: `2aae07fd1786`
+
+変更されたファイル:
+  - CLAUDE.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
 ## v8 — 2026-09-02
 
 統計値の密度を難易度に依らず抑制し、既存概念の改良・発展形はベース概念との対比を導入部に含める。見出しの主語省略は一意に推測できる場合に限定。reader-criticの数値評価とtemplate-criticのタイトル形式ルールを実際の生成ルール（日本語のみ）に整合させた
