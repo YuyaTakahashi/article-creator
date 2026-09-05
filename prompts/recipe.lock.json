@@ -1,11 +1,11 @@
 {
-  "version": "v14",
-  "hash": "1a46ec573567dec1f26da3b69c215c06f77fbbc90dc88aecf70fcf50a5961758",
-  "updated_at": "2026-09-04",
-  "note": "語源・提唱者の対比構造用語向け例外に、当時の課題を裏づける具体的な研究・失敗事例（エピソード）が独立した段落として①の言い換えになるのを塞ぐ条項を追加。ブラインドテスト1回目でこの抜け穴により課題段落が再発したため。2回目の再検証で解消を確認。",
+  "version": "v15",
+  "hash": "7fe2c26a0557b27cadf99f73faa95bae4d32271f6b5d45af2a354bbeb5c207d6",
+  "updated_at": "2026-09-05",
+  "note": "グロッサリー記事は証拠を最小限にする、反証が効果の前提を覆す独立知見なら3セクション目まで許可、具体例・引用の置き場所は論点の近さで決める、の3点を追加(v15)。行為者-観察者バイアスの最終編集での人力トリムから抽出。",
   "files": {
-    "prompts/01_information_gathering.md": "55274e4ac13e57170b857a29b7990caeb5ac5bf9e8d1ee260051182662b53ee3",
-    "prompts/02_polishing.md": "b9c7f4b6cbcfa161442a54aa7f86639d41eed8702b478b0920b1579e65c48e32",
+    "prompts/01_information_gathering.md": "0faa9e5f470624c36b54b7346fc779af9802320960c4334ad05c9be8db4a324f",
+    "prompts/02_polishing.md": "29b96463d4251bc381c439503bb64a58e1ce2ac9d37b92162157c4031f7b28c6",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "849e3df637cd6800ad6d747b051ff084ea5886e20825a9e182245a04a4cf4df5",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
@@ -14,6 +14,6 @@
     ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
     ".agent/skills/article-critic/references/reader-critic.md": "1cb7b6f1c7193b43d04be9c617fb4baa666ec7ae6c5f312b3cd57d7f982d1435",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
-    "CLAUDE.md": "1a4b50bf49e66bcc44b49841bf6eba15b21c75d61f087ce76c159d84aca8cb32"
+    "CLAUDE.md": "8b38d6a81f1c51bc4cb17a021ca79639c12db4c8ea3d3503c30a534c008571fa"
   }
 }
