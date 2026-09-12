@@ -250,6 +250,22 @@ python3 scripts/recipe_version.py bump --note "語源セクションを当時の
 
 生成時に `scripts/stamp_version.py` がフロントマターへ `creator_version` / `recipe_hash` / `generated_at` を刻み、同じ値が用語DBのS・T列にも入る。バージョン管理を始める前に作った記事は `v0` になっている。
 
+レビュー用のGoogleドキュメントにも同じ版を載せる。Doc化のとき `scripts/make_doc_md.py` が貼り付け用のMDを組み立て、タイトルとレビュー案内行の下に版の行を入れる。
+
+```
+*（版：v15 ／ レシピhash 7fe2c26a0557 ／ 生成日 2026-09-07 ／ この行はレビュー用で、WordPressには載りません）*
+```
+
+レビューする人は用語DBを開かなくても、Docだけでどのレシピ版の記事かを判断できる。刻印していない記事はここで止まるので、版の分からないDocが増えない。
+
+| コマンド | 用途 |
+|---|---|
+| `python3 scripts/make_doc_md.py "drafts/{用語}.md"` | Doc貼り付け用のMDを `pipeline/doc-ready/` に書き出す |
+| `python3 scripts/make_doc_md.py "drafts/{用語}.md" --stdout` | ファイルに書かず標準出力に出す |
+| `python3 scripts/make_doc_md.py "drafts/{用語}.md" --old-doc-url "{旧DocURL}"` | 作り直しのとき、旧Docへのリンク行を足す |
+
+2026-09-12 より前に作られたDocには版の行が入っていない。用語DBのS・T列（生成バージョン／レシピhash）で確認する。
+
 ### 作り直しを頼む
 
 Slackで用語くんに頼む。

@@ -461,19 +461,28 @@ cd "${REPO_BASH:-$HOME/workspace/article-creator}" && python3 scripts/stamp_vers
 
 ### 10-1. レビュー用MDを組み立てる
 
-フロントマターを取り除き、冒頭に次の2行を足す。
+手で組み立てず、次のスクリプトに作らせる。フロントマターの除去・タイトル行・レビュー案内行・**レシピ版の行**をまとめて付ける。
+
+```bash
+cd "${REPO_BASH:-$HOME/workspace/article-creator}" && python3 scripts/make_doc_md.py "drafts/{ファイル名}.md"
+# 古い版を作り直したときは: --old-doc-url "{旧DocURL}"
+```
+
+`pipeline/doc-ready/{ファイル名}.md` に、次の形で書き出される。
 
 ```
 # {タイトル}
 
 *（レビュー用ドラフト：本文を直接編集してください。英字¥カタカナ¥ は読みがな記法、-- wp分割ライン-- は投稿時の区切りマーカーなので、そのまま残してください）*
+
+*（版：v15 ／ レシピhash 7fe2c26a0557 ／ 生成日 2026-09-07 ／ この行はレビュー用で、WordPressには載りません）*
 ```
 
-古い版を作り直したときは、案内行の後ろにもう1行足す：`*（{新版} で作り直した版です。前の版はこちら: {旧DocのURL}）*`
+版の行は、レビューする人がDocだけを見て「どのレシピ版で書かれた記事か」を判断できるようにするためのもの。手で消さない。「レシピ版の刻印」を飛ばしているとスクリプトが止まるので、止まったら stamp_version.py をやり直す。
 
 ### 10-2. Googleドキュメントにする
 
-Drive連携の `create_file` で作る（Cowork・Claude Code のどちらでも動く）。
+10-1 が書き出したMDの中身をそのまま渡し、Drive連携の `create_file` で作る（Cowork・Claude Code のどちらでも動く）。
 
 - `contentMimeType`: `text/markdown`（これでGoogleドキュメントに自動変換される）
 - `parentId`: `1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS`（記事ドラフトフォルダ）

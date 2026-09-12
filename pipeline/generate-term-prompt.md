@@ -15,9 +15,14 @@
 - 保存したら `python3 scripts/stamp_version.py "drafts/{対象用語}.md"` を実行し、レシピ版をフロントマターに刻む
 
 ## Step 3: Doc化
-frontmatterを除去し、冒頭に「# {タイトル}」と次のレビュー案内行（イタリック）を付ける：
-`*（レビュー用ドラフト：本文を直接編集してください。英字¥カタカナ¥ は読みがな記法、-- wp分割ライン -- は投稿時の区切りマーカーなので、そのまま残してください）*`
-Google Drive の create_file で `contentMimeType=text/markdown`・`parentId=1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS` に作成する。
+貼り付け用のMDは手で組み立てず、次のスクリプトに作らせる。frontmatterの除去・タイトル行・レビュー案内行・**レシピ版の行**をまとめて付ける。
+
+```bash
+python3 scripts/make_doc_md.py "drafts/{対象用語}.md"
+```
+
+`pipeline/doc-ready/{対象用語}.md` が書き出されるので、その中身をそのまま Google Drive の create_file に渡す（`contentMimeType=text/markdown`・`parentId=1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS`）。
+Step 2 の刻印を飛ばしているとスクリプトが止まる。止まったら stamp_version.py をやり直す。
 
 ## Step 4: 書き戻し
 次を実行する。フロントマターの読み取り・行の特定（無ければ新規追加）・全項目の書き戻しをスクリプトがまとめて行う。
