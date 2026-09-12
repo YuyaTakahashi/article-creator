@@ -26,6 +26,7 @@ import base64
 import mimetypes
 import urllib.request
 import urllib.error
+import urllib.parse
 from pathlib import Path
 
 
@@ -308,18 +309,15 @@ def append_post_id(md_path: Path, post_id: int):
 
 # ---------- メディア（挿絵・アイキャッチ）アップロード ----------
 
-def upload_media(env: dict, path: Path):
-    """画像を WP メディアライブラリへアップロードし (id, source_url) を返す。"""
+def upload_bytes(env: dict, data: bytes, fname: str, mime: str = None):
+    """画像のバイト列を WP メディアライブラリへアップロードし (id, source_url) を返す。"""
     site = env["WP_SITE_URL"].rstrip("/")
     user = env["WP_USER"]
     app_pass = env["WP_APP_PASS"].replace(" ", "")
     auth = base64.b64encode(f"{user}:{app_pass}".encode()).decode()
-    fname = path.name
     # Content-Disposition は latin-1 でエンコードされるため、日本語等の非ASCIIファイル名は
     # ASCIIへ変換してから送る（変換しないと UnicodeEncodeError でアップロードが落ちる）
     safe_fname = re.sub(r"[^A-Za-z0-9._-]", "-", fname).strip("-") or "image.png"
-    mime, _ = mimetypes.guess_type(fname)
-    data = path.read_bytes()
     req = urllib.request.Request(
         f"{site}/wp-json/wp/v2/media",
         data=data,
@@ -335,12 +333,44 @@ def upload_media(env: dict, path: Path):
     return body["id"], body["source_url"]
 
 
+def upload_media(env: dict, path: Path):
+    """ローカルの画像ファイルを WP メディアライブラリへアップロードする。"""
+    mime, _ = mimetypes.guess_type(path.name)
+    return upload_bytes(env, path.read_bytes(), path.name, mime)
+
+
+# 本文の外部画像のうち、WPメディアへ複製し直すホスト。
+# Wikimedia の画像は自由に使えるライセンスで配られているため複製してよい。
+# それ以外（本人の公式サイト等）は権利がはっきりしないので、出典を明記したまま
+# ホットリンクで残す。article-post スキルの画像選定ルールと同じ線引きにしている。
+REHOST_HOSTS = ("upload.wikimedia.org", "commons.wikimedia.org")
+
+
+def fetch_remote_image(url: str):
+    """外部の画像を取ってきて (bytes, ファイル名, MIME) を返す。取れなければ None。"""
+    fname = urllib.parse.unquote(urllib.parse.urlparse(url).path.rsplit("/", 1)[-1]) or "image"
+    # Wikimedia は User-Agent の無いリクエストを拒否するので必ず名乗る
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "article-creator/1.0 (UX TIMES glossary; +https://uxdaystokyo.com)",
+    })
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = resp.read()
+        mime = resp.headers.get("Content-Type", "").split(";")[0].strip()
+    if not mime.startswith("image/"):
+        raise ValueError(f"画像ではない Content-Type: {mime or '（不明）'}")
+    if "." not in fname:
+        fname += mimetypes.guess_extension(mime) or ".png"
+    return data, fname, mime
+
+
 def process_media(env: dict, md_path: Path, md_text: str) -> str:
     """本文中の <img src="drafts/..."> をWPメディアへアップしてURLに置換し、
+    Wikimedia の外部画像も WP メディアへ複製し直す。あわせて
     フロントマターの eyecatch_image をアップして featured_media を付与する。
     変更は md_path に永続化し、再実行時の二重アップロードを防ぐ
-    （次回はsrcがhttp URLになるため対象外になる）。"""
+    （次回はsrcが自サイトのURLになるため対象外になる）。"""
     repo_root = md_path.resolve().parent.parent
+    site_host = urllib.parse.urlparse(env["WP_SITE_URL"]).netloc
     changed = False
 
     # 1) 本文のローカル画像（挿絵・提唱者ポートレート等）
@@ -354,6 +384,27 @@ def process_media(env: dict, md_path: Path, md_text: str) -> str:
         md_text = md_text.replace(f'src="{src}"', f'src="{url}"')
         changed = True
         print(f"[media] 挿絵アップロード: {src} -> {url}")
+
+    # 1.5) 本文の外部画像（提唱者ポートレート等）をWPメディアへ複製する。
+    # ホットリンクのままだと、配信元でファイルが差し替わったり消えたりしたときに
+    # 公開中の記事の画像が黙って壊れる。取得に失敗したらURLはそのまま残し、投稿は止めない。
+    remote_srcs = sorted(set(re.findall(r'src="(https?://[^"]+)"', md_text)))
+    for src in remote_srcs:
+        host = urllib.parse.urlparse(src).netloc
+        if host == site_host:
+            continue  # すでに自サイトのメディア
+        if host not in REHOST_HOSTS:
+            print(f"[media] 複製の対象外なのでホットリンクのまま残す: {host}")
+            continue
+        try:
+            data, fname, mime = fetch_remote_image(src)
+            _id, url = upload_bytes(env, data, fname, mime)
+        except Exception as e:  # noqa: BLE001 画像1枚の失敗で投稿全体を落とさない
+            sys.stderr.write(f"[media] 複製に失敗したのでホットリンクのまま残す: {src}（{e}）\n")
+            continue
+        md_text = md_text.replace(f'src="{src}"', f'src="{url}"')
+        changed = True
+        print(f"[media] 外部画像を複製: {src} -> {url}")
 
     # 2) アイキャッチ → featured_media
     fm, _ = parse_frontmatter(md_text)

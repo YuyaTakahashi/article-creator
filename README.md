@@ -52,6 +52,9 @@ Docの本文で `Robert¥ロバート¥` のように書いた箇所は、WP下�
 - 単発で今すぐ1本生成：`bash scripts/generate-term.sh "◯◯"` または `/generate-term ◯◯`
 - Slackで頼まれた分を今すぐ消化：`bash scripts/friday-glossary-batch.sh --quiet`（新規リクエストと作り直しをまとめて処理。`--quiet` を付けるとSlack告知を出さない。告知は月曜レポートがまとめて出す）
 - 画像入れ：`/glossary-wp-images G-xxx`（提唱者の顔写真・アイキャッチ・各章の挿絵を自動でWP下書きに入れる）
+  - 投稿時、`post_to_wp.py` が画像をWPメディアライブラリへ上げ直す。`drafts/` のローカル画像に加えて、Wikimedia（`upload.wikimedia.org` / `commons.wikimedia.org`）の外部画像も複製する。配信元でファイルが差し替わったり消えたりしても、公開中の記事の画像が壊れないようにするため。
+  - Wikimedia 以外の外部画像（本人の公式サイトの写真など）は権利がはっきりしないので複製せず、出典を明記したままホットリンクで残す。
+  - 取得に失敗した画像はURLをそのまま残して投稿を続ける。ログに `[media] 複製に失敗したので…` が出ていたら、その画像はホットリンクのままになっている。
 - セットアップは下の「セットアップ」を参照。
 
 ### Claude Code が無い人
