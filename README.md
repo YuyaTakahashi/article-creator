@@ -294,6 +294,7 @@ Slackで用語くんに頼む。
 bash scripts/weekly-learn-batch.sh
 ```
 
+0. `sync_published_status.py` が、WPで公開された記事の用語DBステータスを「公開済み」に直す（WPで公開してもDBは書き換わらないため。「作り直し済み」「見送り」は触らない）。完了マーク済みの週も毎回走る
 1. `collect_edit_gaps.py` が、公開済み（`wp_post_id` あり・用語DBのW列が空）の記事について、初稿と公開版を段落単位で突き合わせ、`logs/gaps/{日付}/{用語}.md` に差分を出す
 2. 差分を読んで分類し、**既存ルールで防げたはず**か**ルール自体が無い**かに切り分けて `prompts/learned/observations.md` に積む
 3. 未反映の観測が**3本たまったら** `prompts/learned/proposal-{日付}.md` に改訂案が出る
