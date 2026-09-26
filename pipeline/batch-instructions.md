@@ -100,6 +100,8 @@ python3 scripts/stamp_version.py "drafts/{topic}.md"
    `*（版：v15 ／ レシピhash 7fe2c26a0557 ／ 生成日 2026-09-07 ／ この行はレビュー用で、WordPressには載りません）*`
 2. 書き出された `pipeline/doc-ready/{用語}.md` の中身をそのまま使い、`create_file`（Drive連携）で `contentMimeType: text/markdown`・`parentId: 記事ドラフトフォルダ` を指定して作成する（自動でGoogleドキュメントに変換される）
 
+提唱者の肖像や挿絵の `<figure>` は、このスクリプトがDoc用の本文から外す。Docに入れると画像とキャプションが次の段落とつながり、用語くんがWP下書きにするときにキャプションの文字だけが本文に残るため。肖像は Step 4 の `register_draft.py` が用語DBのX列（肖像）へJSONで控え、用語くんがWP下書きにするときに `## 語源・提唱者` の元の位置へ差し込む（Wikimedia の画像はWPメディアへ複製する）。
+
 Step 2 の刻印を飛ばしているとスクリプトが止まる。止まったら stamp_version.py をやり直してから組み立て直す。
 
 作り直し（U列=TRUE）のときは、**旧Docを消さず新しいDocを作る**。人が旧Docに入れた編集を消さないためで、`--old-doc-url` を付けると版の行の後ろに次が足され、どちらが新しいか分かる：
