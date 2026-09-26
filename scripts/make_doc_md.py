@@ -5,6 +5,9 @@ Doc化のたびに手作業でフロントマターを外してタイトルと�
 版の記載が抜けたり、案内行の文面がDocごとにぶれたりしていた。ここで組み立てを
 1か所にまとめ、**どのDocを開いても、どのレシピ版で作られたかが分かる**ようにする。
 
+本文の <figure>（提唱者の肖像・挿絵）はDocに入れない。肖像はWP移行のときに用語くんが差し込む
+（scripts/portraits.py に理由を書いた）。
+
 出力の冒頭は必ずこの形になる:
 
     # {タイトル}
@@ -33,6 +36,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from stamp_version import split_frontmatter, read_key  # noqa: E402
 from recipe_version import BASE  # noqa: E402
+from portraits import split_figures  # noqa: E402
 
 DOC_READY = BASE / "pipeline" / "doc-ready"
 
@@ -98,6 +102,10 @@ def build(md_path: Path, old_doc_url=None):
     if body_lines and body_lines[0].strip() == "---":
         body_lines = body_lines[1:]
     body_text = "\n".join(body_lines).lstrip("\n")
+    # 肖像・挿絵の <figure> はDocに入れない。Docでは画像とキャプションが次の段落とつながり、
+    # WP移行でキャプションの文字だけが本文に残るため。肖像は register_draft.py が用語DBのX列へ控え、
+    # 用語くんがWP下書きにするときに差し込む。
+    body_text, _ = split_figures(body_text)
 
     return "\n".join(head) + "\n\n" + body_text
 

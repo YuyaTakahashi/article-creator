@@ -38,6 +38,8 @@ const COL = {
   EYECATCH_PROMPT: 18,
   // レシピ版管理。S=どのレシピ版で作った記事か、T=そのときのハッシュ、U=作り直しリクエスト、V=依頼の経緯
   CREATOR_VERSION: 19, RECIPE_HASH: 20, REGEN: 21, REGEN_NOTE: 22,
+  // W=GAP確認日（collect_edit_gaps.py が使う）。X=提唱者の肖像（JSON）。Docには入れず、WP下書き化のときに差し込む
+  PORTRAIT: 24,
 };
 
 // ============================================================
@@ -676,6 +678,14 @@ function ensureVersionColumns_(sheet) {
   return sh;
 }
 
+/** 用語DBのX列に見出しが無ければ入れる。 */
+function ensurePortraitColumn_(sheet) {
+  const sh = sheet || getGlossarySheet_();
+  const cell = sh.getRange(1, COL.PORTRAIT);
+  if (String(cell.getValue() || '').trim() === '') cell.setValue('肖像（WP下書き化で挿入）');
+  return sh;
+}
+
 /** 生成済みの記事のうち、現行レシピ版より前に作られたものを数える。 */
 function countStale_() {
   const sheet = ensureVersionColumns_();
@@ -1167,6 +1177,11 @@ function updateRow(body) {
   set(COL.CREATOR_VERSION, body.creator_version);
   set(COL.RECIPE_HASH, body.recipe_hash);
   set(COL.REGEN_NOTE, body.regen_note);
+  // 肖像（X列）。"[]"（肖像なし）も書く。作り直しで肖像が無くなったとき、古い肖像を残さないため
+  if (body.portrait !== undefined && body.portrait !== null && body.portrait !== '') {
+    ensurePortraitColumn_(sheet);
+    sheet.getRange(row, COL.PORTRAIT).setValue(String(body.portrait));
+  }
   // 作り直しリクエスト（U列）。バッチが作り直し完了時に regen:false を送って消化する。false も明示的に書く。
   if (body.regen !== undefined && body.regen !== null && body.regen !== '') {
     sheet.getRange(row, COL.REGEN).setValue(body.regen);
@@ -1460,7 +1475,9 @@ function publishRowToWpDraftLocked_(sheet, row) {
   const md = cleanReviewMd_(fetchDocMarkdown_(docUrl));
   const title = extractTitle_(md) || term;
   // 「-- wp分割ライン--」より後ろだけが本文。前段（フロントマター・最小限の説明・改ページ）は本文に入れない（post_to_wp.pyと同じ）
-  const html = mdToHtml_(stripToBody_(stripTitle_(md)));
+  // 肖像はDocに入っていない。用語DBのX列から差し込む（Docに肖像が入っていた頃の記事は、残ったキャプションを先に消す）
+  const portraits = preparePortraits_(cfg, sheet, row);
+  const html = mdToHtml_(insertPortraits_(stripPortraitCaptions_(stripToBody_(stripTitle_(md))), portraits));
 
   const payload = { title: title, content: html };
   if (excerpt) payload.excerpt = excerpt;
@@ -1515,6 +1532,107 @@ function publishRowToWpDraftLocked_(sheet, row) {
   // WP下書き化したDocのファイル名頭に「【WP移行済み】」を付け、他の人が間違って着手しないようにする。
   try { markDocMigrated_(docUrl); } catch (e) { console.warn('Docタイトル更新失敗（WP下書きは成功済み）: ' + e); }
   return { term: term, link: editUrl, id: j.id, note: note };
+}
+
+// ============================================================
+// 提唱者の肖像（WP下書き化のときに差し込む）
+//   Docに肖像を入れると、画像とキャプションが次の段落と1つにつながり、fetchDocMarkdown_ は画像を読まないため
+//   「〇〇（出典：URL） これによって…」とキャプションの文字だけが本文に残っていた。
+//   いまはDocに肖像を入れず（scripts/make_doc_md.py）、register_draft.py が X列へ
+//   [{"html":"<figure …>","src":"…","after":"Hegel"}] を控える。ここではそれを本文へ戻す。
+// ============================================================
+
+// 自由に使えるライセンスで配られているので、WPメディアへ複製してよい画像の配信元（post_to_wp.py と同じ）
+const PORTRAIT_REHOST_HOSTS = ['upload.wikimedia.org', 'commons.wikimedia.org'];
+
+/** X列の肖像を読み、Wikimedia の画像はWPメディアへ複製してから返す。複製した先はX列へ書き戻し、次回は上げ直さない。 */
+function preparePortraits_(cfg, sheet, row) {
+  const raw = String(sheet.getRange(row, COL.PORTRAIT).getValue() || '').trim();
+  if (!raw) return [];
+  let list;
+  try { list = JSON.parse(raw); } catch (e) { console.warn('X列の肖像を読めない（肖像なしで進める）: ' + e); return []; }
+  if (!Array.isArray(list)) return [];
+  let changed = false;
+  list.forEach(function (p) {
+    if (!p || !p.html || !p.src) return;
+    const host = (String(p.src).match(/^https?:\/\/([^\/?#]+)/) || [])[1] || '';
+    if (PORTRAIT_REHOST_HOSTS.indexOf(host) === -1) return;   // 権利がはっきりしない画像はホットリンクのまま
+    try {
+      const url = rehostImage_(cfg, p.src);
+      p.html = p.html.split(p.src).join(url);
+      p.src = url;
+      changed = true;
+    } catch (e) {
+      console.warn('肖像の複製に失敗したのでホットリンクのまま残す: ' + p.src + '（' + e + '）');
+    }
+  });
+  if (changed) sheet.getRange(row, COL.PORTRAIT).setValue(JSON.stringify(list));
+  return list;
+}
+
+/** 外部画像を取ってきてWPメディアへ上げ、そのURLを返す。 */
+function rehostImage_(cfg, src) {
+  // Wikimedia は User-Agent の無いリクエストを拒否するので必ず名乗る
+  const got = UrlFetchApp.fetch(src, {
+    headers: { 'User-Agent': 'UXTIMES-glossary-bot/1.0 (' + cfg.site + ')' },
+    muteHttpExceptions: true,
+  });
+  if (got.getResponseCode() !== 200) throw new Error('画像の取得に失敗（' + got.getResponseCode() + '）');
+  const blob = got.getBlob();
+  const mime = blob.getContentType() || '';
+  if (mime.indexOf('image/') !== 0) throw new Error('画像ではない応答（' + mime + '）');
+  let fname = decodeURIComponent(String(src).split('?')[0].split('/').pop() || 'portrait');
+  fname = fname.replace(/[^A-Za-z0-9._-]/g, '-').replace(/^-+|-+$/g, '') || 'portrait.jpg';
+  const up = UrlFetchApp.fetch(cfg.site + '/wp-json/wp/v2/media', {
+    method: 'post',
+    contentType: mime,
+    headers: { Authorization: 'Basic ' + cfg.auth, 'Content-Disposition': 'attachment; filename="' + fname + '"' },
+    payload: blob.getBytes(),
+    muteHttpExceptions: true,
+  });
+  const code = up.getResponseCode();
+  if (code < 200 || code >= 300) throw new Error('WPメディアへの登録に失敗（' + code + '）');
+  const url = JSON.parse(up.getContentText()).source_url;
+  if (!url) throw new Error('WPメディアのURLが返らなかった');
+  return url;
+}
+
+/**
+ * Docに肖像が入っていた頃の記事で、画像だけ落ちて残ったキャプション「〇〇（出典：URL）」を段落の頭から消す。
+ * 氏名部分は句点を含まない短い語に限る（本文の文中にある出典表記を巻き込まないため）。
+ */
+function stripPortraitCaptions_(md) {
+  return String(md)
+    .replace(/^[^\n。（]{1,60}（出典：[^）\n]*https?:\/\/[^）\n]*）[ \t　]*/gm, '')
+    .replace(/\n{3,}/g, '\n\n');
+}
+
+/**
+ * 肖像を `## 語源・提唱者` の中へ戻す。目印（after＝英字の姓など）を含む最初の段落の直後に置き、
+ * 見つからなければ節の1段落目の直後に置く。同じ画像がすでに本文にあれば足さない。
+ */
+function insertPortraits_(md, portraits) {
+  if (!portraits || !portraits.length) return md;
+  const blocks = String(md).split(/\n{2,}/);
+  const isHeading = function (b) { return /^#{1,4}\s/.test(b); };
+  portraits.forEach(function (p) {
+    if (!p || !p.html) return;
+    if (p.src && md.indexOf(p.src) !== -1) return;
+    let start = -1;
+    for (let i = 0; i < blocks.length; i++) { if (/^#{1,4}\s*語源/.test(blocks[i])) { start = i; break; } }
+    if (start === -1) { console.warn('語源・提唱者の見出しが無いので肖像を入れない: ' + p.src); return; }
+    let end = blocks.length;
+    for (let i = start + 1; i < blocks.length; i++) { if (isHeading(blocks[i])) { end = i; break; } }
+    let at = -1;
+    if (p.after) {
+      for (let i = start + 1; i < end; i++) {
+        if (blocks[i].indexOf('<figure') !== 0 && blocks[i].indexOf(p.after) !== -1) { at = i; break; }
+      }
+    }
+    if (at === -1) at = (start + 1 < end) ? start + 1 : start;
+    blocks.splice(at + 1, 0, String(p.html).replace(/\s*\n\s*/g, ' '));
+  });
+  return blocks.join('\n\n');
 }
 
 /**

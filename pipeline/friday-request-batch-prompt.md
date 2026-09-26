@@ -24,14 +24,18 @@
 - 作り直し（U列=TRUE）のときは、生成前に既存MDを `drafts/_archive/{用語}_{旧版}_{今日}.md` へ退避し、刻印は `--regenerated-from {旧版}` を付けて実行する
 
 ## Step 3: Doc化（記事ドラフトフォルダ）
-生成できた各ドラフトについて、frontmatterを除去し、冒頭に「# {タイトル}」と次のレビュー案内行（イタリック）を付ける:
-`*（レビュー用ドラフト：本文を直接編集してください。英字¥カタカナ¥ は読みがな記法、-- wp分割ライン -- は投稿時の区切りマーカーなので、そのまま残してください）*`
-これを Google Drive の create_file で `contentMimeType=text/markdown`・`parentId=1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS` に作成する（自動でGoogleドキュメントに変換される）。作成された Doc の URL を控える。
+生成できた各ドラフトについて、貼り付け用のMDを **手で作らず必ず** 次で組み立てる（フロントマターの除去・タイトル・レビュー案内・版の行をまとめて付け、提唱者の肖像などの `<figure>` を外す）:
+`python3 scripts/make_doc_md.py "drafts/{用語}.md"`（作り直しのときは `--old-doc-url "{旧DocURL}"` を付ける）
+肖像はDocに入れない。Docでは画像とキャプションが次の段落とつながり、WP移行でキャプションの文字だけが本文に残るため。肖像は Step 4 で用語DBのX列に控え、用語くんがWP下書きにするときに差し込む。
+書き出された `pipeline/doc-ready/{用語}.md` の中身をそのまま Google Drive の create_file で `contentMimeType=text/markdown`・`parentId=1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS` に作成する（自動でGoogleドキュメントに変換される）。作成された Doc の URL を控える。
 
 作り直しの場合は**旧Docを消さず新しいDocを作り**、レビュー案内行の後ろに `*（{新版} で作り直した版です。前の版はこちら: {旧DocのURL}）*` を足す。
 
 ## Step 4: 書き戻し（update_row webhook）
-各件について .env の GAS_WEBAPP_URL に curl で POST する:
+生成できた各件は、次の1コマンドで書き戻す（フロントマターの値と、X列の肖像をまとめて送る）:
+`python3 scripts/register_draft.py "drafts/{用語}.md" --id G-xxx --doc-url "<DocURL>"`（作り直しのときは `--regenerated-from {旧版} --old-doc-url "{旧DocURL}"` を付ける。status・regen・note・regen_note はスクリプトが決める）
+
+見送りの件だけは、.env の GAS_WEBAPP_URL に curl で直接 POST する。参考までに、生成した件で送っている項目は次のとおり:
 ```
 {"token":"<GAS_TOKEN>","action":"update_row","id":"G-xxx","status":"レビュー待ち","doc_url":"<DocURL>","generated_at":"<今日YYYY-MM-DD>","slug":"<frontmatterのslug>","excerpt":"<frontmatterのexcerpt>","category_id":<frontmatterのcategory_id>,"eyecatch_prompt":"<frontmatterのeyecatch_prompt>","creator_version":"<frontmatterのcreator_version>","recipe_hash":"<frontmatterのrecipe_hash>","flag":false}
 ```

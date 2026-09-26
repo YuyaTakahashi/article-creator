@@ -14,6 +14,8 @@ Doc化そのものは Drive コネクタ（create_file）が担当し、ここ�
     python3 scripts/register_draft.py drafts/OOUX.md --doc-url "..." \
         --regenerated-from v0 --old-doc-url "https://docs.google.com/...旧..."
     python3 scripts/register_draft.py drafts/モーダル.md --doc-url "..." --dry-run
+    python3 scripts/register_draft.py drafts/ヘーゲルの弁証法.md --portrait-only --id G-087
+        肖像（X列）だけを書き戻す。Docに肖像を入れていた頃に作った記事の後追い用
 
 用語DBの行は、ファイル名（drafts/{用語}.md）を用語名として B列 から探す。
 見つからなければ add_term で新しい行を作ってから書き戻す。--term で明示もできる。
@@ -31,6 +33,8 @@ from datetime import date
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE / "scripts"))
+from portraits import portraits_json  # noqa: E402
 SHEET_ID = "1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY"
 TAB = "UX TIMES 用語DB"
 # 行数は固定せず広めに読む。上限を切ると、超えた行の用語が「無い」と判定されて重複行が生える。
@@ -148,13 +152,18 @@ def warn_if_critic_skipped(term):
 def main():
     ap = argparse.ArgumentParser(description="記事MDを用語DBに反映する")
     ap.add_argument("md", help="drafts/{用語}.md")
-    ap.add_argument("--doc-url", required=True, help="Doc化で作ったGoogleドキュメントのURL")
+    ap.add_argument("--doc-url", help="Doc化で作ったGoogleドキュメントのURL（--portrait-only 以外では必須）")
+    ap.add_argument("--portrait-only", action="store_true",
+                    help="肖像（X列）だけを書き戻す。ステータスやDocリンクには触らない")
+    ap.add_argument("--id", help="用語DBのG-ID。ファイル名と用語名が一致しないときに指定する")
     ap.add_argument("--term", help="用語DBのB列と照合する用語名（既定はファイル名）")
     ap.add_argument("--regenerated-from", help="作り直しのとき、元のレシピ版（例: v0）")
     ap.add_argument("--old-doc-url", help="作り直しのとき、前の版のDoc URL")
     ap.add_argument("--context", default="", help="新規行を作るときの補足・文脈")
     ap.add_argument("--dry-run", action="store_true", help="送信内容を出すだけで書き込まない")
     args = ap.parse_args()
+    if not args.portrait_only and not args.doc_url:
+        ap.error("--doc-url が必要（肖像だけを書き戻すなら --portrait-only）")
 
     env = load_env()
     if not args.dry_run and (not env.get("GAS_WEBAPP_URL") or not env.get("GAS_TOKEN")):
@@ -165,6 +174,19 @@ def main():
         path = BASE / args.md
     if not path.exists():
         sys.exit(f"見つからない: {args.md}")
+
+    if args.portrait_only:
+        gid = args.id
+        if not gid:
+            _, gid, _ = find_row(read_sheet(), args.term or path.stem)
+        if not gid:
+            sys.exit(f"用語DBに行が見つからない: {args.term or path.stem}（--id G-xxx で指定する）")
+        portrait = portraits_json(path.read_text(encoding="utf-8"))
+        res = post(env, {"action": "update_row", "id": gid, "portrait": portrait}, args.dry_run)
+        if not res.get("ok"):
+            sys.exit(f"update_row に失敗: {res}")
+        print(f"完了: {gid} に肖像 {len(json.loads(portrait))} 件を書き戻した")
+        return 0
 
     fm = read_frontmatter(path)
     term = args.term or path.stem
@@ -187,7 +209,14 @@ def main():
             pass
 
     rows = read_sheet()
-    row_no, gid, row = find_row(rows, term)
+    if args.id:
+        hit = [(i, r) for i, r in enumerate(rows[1:], start=2) if r and str(r[0]).strip() == args.id]
+        if not hit:
+            sys.exit(f"用語DBに {args.id} が無い")
+        row_no, row = hit[0]
+        gid = args.id
+    else:
+        row_no, gid, row = find_row(rows, term)
     if gid:
         print(f"用語DB: {gid}（{row_no}行目）に反映する")
     else:
@@ -214,6 +243,8 @@ def main():
         "creator_version": fm.get("creator_version", ""),
         "recipe_hash": fm.get("recipe_hash", ""),
         "flag": False,
+        # 肖像はDocに入れず、ここでX列に控える。用語くんがWP下書きにするときに差し込む
+        "portrait": portraits_json(path.read_text(encoding="utf-8")),
     }
     if fm.get("category_id"):
         payload["category_id"] = fm["category_id"]
