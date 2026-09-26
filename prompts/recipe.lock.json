@@ -1,19 +1,19 @@
 {
-  "version": "v16",
-  "hash": "98565a4937e0c588259bccb73de2a80ec73c1da034bed3ef8561b1c7d3b71aed",
-  "updated_at": "2026-09-12",
-  "note": "最小限の説明を用語名と同じ向きで締め、用語名の限定語を落とさないルールを追加。Doc化手順をmake_doc_md.py経由に変更(v16)",
+  "version": "v17",
+  "hash": "aef52788149d3366e08742b2d4c3c108cd1821c87997d73b9ec86e8261eedd93",
+  "updated_at": "2026-09-26",
+  "note": "ヘーゲルの弁証法と恒常的注意力分散の公開版から抽出(v17)。PR #18 の5点（リード文3段落・語源の固有情報の採否・誰に効くかの枠を写さない・誰と使うかの採否・予告文と二段構え）に加え、定義セクションはリード文の例の続きで書き否定形の見出しにしない、冒頭の結論文で答えまで言い切る、段落末のまとめ直しを置かない、手法の例は途中を省かない、根拠として引く第三者に肩書きを添える、名称の由来の豆知識は書かない、を追加",
   "files": {
     "prompts/01_information_gathering.md": "0faa9e5f470624c36b54b7346fc779af9802320960c4334ad05c9be8db4a324f",
-    "prompts/02_polishing.md": "d4b2cb8185561046885e239ca8dc7e19f8ab17359f61a64ed2c1f39c493f8661",
+    "prompts/02_polishing.md": "7d67ed02b0d7144a0c49a04726ba314866617858d048113228d1fff85a233ab1",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
-    ".agent/skills/article-creator/SKILL.md": "5f2c870ea03f1aa4632c26fa797bb3f53414431ffac9837ee59f52393fea491b",
+    ".agent/skills/article-creator/SKILL.md": "cb86e48e02a46417a6a8a8fdbf991bcff2ee1e49ff4e7350d75a7734fc11b768",
     ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
     ".agent/skills/article-critic/SKILL.md": "d28bd02dbd63b40ff5f2a6ad370edcd063e0dabecb5323b383bfa6d01e87be8e",
     ".agent/skills/article-critic/references/template-critic.md": "22391b49379ce7be3070d60f662452ed59c3614ea9a003a759e22fe2ffe84abb",
     ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
     ".agent/skills/article-critic/references/reader-critic.md": "1cb7b6f1c7193b43d04be9c617fb4baa666ec7ae6c5f312b3cd57d7f982d1435",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
-    "CLAUDE.md": "90e8adf529e46be13c02692810474ebe6f0cd3458f2f58a1bb76a089585b5355"
+    "CLAUDE.md": "f3c4768baadc34c826ae3729f868e9779a0c6c2f58b4c3887028fb746151e178"
   }
 }
