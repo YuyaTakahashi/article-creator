@@ -16,6 +16,10 @@ MARKER="${BASE}/logs/learn-done-${WEEK}.marker"
 
 cd "${BASE}" || exit 1
 
+# WPで公開された記事を用語DBの「公開済み」に反映する。公開ボタンでDBは書き換わらず、
+# 放っておくと下の差分収集（公開済みだけが対象）から漏れる。完了マーク済みの週も毎回回す
+python3 scripts/sync_published_status.py >> "${LOG}" 2>&1 || true
+
 # 今週すでに成功していれば何もしない（定期リトライの冪等ガード）
 if [ -f "${MARKER}" ]; then
   exit 0
