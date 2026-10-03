@@ -159,6 +159,29 @@ def append_eyecatch_path(md_path: Path, rel_path: str):
     md_path.write_text(text, encoding="utf-8")
 
 
+# ---------- プロンプト組み立て ----------
+
+DEFAULT_TYPE = "conceptual diagram with arrows"
+
+
+def build_prompt(fm: dict, fallback_title: str, metaphor: str = None, objects: str = None,
+                 illustration_type: str = DEFAULT_TYPE) -> str:
+    """フロントマターからアイキャッチのプロンプトを組み立てる。メタファーが無ければ '' を返す。
+
+    doc_images.py（Docに画像を入れる工程）も同じ組み立てを使う。
+    """
+    metaphor = metaphor or fm.get("eyecatch_prompt", "")
+    if not metaphor:
+        return ""
+    title_jp = re.split(r"[（(]", fm.get("title", fallback_title))[0].strip()
+    return PROMPT_TEMPLATE.format(
+        illustration_type=illustration_type,
+        title_jp=title_jp,
+        core_metaphor=metaphor,
+        key_objects=objects or "main symbol of the term, supporting icons, connecting lines or arrows",
+    )
+
+
 # ---------- main ----------
 
 def main():
@@ -168,7 +191,7 @@ def main():
     parser.add_argument("--objects", help="KEY_OBJECTS（カンマ区切り、英語）")
     parser.add_argument(
         "--type",
-        default="conceptual diagram with arrows",
+        default=DEFAULT_TYPE,
         choices=["two-person dialogue", "conceptual diagram with arrows", "abstract infographic"],
         help="ILLUSTRATION_TYPE",
     )
@@ -187,20 +210,10 @@ def main():
 
     md_text = md_path.read_text(encoding="utf-8")
     fm = parse_frontmatter(md_text)
-    title_jp = re.split(r"[（(]", fm.get("title", md_path.stem))[0].strip()
 
-    metaphor = args.metaphor or fm.get("eyecatch_prompt", "")
-    if not metaphor:
+    prompt = build_prompt(fm, md_path.stem, args.metaphor, args.objects, args.type)
+    if not prompt:
         sys.exit("--metaphor を指定するか、フロントマターに eyecatch_prompt を入れてください。")
-
-    objects = args.objects or "main symbol of the term, supporting icons, connecting lines or arrows"
-
-    prompt = PROMPT_TEMPLATE.format(
-        illustration_type=args.type,
-        title_jp=title_jp,
-        core_metaphor=metaphor,
-        key_objects=objects,
-    )
     print("==== Prompt ====")
     print(prompt)
     print("================")

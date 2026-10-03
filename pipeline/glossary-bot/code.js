@@ -64,6 +64,8 @@ function doPost(e) {
     if (data.action === 'update_row') return updateRow(data);
     if (data.action === 'notify') return notifyAction_(data);
     if (data.action === 'set_recipe_version') return setRecipeVersion_(data);
+    if (data.action === 'insert_doc_image') return insertDocImageAction_(data);
+    if (data.action === 'clear_doc_images') return clearDocImagesAction_(data);
     return jsonOut({ ok: false, error: 'unknown action' });
   }
 
@@ -102,7 +104,7 @@ function handleMention(event) {
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
     postToSlack(event.channel,
-      ':large_green_circle: 1q0O 用語くん v37（ルビの全角￥・WP更新先の作り直し）が応答してるよ ✨\n' + buildLabel_(),
+      ':large_green_circle: 1q0O 用語くん v38（Docの画像をWPへ移す）が応答してるよ ✨\n' + buildLabel_(),
       event.thread_ts || event.ts);
     return;
   }
@@ -1472,7 +1474,10 @@ function publishRowToWpDraftLocked_(sheet, row) {
   const wpPostId = get(COL.WP_POST_ID);
   if (!docUrl) throw new Error('記事Doc(I列)が空です。先に記事を生成してください');
 
-  const md = cleanReviewMd_(fetchDocMarkdown_(docUrl));
+  const doc = fetchDocContent_(docUrl);
+  // Docに残っている画像（アイキャッチ候補・挿絵）をWPメディアへ上げ、本文の目印を <figure> に置き換える
+  const placed = placeDocImages_(cfg, cleanReviewMd_(doc.md), doc.images, slug || String(get(COL.ID) || 'glossary'), term);
+  const md = placed.md;
   const title = extractTitle_(md) || term;
   // 「-- wp分割ライン--」より後ろだけが本文。前段（フロントマター・最小限の説明・改ページ）は本文に入れない（post_to_wp.pyと同じ）
   // 肖像はDocに入っていない。用語DBのX列から差し込む（Docに肖像が入っていた頃の記事は、残ったキャプションを先に消す）
@@ -1483,7 +1488,12 @@ function publishRowToWpDraftLocked_(sheet, row) {
   if (excerpt) payload.excerpt = excerpt;
   if (slug) payload.slug = slug;
   if (categoryId !== '' && categoryId != null) payload[cfg.categoryField] = [Number(categoryId)];
-  if (featuredMedia !== '' && featuredMedia != null) payload.featured_media = Number(featuredMedia);
+  // Docで選んだアイキャッチがあればそれを使い、P列にも控える。無ければ従来どおりP列の値を使う
+  if (placed.featuredMedia) {
+    payload.featured_media = placed.featuredMedia;
+  } else if (featuredMedia !== '' && featuredMedia != null) {
+    payload.featured_media = Number(featuredMedia);
+  }
 
   // 更新先が本当にあるか先に見る。無いIDへそのままPOSTすると
   // 「WP応答 404: rest_post_invalid_id」で止まるだけで、どうすればいいか分からないため。
@@ -1526,6 +1536,8 @@ function publishRowToWpDraftLocked_(sheet, row) {
 
   sheet.getRange(row, COL.WP_URL).setValue(editUrl);
   sheet.getRange(row, COL.WP_POST_ID).setValue(j.id);
+  if (placed.featuredMedia) sheet.getRange(row, COL.FEATURED_MEDIA).setValue(placed.featuredMedia);
+  if (placed.warnings.length) note = (note ? note + '\n' : '') + placed.warnings.join('\n');
   // 既存投稿の更新（公開中の記事を最新レシピの本文に差し替えた場合）は公開状態を保つ。
   // 新規下書きのときだけ「下書き作成済み」にする。
   sheet.getRange(row, COL.STATUS).setValue(j.status === 'publish' ? '公開済み' : '下書き作成済み');
@@ -1682,17 +1694,36 @@ function markDocMigrated_(docUrl) {
 
 /** GoogleドキュメントをDocumentApp（内蔵）で読み、Markdown相当にする。documentsスコープだけで動く。 */
 function fetchDocMarkdown_(docUrl) {
-  const m = String(docUrl).match(/[-\w]{25,}/);
-  if (!m) throw new Error('Doc URLからIDを取得できません: ' + docUrl);
-  const body = DocumentApp.openById(m[0]).getBody();
+  return fetchDocContent_(docUrl).md;
+}
+
+/**
+ * Docを読み、Markdown相当の本文と、本文中の画像を返す。{ md, images: [{blob, alt, desc}] }
+ * 画像は本文の位置に `[[docimg:N]]` の目印を1行で置く（N は images の添字）。
+ * 以前は段落の文字（getText）しか読まず、画像は黙って落ち、同じ段落のキャプションの文字だけが本文に残っていた。
+ */
+function fetchDocContent_(docUrl) {
+  const body = DocumentApp.openById(docIdOf_(docUrl)).getBody();
   const out = [];
+  const images = [];
+  const pushImages = function (el) {
+    for (let c = 0; c < el.getNumChildren(); c++) {
+      const ch = el.getChild(c);
+      if (ch.getType() !== DocumentApp.ElementType.INLINE_IMAGE) continue;
+      const img = ch.asInlineImage();
+      images.push({ blob: img.getBlob(), alt: String(img.getAltTitle() || ''), desc: String(img.getAltDescription() || '') });
+      out.push(docImageMark_(images.length - 1));
+    }
+  };
   const n = body.getNumChildren();
   for (let i = 0; i < n; i++) {
     const el = body.getChild(i);
     const t = el.getType();
     if (t === DocumentApp.ElementType.PARAGRAPH) {
       const p = el.asParagraph();
+      pushImages(p);
       const md = textElementToMd_(p.editAsText(), p.getText());
+      if (!md.trim() && p.getNumChildren() && hasInlineImage_(p)) continue;   // 画像だけの段落
       const h = p.getHeading();
       let prefix = '';
       if (h === DocumentApp.ParagraphHeading.HEADING1) prefix = '# ';
@@ -1705,7 +1736,212 @@ function fetchDocMarkdown_(docUrl) {
       out.push('- ' + textElementToMd_(li.editAsText(), li.getText()));
     }
   }
-  return out.join('\n\n');
+  return { md: out.join('\n\n'), images: images };
+}
+
+function docIdOf_(docUrl) {
+  const m = String(docUrl).match(/[-\w]{25,}/);
+  if (!m) throw new Error('Doc URLからIDを取得できません: ' + docUrl);
+  return m[0];
+}
+
+function hasInlineImage_(el) {
+  for (let c = 0; c < el.getNumChildren(); c++) {
+    if (el.getChild(c).getType() === DocumentApp.ElementType.INLINE_IMAGE) return true;
+  }
+  return false;
+}
+
+function docImageMark_(i) { return '[[docimg:' + i + ']]'; }
+
+// ============================================================
+// Docの画像（アイキャッチ候補・挿絵）
+//   生成バッチ（scripts/doc_images.py）が webhook でDocへ差し込み、レビューする人は要らない画像を消す。
+//   WP下書きにするとき、残った画像をWPメディアへ上げる。
+//   - アイキャッチ: 「wp分割ライン」より前にある画像（または代替タイトルが eyecatch の画像）。先頭の1枚を featured_media にする
+//   - 挿絵: 本文（wp分割ラインより後ろ）にある画像。その位置に <figure> を置く。人がDocに貼った画像もここに入る
+// ============================================================
+
+const DOC_IMAGE_KINDS = ['eyecatch', 'illustration'];
+const EYECATCH_LABEL = '▼ アイキャッチ候補（使う1枚だけ残してください。複数残っていたら先頭を使います。本文の挿絵も、使わないものは消してください）';
+
+/** webhook: Docに画像を1枚差し込む。{doc_url, kind, heading?, alt?, mime?, name?, data(base64)} */
+function insertDocImageAction_(data) {
+  try {
+    if (DOC_IMAGE_KINDS.indexOf(data.kind) === -1) throw new Error('kind は eyecatch か illustration にしてください');
+    if (!data.data) throw new Error('画像データ(data)が空です');
+    const doc = DocumentApp.openById(docIdOf_(data.doc_url));
+    const body = doc.getBody();
+    const blob = Utilities.newBlob(Utilities.base64Decode(data.data), data.mime || 'image/png', data.name || 'image.png');
+    let at;
+    if (data.kind === 'eyecatch') {
+      // wp分割ラインの直前に並べる（前段なのでWPの本文には入らない）。候補を足すたびに分割ラインが1つ下がるので、送った順に並ぶ
+      at = findSplitLineIndex_(body);
+      if (at === -1) throw new Error('Docに「wp分割ライン」が見つからないので、アイキャッチの置き場所が決められません');
+      if (!(at > 0 && body.getChild(at - 1).getType() === DocumentApp.ElementType.PARAGRAPH &&
+            hasInlineImage_(body.getChild(at - 1)) && isDocImageOf_(body.getChild(at - 1), 'eyecatch'))) {
+        body.insertParagraph(at, EYECATCH_LABEL).setHeading(DocumentApp.ParagraphHeading.NORMAL);
+        at++;
+      }
+    } else {
+      const h = findHeadingIndex_(body, data.heading);
+      if (h === -1) throw new Error('見出し「' + data.heading + '」がDocに見つかりません');
+      at = h + 1;
+      // 同じ見出しに2枚目以降を入れるときは、先に入れた挿絵の後ろに並べる
+      while (at < body.getNumChildren() && isDocImageOf_(body.getChild(at), 'illustration')) at++;
+    }
+    const p = body.insertParagraph(at, '');
+    p.setHeading(DocumentApp.ParagraphHeading.NORMAL);
+    p.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
+    const img = p.appendInlineImage(blob);
+    img.setAltTitle(data.kind);
+    if (data.alt) img.setAltDescription(String(data.alt));
+    // Docで見比べやすい大きさにそろえる（アイキャッチは2案を縦に並べるので小さめ）
+    const maxW = data.kind === 'eyecatch' ? 260 : 440;
+    const w = img.getWidth(), hgt = img.getHeight();
+    if (w > maxW) { img.setWidth(maxW); img.setHeight(Math.round(hgt * maxW / w)); }
+    doc.saveAndClose();
+    return jsonOut({ ok: true });
+  } catch (e) {
+    return jsonOut({ ok: false, error: String(e && e.message || e) });
+  }
+}
+
+/** webhook: 以前に差し込んだ画像（代替タイトルが eyecatch / illustration）と案内行を消す。送り直しで重ならないようにする。 */
+function clearDocImagesAction_(data) {
+  try {
+    const doc = DocumentApp.openById(docIdOf_(data.doc_url));
+    const body = doc.getBody();
+    let removed = 0;
+    for (let i = body.getNumChildren() - 1; i >= 0; i--) {
+      const el = body.getChild(i);
+      if (el.getType() !== DocumentApp.ElementType.PARAGRAPH) continue;
+      const p = el.asParagraph();
+      if (p.getText() === EYECATCH_LABEL) { removeParagraph_(body, p); continue; }
+      if (!hasInlineImage_(p) || p.getText().trim()) continue;   // 文字と一緒にある画像は人が貼ったものとみなして触らない
+      if (DOC_IMAGE_KINDS.some(function (k) { return isDocImageOf_(p, k); })) { removeParagraph_(body, p); removed++; }
+    }
+    doc.saveAndClose();
+    return jsonOut({ ok: true, removed: removed });
+  } catch (e) {
+    return jsonOut({ ok: false, error: String(e && e.message || e) });
+  }
+}
+
+/** Docの最後の段落は消せないので、そのときは中身だけ空にする。 */
+function removeParagraph_(body, p) {
+  if (body.getChildIndex(p) === body.getNumChildren() - 1) { p.clear(); return; }
+  p.removeFromParent();
+}
+
+function isDocImageOf_(el, kind) {
+  if (el.getType() !== DocumentApp.ElementType.PARAGRAPH) return false;
+  for (let c = 0; c < el.getNumChildren(); c++) {
+    const ch = el.getChild(c);
+    if (ch.getType() === DocumentApp.ElementType.INLINE_IMAGE && String(ch.asInlineImage().getAltTitle() || '') === kind) return true;
+  }
+  return false;
+}
+
+function findSplitLineIndex_(body) {
+  for (let i = 0; i < body.getNumChildren(); i++) {
+    const el = body.getChild(i);
+    if (el.getType() === DocumentApp.ElementType.PARAGRAPH && /wp\s*分割\s*ライン/.test(el.asParagraph().getText())) return i;
+  }
+  return -1;
+}
+
+/** 見出しの文字で段落を探す。空白・全角半角の違いは吸収する。 */
+function findHeadingIndex_(body, heading) {
+  const key = function (s) { return String(s || '').normalize('NFKC').replace(/[\s　]/g, ''); };
+  const want = key(heading);
+  if (!want) return -1;
+  for (let i = 0; i < body.getNumChildren(); i++) {
+    const el = body.getChild(i);
+    if (el.getType() !== DocumentApp.ElementType.PARAGRAPH) continue;
+    const p = el.asParagraph();
+    if (p.getHeading() === DocumentApp.ParagraphHeading.NORMAL) continue;
+    if (key(p.getText()) === want) return i;
+  }
+  return -1;
+}
+
+/**
+ * 本文の画像の目印をWPの画像に置き換える。{ md, featuredMedia, warnings }
+ * アイキャッチ候補は先頭の1枚だけを上げ、残りの目印は捨てる。失敗した画像は目印ごと外して投稿は続ける。
+ */
+function placeDocImages_(cfg, md, images, fileBase, term) {
+  const result = { md: md, featuredMedia: 0, warnings: [] };
+  if (!images || !images.length) return result;
+  const splitAt = String(md).search(/^.*wp\s*分割\s*ライン.*$/m);
+  const safeBase = String(fileBase).replace(/[^A-Za-z0-9._-]/g, '-').replace(/^-+|-+$/g, '') || 'glossary';
+  let figureNo = 0;
+  result.md = String(md).replace(/\[\[docimg:(\d+)\]\]/g, function (mark, idx, offset) {
+    const img = images[Number(idx)];
+    if (!img) return '';
+    const isEyecatch = img.alt === 'eyecatch' || (splitAt !== -1 && offset < splitAt);
+    if (isEyecatch) {
+      if (result.featuredMedia) return '';
+      try {
+        result.featuredMedia = uploadDocImage_(cfg, img.blob, safeBase + '-eyecatch').id;
+      } catch (e) {
+        result.warnings.push('アイキャッチをWPに上げられなかった（' + e.message + '）。WP管理画面で設定してね');
+      }
+      return '';
+    }
+    figureNo++;
+    try {
+      const up = uploadDocImage_(cfg, img.blob, safeBase + '-' + figureNo);
+      const alt = escapeHtmlAttr_(img.desc || (term + 'のイメージ'));
+      return '<figure style="text-align:center;margin:1.5em auto;"><img src="' + up.url + '" alt="' + alt +
+        '" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;border-radius:6px;"></figure>';
+    } catch (e) {
+      result.warnings.push(figureNo + '枚目の挿絵をWPに上げられなかったので外した（' + e.message + '）');
+      return '';
+    }
+  });
+  return result;
+}
+
+function escapeHtmlAttr_(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/**
+ * Docの画像をWPメディアへ上げる。{id, url}
+ * 同じ画像を作り直しや再移行のたびに上げ直さないよう、中身のハッシュで上げた先を控える。
+ * 控えた先がWPから消えていたら上げ直す。
+ */
+function uploadDocImage_(cfg, blob, baseName) {
+  const bytes = blob.getBytes();
+  const hash = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, bytes)
+    .map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join('');
+  const props = PropertiesService.getScriptProperties();
+  const key = 'docimg_' + hash;
+  const cached = props.getProperty(key);
+  if (cached) {
+    const c = JSON.parse(cached);
+    const chk = UrlFetchApp.fetch(cfg.site + '/wp-json/wp/v2/media/' + c.id, {
+      method: 'get', headers: { Authorization: 'Basic ' + cfg.auth }, muteHttpExceptions: true,
+    });
+    if (chk.getResponseCode() === 200) return c;
+  }
+  const mime = blob.getContentType() || 'image/png';
+  const ext = mime === 'image/jpeg' ? '.jpg' : mime === 'image/gif' ? '.gif' : mime === 'image/webp' ? '.webp' : '.png';
+  const up = UrlFetchApp.fetch(cfg.site + '/wp-json/wp/v2/media', {
+    method: 'post',
+    contentType: mime,
+    headers: { Authorization: 'Basic ' + cfg.auth, 'Content-Disposition': 'attachment; filename="' + baseName + ext + '"' },
+    payload: bytes,
+    muteHttpExceptions: true,
+  });
+  const code = up.getResponseCode();
+  if (code < 200 || code >= 300) throw new Error('WPメディアへの登録に失敗（' + code + '）');
+  const j = JSON.parse(up.getContentText());
+  if (!j.id || !j.source_url) throw new Error('WPメディアのIDかURLが返らなかった');
+  const out = { id: j.id, url: j.source_url };
+  props.setProperty(key, JSON.stringify(out));
+  return out;
 }
 
 function textElementToMd_(textEl, plain) {

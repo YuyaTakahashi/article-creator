@@ -162,7 +162,7 @@ function makeWpRow(postId) {
 }
 
 // WPの応答を差し替えて1回分の「WP下書きに」を走らせる。responder(url, method) が {code, body} を返す。
-function runWpDraft(postId, responder) {
+function runWpDraft(postId, responder, docContent) {
   const rows = [makeWpRow(postId)];
   const wpSheet = makeSheet(rows);
   const calls = [];
@@ -174,16 +174,25 @@ function runWpDraft(postId, responder) {
         WP_SITE_URL: 'https://example.com', WP_USER: 'u', WP_APP_PASS: 'p',
         WP_POST_TYPE: 'glossary', WP_CATEGORY_FIELD: 'glossary-category',
       };
-      return { getProperty: function (k) { return props[k] || ''; } };
+      return {
+        getProperty: function (k) { return props[k] || ''; },
+        setProperty: function (k, v) { props[k] = v; },
+      };
     },
   };
-  ctx.Utilities = { base64Encode: function () { return 'BASIC'; } };
-  ctx.fetchDocMarkdown_ = function () { return '# IaC\n\n-- wp分割ライン--\n\nKief￥キーフ￥ Morris￥モリス￥が著した。'; };
+  ctx.Utilities = {
+    base64Encode: function () { return 'BASIC'; },
+    DigestAlgorithm: { MD5: 'MD5' },
+    computeDigest: function (alg, bytes) { return bytes.slice(0, 16); },
+  };
+  ctx.fetchDocContent_ = function () {
+    return docContent || { md: '# IaC\n\n-- wp分割ライン--\n\nKief￥キーフ￥ Morris￥モリス￥が著した。', images: [] };
+  };
   ctx.markDocMigrated_ = function () {};
   ctx.UrlFetchApp = {
     fetch: function (url, opts) {
       const method = (opts && opts.method) || 'get';
-      calls.push({ url: url, method: method, payload: opts && opts.payload });
+      calls.push({ url: url, method: method, payload: opts && opts.payload, headers: opts && opts.headers });
       const r = responder(url, method);
       return { getResponseCode: function () { return r.code; }, getContentText: function () { return r.body; } };
     },
@@ -245,6 +254,50 @@ const denied = runWpDraft(39245, function (url, method) {
 check('WP更新（401では作り直さない）',
   denied.result === null && /401/.test(denied.error) &&
   denied.calls.filter(function (c) { return c.method === 'post'; }).length === 0, true);
+
+// 11. Docの画像：wp分割ラインより前はアイキャッチ（先頭の1枚だけ）、後ろは本文の挿絵
+//     以前は fetchDocMarkdown_ が画像を読まず、Docに画像があるとキャプションの文字だけが本文に残っていた。
+function fakeBlob(seed) {
+  return { getBytes: function () { return [seed, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; },
+           getContentType: function () { return 'image/png'; } };
+}
+const imgDoc = {
+  md: '# IaC\n\n[[docimg:0]]\n\n[[docimg:1]]\n\n-- wp分割ライン--\n\n## 効果\n\n[[docimg:2]]\n\n本文です。',
+  images: [
+    { blob: fakeBlob(1), alt: 'eyecatch', desc: 'IaCのアイキャッチ' },
+    { blob: fakeBlob(2), alt: 'eyecatch', desc: 'IaCのアイキャッチ' },
+    { blob: fakeBlob(3), alt: 'illustration', desc: '効果のイメージ' },
+  ],
+};
+let mediaSeq = 900;
+const withImages = runWpDraft('', function (url, method) {
+  if (/\/media$/.test(url)) { mediaSeq++; return { code: 201, body: '{"id":' + mediaSeq + ',"source_url":"https://example.com/m/' + mediaSeq + '.png"}' }; }
+  return { code: 201, body: '{"id":40010,"status":"draft"}' };
+}, imgDoc);
+const wpPost = withImages.calls.filter(function (c) { return /\/glossary$/.test(c.url); })[0];
+const sent = wpPost ? JSON.parse(wpPost.payload) : {};
+check('Doc画像：アップは採用アイキャッチ1枚＋挿絵1枚だけ',
+  withImages.calls.filter(function (c) { return /\/media$/.test(c.url); }).length, 2);
+check('Doc画像：先頭のアイキャッチ候補を featured_media にする', sent.featured_media, 901);
+check('Doc画像：P列に採用したアイキャッチのIDを控える', withImages.row[15], 901);
+check('Doc画像：挿絵は見出しの直後に <figure> で入る',
+  /<h2>効果<\/h2>\n<figure[^>]*><img src="https:\/\/example.com\/m\/902.png" alt="効果のイメージ"/.test(sent.content || ''), true);
+check('Doc画像：目印や2案目のアイキャッチは本文に残らない', /docimg|901\.png/.test(sent.content || ''), false);
+check('Doc画像：ファイル名はslugから付ける',
+  withImages.calls.filter(function (c) { return /\/media$/.test(c.url); })
+    .map(function (c) { return (c.headers['Content-Disposition'].match(/filename="([^"]+)"/) || [])[1]; }),
+  ['infrastructure-as-code-eyecatch.png', 'infrastructure-as-code-1.png']);
+
+// 11-2. 画像のアップに失敗しても投稿は止めず、外したことを伝える
+const upFail = runWpDraft('', function (url, method) {
+  if (/\/media$/.test(url)) return { code: 500, body: '{}' };
+  return { code: 201, body: '{"id":40011,"status":"draft"}' };
+}, imgDoc);
+check('Doc画像：アップ失敗でも下書きは作り、警告を返す',
+  upFail.error === null && /アイキャッチ/.test(upFail.result.note) && /挿絵/.test(upFail.result.note), true);
+
+// 11-3. 画像が無いDocは従来どおり（P列の featured_media をそのまま使う）
+check('Doc画像：画像なしなら従来どおり', alive.calls.filter(function (c) { return /\/media/.test(c.url); }).length, 0);
 
 // 10. version応答：デプロイ時に埋め込むビルド識別子
 //     版の文字列を手で上げ忘れても、動いているコードがどれか分かるようにするための仕掛け。
