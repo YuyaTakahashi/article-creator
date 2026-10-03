@@ -104,7 +104,7 @@ function handleMention(event) {
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
     postToSlack(event.channel,
-      ':large_green_circle: 1q0O 用語くん v39（Docの画像をWPへ移す・区切り行の判定）が応答してるよ ✨\n' + buildLabel_(),
+      ':large_green_circle: 1q0O 用語くん v40（English欄・関連用語の埋め込み）が応答してるよ ✨\n' + buildLabel_(),
       event.thread_ts || event.ts);
     return;
   }
@@ -1482,9 +1482,13 @@ function publishRowToWpDraftLocked_(sheet, row) {
   // 「-- wp分割ライン--」より後ろだけが本文。前段（フロントマター・最小限の説明・改ページ）は本文に入れない（post_to_wp.pyと同じ）
   // 肖像はDocに入っていない。用語DBのX列から差し込む（Docに肖像が入っていた頃の記事は、残ったキャプションを先に消す）
   const portraits = preparePortraits_(cfg, sheet, row);
-  const html = mdToHtml_(insertPortraits_(stripPortraitCaptions_(stripToBody_(stripTitle_(md))), portraits));
+  const body = linkRelatedTerms_(insertPortraits_(stripPortraitCaptions_(stripToBody_(stripTitle_(md))), portraits), title);
+  const html = mdToHtml_(body);
 
   const payload = { title: title, content: html };
+  // カスタム項目「English」（記事タイトル下の英語名）。C列が空なら本文冒頭の「用語（English）」から拾う
+  const english = String(get(COL.TERM_EN) || '').trim() || extractEnglishName_(body, title);
+  if (english) payload.meta = { English: english };
   if (excerpt) payload.excerpt = excerpt;
   if (slug) payload.slug = slug;
   if (categoryId !== '' && categoryId != null) payload[cfg.categoryField] = [Number(categoryId)];
@@ -1645,6 +1649,52 @@ function insertPortraits_(md, portraits) {
     blocks.splice(at + 1, 0, String(p.html).replace(/\s*\n\s*/g, ' '));
   });
   return blocks.join('\n\n');
+}
+
+/**
+ * `## 関連用語` の箇条書きのうち、WPに記事がある用語をURLの行（埋め込みカード）に置き換える。
+ * 公開済み記事の形（記事の無い用語は <ul>、ある用語はその下にURLを1行ずつ）に合わせる。
+ * 既存記事の一覧が取れなければ、箇条書きのまま返す。
+ */
+function linkRelatedTerms_(md, selfTitle) {
+  const blocks = String(md).split(/\n{2,}/);
+  let start = -1;
+  for (let i = 0; i < blocks.length; i++) { if (/^#{1,4}\s*関連用語/.test(blocks[i])) { start = i; break; } }
+  if (start === -1) return md;
+  let end = blocks.length;
+  for (let i = start + 1; i < blocks.length; i++) { if (/^#{1,4}\s/.test(blocks[i])) { end = i; break; } }
+
+  let articles;
+  try { articles = getExistingArticles(); } catch (e) { console.warn('既存記事が取れないので関連用語はリンクしない: ' + e); return md; }
+  const norm = function (s) { return String(s || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase(); };
+  const byTitle = {};
+  (articles || []).forEach(function (a) { if (a.title && a.url) byTitle[norm(a.title)] = a.url; });
+
+  const plain = [];
+  const urls = [];
+  const others = [];
+  blocks.slice(start + 1, end).forEach(function (b) {
+    b.split('\n').forEach(function (line) {
+      const m = line.match(/^\s*[-*]\s+(.*)$/);
+      if (!m) { if (line.trim()) others.push(line); return; }
+      const name = m[1].replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim();
+      const link = norm(name) !== norm(selfTitle) ? byTitle[norm(name)] : '';
+      if (link) urls.push(link); else plain.push('- ' + m[1].trim());
+    });
+  });
+  const section = [];
+  if (plain.length) section.push(plain.join('\n'));
+  urls.forEach(function (u) { section.push(u); });
+  others.forEach(function (o) { section.push(o); });
+  return blocks.slice(0, start + 1).concat(section, blocks.slice(end)).join('\n\n');
+}
+
+/** 本文冒頭の「用語（English）とは」から英語名を拾う。カスタム項目 English のC列が空のときの代わり。 */
+function extractEnglishName_(md, title) {
+  const s = String(md);
+  const t = String(title || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = (t && s.match(new RegExp(t + '[（(]\\s*([A-Za-z][^）)]*?)\\s*[）)]'))) || s.match(/[（(]\s*([A-Za-z][A-Za-z0-9 .'’\-]*?)\s*[）)]/);
+  return m ? m[1].trim() : '';
 }
 
 /**
@@ -2033,8 +2083,18 @@ function mdToHtml_(md) {
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx].replace(/\s+$/, '');
     if (/wp分割ライン/.test(line)) { flushPara(); flushList(); out.push('<!--nextpage-->'); continue; }
-    if (line.trim() === '') { flushPara(); flushList(); continue; }
+    if (line.trim() === '') {
+      flushPara();
+      // Docから書き出したMDは箇条書きの項目のあいだに空行が入る。次の行も項目なら同じ <ul> を続ける
+      // （閉じると関連用語が1項目ずつ別の <ul> に割れる）
+      let next = idx + 1;
+      while (next < lines.length && lines[next].trim() === '') next++;
+      if (!(inList && next < lines.length && /^\s*[-*]\s+/.test(lines[next]))) flushList();
+      continue;
+    }
     if (/^\s*</.test(line)) { flushPara(); flushList(); out.push(line); continue; }
+    // URLだけの行はWPの埋め込みカードになるので、<p> で包まずにそのまま置く（関連用語の既存記事リンク）
+    if (/^https?:\/\/\S+$/.test(line.trim())) { flushPara(); flushList(); out.push(line.trim()); continue; }
     let m;
     if ((m = line.match(/^(#{1,4})\s+(.*)$/))) {
       flushPara(); flushList();
