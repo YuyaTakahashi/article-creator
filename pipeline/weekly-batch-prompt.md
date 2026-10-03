@@ -32,7 +32,7 @@
 作り直しの場合は**旧Docを消さず新しいDocを作り**、レビュー案内行の後ろに `*（{新版} で作り直した版です。前の版はこちら: {旧DocのURL}）*` を足す。
 
 ## Step 3.5: アイキャッチ候補と挿絵をDocに入れる
-`pipeline/batch-instructions.md` の「Step 3.5」に従う。挿絵の計画 `drafts/{slug}-images.json` を書き、`python3 scripts/doc_images.py generate "drafts/{用語}.md"` で生成し、画像を Read で確かめて（だめな画像だけ `--only` で1回まで作り直す）、`python3 scripts/doc_images.py send "drafts/{用語}.md" --doc-url "<DocURL>"` でDocへ入れる。画像で失敗しても記事は止めず、ログに残して次へ進む。
+`pipeline/batch-instructions.md` の「Step 3.5」に従う。挿絵の計画 `drafts/{slug}-images.json` を書き、アイキャッチ2案をSVGで描いて `python3 scripts/doc_images.py render "drafts/{用語}.md"`、挿絵を `python3 scripts/doc_images.py generate "drafts/{用語}.md"` で作る。PNGを Read で確かめ（だめなものだけ1回まで作り直す）、`python3 scripts/doc_images.py send "drafts/{用語}.md" --doc-url "<DocURL>"` でDocへ入れる。画像で失敗しても記事は止めず、ログに残して次へ進む。
 
 ## Step 4: 書き戻し（update_row webhook）
 生成できた各件は、次の1コマンドで書き戻す（フロントマターの値と、X列の肖像をまとめて送る）:
