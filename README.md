@@ -22,9 +22,9 @@ UX TIMES 用語集（uxdaystokyo.com/articles/glossary/）は、Slackの「用�
 |---|---|---|
 | ① 追加 | 用語を候補に積む | 誰でも：Slackで `@用語くん ◯◯ 追加して` |
 | ② 生成 | 記事ドラフトを作る | 自動（毎週月曜の朝に3本）／`@用語くん ◯◯ の下書き作って` でリクエスト → 月曜（毎週）か金曜（リクエストがある時）に生成して、チャンネルで告知 |
-| ③ レビュー | ドラフトを直す | 誰でも：Googleドキュメントを直接編集 → 用語DBのステータスを「公開OK」に |
-| ④ WP下書き | WordPressに下書き化 | 誰でも：`@用語くん G-xxx をWP下書きに`／用語DBメニュー「用語くん」→「▶ 選択行をWP下書きに送る」。提唱者の顔写真はDocには入れず、このとき用語DBのX列から自動で差し込む |
-| ⑤ 画像 | 顔写真＋アイキャッチ＋挿絵 | Claudeがある人：`/glossary-wp-images G-xxx`／無い人：用語DBのR列「アイキャッチプロンプト」をChatGPT・Geminiに渡して作り、WP管理画面で貼る（画像は任意） |
+| ③ レビュー | ドラフトと画像を直す | 誰でも：Googleドキュメントを直接編集 → 用語DBのステータスを「公開OK」に。Docにはアイキャッチ候補2案と挿絵が入っているので、使わない画像を消す（アイキャッチは残った先頭の1枚を使う）。自分で用意した画像を本文に貼ってもよい |
+| ④ WP下書き | WordPressに下書き化 | 誰でも：`@用語くん G-xxx をWP下書きに`／用語DBメニュー「用語くん」→「▶ 選択行をWP下書きに送る」。Docに残った画像はWPメディアへ上げ、アイキャッチと本文の挿絵になる。提唱者の顔写真はDocには入れず、このとき用語DBのX列から自動で差し込む |
+| ⑤ 画像 | （通常は不要） | ③④で入る。Docに画像が無い古い記事だけ、Claudeがある人：`/glossary-wp-images G-xxx`／無い人：用語DBのR列「アイキャッチプロンプト」をChatGPT・Geminiに渡して作り、Docに貼ってから④をやり直す |
 | ⑥ 公開 | 公開する | 誰でも：WP管理画面で「公開」ボタン |
 | ⑦ 作り直し | 古い書き方の記事を書き直す | 誰でも：`@用語くん ◯◯ を最新版で作り直して` → 月／金の生成タイミングで最新レシピの新しいDocができる |
 
@@ -51,7 +51,8 @@ Docの本文で `Robert¥ロバート¥` のように書いた箇所は、WP下�
 
 - 単発で今すぐ1本生成：`bash scripts/generate-term.sh "◯◯"` または `/generate-term ◯◯`
 - Slackで頼まれた分を今すぐ消化：`bash scripts/friday-glossary-batch.sh --quiet`（新規リクエストと作り直しをまとめて処理。`--quiet` を付けるとSlack告知を出さない。告知は月曜レポートがまとめて出す）
-- 画像入れ：`/glossary-wp-images G-xxx`（提唱者の顔写真・アイキャッチ・各章の挿絵を自動でWP下書きに入れる）
+- Docに画像を入れ直す：`python3 scripts/doc_images.py generate "drafts/◯◯.md"` → 画像を確かめて `python3 scripts/doc_images.py send "drafts/◯◯.md" --doc-url "<DocURL>"`（挿絵の計画は `drafts/{slug}-images.json`。書き方は `pipeline/batch-instructions.md` の Step 3.5）
+- 画像入れ（Docに画像が無い古い記事向け）：`/glossary-wp-images G-xxx`（提唱者の顔写真・アイキャッチ・各章の挿絵を自動でWP下書きに入れる）
   - 投稿時、`post_to_wp.py` が画像をWPメディアライブラリへ上げ直す。`drafts/` のローカル画像に加えて、Wikimedia（`upload.wikimedia.org` / `commons.wikimedia.org`）の外部画像も複製する。配信元でファイルが差し替わったり消えたりしても、公開中の記事の画像が壊れないようにするため。
   - Wikimedia 以外の外部画像（本人の公式サイトの写真など）は権利がはっきりしないので複製せず、出典を明記したままホットリンクで残す。
   - 取得に失敗した画像はURLをそのまま残して投稿を続ける。ログに `[media] 複製に失敗したので…` が出ていたら、その画像はホットリンクのままになっている。

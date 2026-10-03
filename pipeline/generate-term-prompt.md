@@ -24,6 +24,9 @@ python3 scripts/make_doc_md.py "drafts/{対象用語}.md"
 `pipeline/doc-ready/{対象用語}.md` が書き出されるので、その中身をそのまま Google Drive の create_file に渡す（`contentMimeType=text/markdown`・`parentId=1tQU3-ts3mU6YusLFjijNDNGzdcf-y-GS`）。
 Step 2 の刻印を飛ばしているとスクリプトが止まる。止まったら stamp_version.py をやり直す。
 
+## Step 3.5: アイキャッチ候補と挿絵をDocに入れる
+`pipeline/batch-instructions.md` の「Step 3.5」に従う。挿絵の計画 `drafts/{slug}-images.json` を書き、`python3 scripts/doc_images.py generate "drafts/{対象用語}.md"` で生成し、画像を Read で確かめて（だめな画像だけ `--only` で1回まで作り直す）、`python3 scripts/doc_images.py send "drafts/{対象用語}.md" --doc-url "<DocURL>"` でDocへ入れる。画像で失敗しても記事は止めず、ログに残して次へ進む。
+
 ## Step 4: 書き戻し
 次を実行する。フロントマターの読み取り・行の特定（無ければ新規追加）・全項目の書き戻しをスクリプトがまとめて行う。
 
