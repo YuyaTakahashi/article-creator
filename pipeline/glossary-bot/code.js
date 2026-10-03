@@ -104,7 +104,7 @@ function handleMention(event) {
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
     postToSlack(event.channel,
-      ':large_green_circle: 1q0O 用語くん v38（Docの画像をWPへ移す）が応答してるよ ✨\n' + buildLabel_(),
+      ':large_green_circle: 1q0O 用語くん v39（Docの画像をWPへ移す・区切り行の判定）が応答してるよ ✨\n' + buildLabel_(),
       event.thread_ts || event.ts);
     return;
   }
@@ -1775,14 +1775,18 @@ function insertDocImageAction_(data) {
     const blob = Utilities.newBlob(Utilities.base64Decode(data.data), data.mime || 'image/png', data.name || 'image.png');
     let at;
     if (data.kind === 'eyecatch') {
-      // wp分割ラインの直前に並べる（前段なのでWPの本文には入らない）。候補を足すたびに分割ラインが1つ下がるので、送った順に並ぶ
-      at = findSplitLineIndex_(body);
-      if (at === -1) throw new Error('Docに「wp分割ライン」が見つからないので、アイキャッチの置き場所が決められません');
-      if (!(at > 0 && body.getChild(at - 1).getType() === DocumentApp.ElementType.PARAGRAPH &&
-            hasInlineImage_(body.getChild(at - 1)) && isDocImageOf_(body.getChild(at - 1), 'eyecatch'))) {
+      // タイトルの直後（レビューする人が最初に見る場所）に案内行と候補を並べる。wp分割ラインより前なのでWPの本文には入らない
+      if (findSplitLineIndex_(body) === -1) throw new Error('Docに「wp分割ライン」が見つからないので、アイキャッチを本文と区別できません');
+      at = findTitleIndex_(body) + 1;
+      if (at < body.getNumChildren() && body.getChild(at).getType() === DocumentApp.ElementType.PARAGRAPH &&
+          body.getChild(at).asParagraph().getText() === EYECATCH_LABEL) {
+        at++;
+      } else {
         body.insertParagraph(at, EYECATCH_LABEL).setHeading(DocumentApp.ParagraphHeading.NORMAL);
         at++;
       }
+      // 先に入れた候補の後ろに並べる（送った順に並ぶ）
+      while (at < body.getNumChildren() && isDocImageOf_(body.getChild(at), 'eyecatch')) at++;
     } else {
       const h = findHeadingIndex_(body, data.heading);
       if (h === -1) throw new Error('見出し「' + data.heading + '」がDocに見つかりません');
@@ -1843,10 +1847,24 @@ function isDocImageOf_(el, kind) {
   return false;
 }
 
+// 区切りだけの行に当てる。レビュー案内の文中にも「-- wp分割ライン-- は…」と出てくるので、行の一部に当てると取り違える
+// ダッシュはDoc変換で全角や長音記号になることがある
+const SPLIT_LINE_RE = /^[ \t　]*[-‐－—–ー─]*[ \t　]*wp[ \t　]*分割[ \t　]*ライン[ \t　]*[-‐－—–ー─]*[ \t　]*$/m;
+
 function findSplitLineIndex_(body) {
   for (let i = 0; i < body.getNumChildren(); i++) {
     const el = body.getChild(i);
-    if (el.getType() === DocumentApp.ElementType.PARAGRAPH && /wp\s*分割\s*ライン/.test(el.asParagraph().getText())) return i;
+    if (el.getType() === DocumentApp.ElementType.PARAGRAPH && SPLIT_LINE_RE.test(el.asParagraph().getText())) return i;
+  }
+  return -1;
+}
+
+/** タイトル（最初の見出し1）の位置。無ければ -1（＝先頭に置く）。 */
+function findTitleIndex_(body) {
+  for (let i = 0; i < body.getNumChildren(); i++) {
+    const el = body.getChild(i);
+    if (el.getType() === DocumentApp.ElementType.PARAGRAPH &&
+        el.asParagraph().getHeading() === DocumentApp.ParagraphHeading.HEADING1) return i;
   }
   return -1;
 }
@@ -1873,7 +1891,7 @@ function findHeadingIndex_(body, heading) {
 function placeDocImages_(cfg, md, images, fileBase, term) {
   const result = { md: md, featuredMedia: 0, warnings: [] };
   if (!images || !images.length) return result;
-  const splitAt = String(md).search(/^.*wp\s*分割\s*ライン.*$/m);
+  const splitAt = String(md).search(SPLIT_LINE_RE);
   const safeBase = String(fileBase).replace(/[^A-Za-z0-9._-]/g, '-').replace(/^-+|-+$/g, '') || 'glossary';
   let figureNo = 0;
   result.md = String(md).replace(/\[\[docimg:(\d+)\]\]/g, function (mark, idx, offset) {

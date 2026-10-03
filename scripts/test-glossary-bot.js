@@ -288,6 +288,24 @@ check('Doc画像：ファイル名はslugから付ける',
     .map(function (c) { return (c.headers['Content-Disposition'].match(/filename="([^"]+)"/) || [])[1]; }),
   ['infrastructure-as-code-eyecatch.png', 'infrastructure-as-code-1.png']);
 
+// 11-1b. レビュー案内の文中の「-- wp分割ライン--」を区切りと取り違えない
+//        案内行が残っていても、その後ろの本文の画像はアイキャッチではなく挿絵として扱う
+const guideDoc = {
+  md: '# IaC\n\n（レビュー用の注意：-- wp分割ライン-- は区切りなので残してください）\n\n[[docimg:0]]\n\n-- wp分割ライン--\n\n## 効果\n\n[[docimg:1]]',
+  images: [
+    { blob: fakeBlob(4), alt: '', desc: '' },   // 人が前段に貼ったアイキャッチ（代替タイトルなし）
+    { blob: fakeBlob(5), alt: '', desc: '' },   // 人が本文に貼った画像（代替タイトルなし）
+  ],
+};
+mediaSeq = 950;
+const guided = runWpDraft('', function (url) {
+  if (/\/media$/.test(url)) { mediaSeq++; return { code: 201, body: '{"id":' + mediaSeq + ',"source_url":"https://example.com/m/' + mediaSeq + '.png"}' }; }
+  return { code: 201, body: '{"id":40012,"status":"draft"}' };
+}, guideDoc);
+const guidedSent = JSON.parse(guided.calls.filter(function (c) { return /\/glossary$/.test(c.url); })[0].payload);
+check('Doc画像：案内文中の分割ラインと取り違えず、前段に貼った画像をアイキャッチにする',
+  guidedSent.featured_media === 951 && /m\/952\.png" alt="IaCのイメージ"/.test(guidedSent.content), true);
+
 // 11-2. 画像のアップに失敗しても投稿は止めず、外したことを伝える
 const upFail = runWpDraft('', function (url, method) {
   if (/\/media$/.test(url)) return { code: 500, body: '{}' };
