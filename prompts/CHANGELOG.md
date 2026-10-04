@@ -3,6 +3,23 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v18 — 2026-10-04
+
+- 2026-10-04 版を据え置いたまま lock を更新（P6 の確かめ方に、組織と一覧・文書を分けて説明する例を追加（書きぶりの方針は変えない）） — 対象: prompts/02_polishing.md
+
+執筆ルールを原則7つ＋形式6つ＋関門3つに正規化（出典台帳・成立条件メモ・通し例）。要点を運ぶ評価文は出典の数値で言い直す。提唱者が名前だけになるときは所属を添える
+
+レシピhash: `9810921f633c`
+
+変更されたファイル:
+  - .agent/skills/article-creator/SKILL.md
+  - .agent/skills/article-critic/references/reader-critic.md
+  - .agent/skills/article-critic/references/template-critic.md
+  - .agent/skills/article-review/SKILL.md
+  - CLAUDE.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
 ## v17 — 2026-09-26
 
 ヘーゲルの弁証法と恒常的注意力分散の公開版から抽出(v17)。PR #18 の5点（リード文3段落・語源の固有情報の採否・誰に効くかの枠を写さない・誰と使うかの採否・予告文と二段構え）に加え、定義セクションはリード文の例の続きで書き否定形の見出しにしない、冒頭の結論文で答えまで言い切る、段落末のまとめ直しを置かない、手法の例は途中を省かない、根拠として引く第三者に肩書きを添える、名称の由来の豆知識は書かない、を追加
