@@ -79,7 +79,9 @@ MAX_SIDE = 1600      # Docとwebhookを重くしないための長辺の上限
 LABEL_FONT = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
 LABEL_INK = (26, 26, 26)
 LABEL_BORDER = (201, 163, 94)   # アイキャッチと同じマスタード
-LABEL_MAX_CHARS = 12            # 札は短い名詞句にする。長い説明は本文に書く
+LABEL_MAX_CHARS = 8             # 札は短い名詞句にする。長い説明は本文に書く
+# 文字の大きさは画像の幅に対する割合。スマホでは挿絵が幅360px前後まで縮むので、そこで12px以上に見える大きさにする
+LABEL_SIZE_RATIO = 0.035
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 
@@ -222,7 +224,7 @@ def draw_labels(raw: Path, out: Path, labels):
     img = Image.open(raw).convert("RGB")
     W, H = img.size
     d = ImageDraw.Draw(img)
-    size = max(20, round(W * 0.022))
+    size = max(20, round(W * LABEL_SIZE_RATIO))
     pad = round(size * 0.45)
     font = ImageFont.truetype(LABEL_FONT, size)
     for lb in labels:
@@ -290,13 +292,16 @@ def post(env, payload):
     return json.loads(urllib.request.urlopen(req, timeout=180).read().decode("utf-8"))
 
 
-def send(md_path: Path, doc_url: str, dry_run: bool):
+def send(md_path: Path, doc_url: str, dry_run: bool, illustrations_only: bool = False):
     env = load_env(BASE / ".env")
     for k in ("GAS_WEBAPP_URL", "GAS_TOKEN"):
         if not env.get(k):
             sys.exit(f"{k} が .env に設定されていません。")
     fm, jobs = build_jobs(md_path)
     title = fm.get("title") or md_path.stem
+    if illustrations_only:
+        # 人がアイキャッチ候補を選んだあとでも、挿絵だけを差し替えられるようにする
+        jobs = [j for j in jobs if j["kind"] == "illustration"]
     ready = [j for j in jobs if (BASE / j["file"]).exists()]
     for j in jobs:
         if j not in ready:
@@ -309,7 +314,10 @@ def send(md_path: Path, doc_url: str, dry_run: bool):
             print(f"  [dry-run] {j['kind']} {j['heading'] or ''} ← {j['file']}")
         return 0
 
-    res = post(env, {"action": "clear_doc_images", "doc_url": doc_url})
+    clear = {"action": "clear_doc_images", "doc_url": doc_url}
+    if illustrations_only:
+        clear["kinds"] = ["illustration"]
+    res = post(env, clear)
     if not res.get("ok"):
         sys.exit(f"Docの前回の画像を消せませんでした: {res}")
     if res.get("removed"):
@@ -348,6 +356,8 @@ def main():
     s.add_argument("md_path")
     s.add_argument("--doc-url", required=True)
     s.add_argument("--dry-run", action="store_true")
+    s.add_argument("--illustrations-only", action="store_true",
+                   help="挿絵だけを消して入れ直す（人が選んだアイキャッチ候補は残す）")
     args = ap.parse_args()
 
     md_path = (BASE / args.md_path).resolve()
@@ -359,7 +369,7 @@ def main():
         sys.exit(generate(md_path, args.only))
     if args.cmd == "label":
         sys.exit(label(md_path, args.only))
-    sys.exit(send(md_path, args.doc_url, args.dry_run))
+    sys.exit(send(md_path, args.doc_url, args.dry_run, args.illustrations_only))
 
 
 if __name__ == "__main__":

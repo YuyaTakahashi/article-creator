@@ -1813,13 +1813,17 @@ function clearDocImagesAction_(data) {
     const doc = DocumentApp.openById(docIdOf_(data.doc_url));
     const body = doc.getBody();
     let removed = 0;
+    // kinds を渡すと、その種類の画像だけを消す（挿絵だけ差し替えるとき、人が選んだアイキャッチ候補を残すため）
+    const kinds = Array.isArray(data.kinds) && data.kinds.length
+      ? DOC_IMAGE_KINDS.filter(function (k) { return data.kinds.indexOf(k) !== -1; })
+      : DOC_IMAGE_KINDS;
     for (let i = body.getNumChildren() - 1; i >= 0; i--) {
       const el = body.getChild(i);
       if (el.getType() !== DocumentApp.ElementType.PARAGRAPH) continue;
       const p = el.asParagraph();
-      if (p.getText() === EYECATCH_LABEL) { removeParagraph_(body, p); continue; }
+      if (p.getText() === EYECATCH_LABEL) { if (kinds.indexOf('eyecatch') !== -1) removeParagraph_(body, p); continue; }
       if (!hasInlineImage_(p) || p.getText().trim()) continue;   // 文字と一緒にある画像は人が貼ったものとみなして触らない
-      if (DOC_IMAGE_KINDS.some(function (k) { return isDocImageOf_(p, k); })) { removeParagraph_(body, p); removed++; }
+      if (kinds.some(function (k) { return isDocImageOf_(p, k); })) { removeParagraph_(body, p); removed++; }
     }
     doc.saveAndClose();
     return jsonOut({ ok: true, removed: removed });
