@@ -1,11 +1,11 @@
 {
   "version": "v18",
-  "hash": "9810921f633ce5feb42ab00d7578214efe4dd39f4003c5892156ab1e3885151f",
+  "hash": "881c027feaf30f1d38576079eedacc959c4b471e31b660bfc5053dd9e84a63c4",
   "updated_at": "2026-10-04",
   "note": "執筆ルールを原則7つ＋形式6つ＋関門3つに正規化（出典台帳・成立条件メモ・通し例）。要点を運ぶ評価文は出典の数値で言い直す。提唱者が名前だけになるときは所属を添える",
   "files": {
     "prompts/01_information_gathering.md": "80d28b80835a6aa3767fbfe2dabb106518116c19babec680d13ad2c241595d10",
-    "prompts/02_polishing.md": "0be81b9b9ba380612aa6b950dd6f0ea980f5065ff89340aa772fe73ce72b593e",
+    "prompts/02_polishing.md": "67be6c7c67f3a29bf3372c9989515eadf53d078f95d77609d1e589cde3626876",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "21240ccb5dbcaf6767bd04f9f98f115d9e8b538b2660f3a1886125325081a418",
     ".agent/skills/article-review/SKILL.md": "a616db92f0f71b895bc935f4a47e35fc7dc72fddfe84c2df29d05d026fd136e1",
