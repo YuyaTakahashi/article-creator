@@ -104,7 +104,7 @@ function handleMention(event) {
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
     postToSlack(event.channel,
-      ':large_green_circle: 1q0O 用語くん v38（Docの画像をWPへ移す）が応答してるよ ✨\n' + buildLabel_(),
+      ':large_green_circle: 1q0O 用語くん v40（English欄・関連用語の埋め込み）が応答してるよ ✨\n' + buildLabel_(),
       event.thread_ts || event.ts);
     return;
   }
@@ -1482,9 +1482,13 @@ function publishRowToWpDraftLocked_(sheet, row) {
   // 「-- wp分割ライン--」より後ろだけが本文。前段（フロントマター・最小限の説明・改ページ）は本文に入れない（post_to_wp.pyと同じ）
   // 肖像はDocに入っていない。用語DBのX列から差し込む（Docに肖像が入っていた頃の記事は、残ったキャプションを先に消す）
   const portraits = preparePortraits_(cfg, sheet, row);
-  const html = mdToHtml_(insertPortraits_(stripPortraitCaptions_(stripToBody_(stripTitle_(md))), portraits));
+  const body = linkRelatedTerms_(insertPortraits_(stripPortraitCaptions_(stripToBody_(stripTitle_(md))), portraits), title);
+  const html = mdToHtml_(body);
 
   const payload = { title: title, content: html };
+  // カスタム項目「English」（記事タイトル下の英語名）。C列が空なら本文冒頭の「用語（English）」から拾う
+  const english = String(get(COL.TERM_EN) || '').trim() || extractEnglishName_(body, title);
+  if (english) payload.meta = { English: english };
   if (excerpt) payload.excerpt = excerpt;
   if (slug) payload.slug = slug;
   if (categoryId !== '' && categoryId != null) payload[cfg.categoryField] = [Number(categoryId)];
@@ -1648,6 +1652,52 @@ function insertPortraits_(md, portraits) {
 }
 
 /**
+ * `## 関連用語` の箇条書きのうち、WPに記事がある用語をURLの行（埋め込みカード）に置き換える。
+ * 公開済み記事の形（記事の無い用語は <ul>、ある用語はその下にURLを1行ずつ）に合わせる。
+ * 既存記事の一覧が取れなければ、箇条書きのまま返す。
+ */
+function linkRelatedTerms_(md, selfTitle) {
+  const blocks = String(md).split(/\n{2,}/);
+  let start = -1;
+  for (let i = 0; i < blocks.length; i++) { if (/^#{1,4}\s*関連用語/.test(blocks[i])) { start = i; break; } }
+  if (start === -1) return md;
+  let end = blocks.length;
+  for (let i = start + 1; i < blocks.length; i++) { if (/^#{1,4}\s/.test(blocks[i])) { end = i; break; } }
+
+  let articles;
+  try { articles = getExistingArticles(); } catch (e) { console.warn('既存記事が取れないので関連用語はリンクしない: ' + e); return md; }
+  const norm = function (s) { return String(s || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase(); };
+  const byTitle = {};
+  (articles || []).forEach(function (a) { if (a.title && a.url) byTitle[norm(a.title)] = a.url; });
+
+  const plain = [];
+  const urls = [];
+  const others = [];
+  blocks.slice(start + 1, end).forEach(function (b) {
+    b.split('\n').forEach(function (line) {
+      const m = line.match(/^\s*[-*]\s+(.*)$/);
+      if (!m) { if (line.trim()) others.push(line); return; }
+      const name = m[1].replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim();
+      const link = norm(name) !== norm(selfTitle) ? byTitle[norm(name)] : '';
+      if (link) urls.push(link); else plain.push('- ' + m[1].trim());
+    });
+  });
+  const section = [];
+  if (plain.length) section.push(plain.join('\n'));
+  urls.forEach(function (u) { section.push(u); });
+  others.forEach(function (o) { section.push(o); });
+  return blocks.slice(0, start + 1).concat(section, blocks.slice(end)).join('\n\n');
+}
+
+/** 本文冒頭の「用語（English）とは」から英語名を拾う。カスタム項目 English のC列が空のときの代わり。 */
+function extractEnglishName_(md, title) {
+  const s = String(md);
+  const t = String(title || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const m = (t && s.match(new RegExp(t + '[（(]\\s*([A-Za-z][^）)]*?)\\s*[）)]'))) || s.match(/[（(]\s*([A-Za-z][A-Za-z0-9 .'’\-]*?)\s*[）)]/);
+  return m ? m[1].trim() : '';
+}
+
+/**
  * 更新先のWP投稿の状態を見る。{ exists, status, otherType } を返す。
  * 404のときだけ「無い」と判断する（401/403などを無いと誤判定して新規作成すると、記事が二重になるため）。
  * 設定と違う投稿タイプで生きている場合は otherType にその名前を入れて、呼び出し側で作り直しを止める。
@@ -1775,14 +1825,18 @@ function insertDocImageAction_(data) {
     const blob = Utilities.newBlob(Utilities.base64Decode(data.data), data.mime || 'image/png', data.name || 'image.png');
     let at;
     if (data.kind === 'eyecatch') {
-      // wp分割ラインの直前に並べる（前段なのでWPの本文には入らない）。候補を足すたびに分割ラインが1つ下がるので、送った順に並ぶ
-      at = findSplitLineIndex_(body);
-      if (at === -1) throw new Error('Docに「wp分割ライン」が見つからないので、アイキャッチの置き場所が決められません');
-      if (!(at > 0 && body.getChild(at - 1).getType() === DocumentApp.ElementType.PARAGRAPH &&
-            hasInlineImage_(body.getChild(at - 1)) && isDocImageOf_(body.getChild(at - 1), 'eyecatch'))) {
+      // タイトルの直後（レビューする人が最初に見る場所）に案内行と候補を並べる。wp分割ラインより前なのでWPの本文には入らない
+      if (findSplitLineIndex_(body) === -1) throw new Error('Docに「wp分割ライン」が見つからないので、アイキャッチを本文と区別できません');
+      at = findTitleIndex_(body) + 1;
+      if (at < body.getNumChildren() && body.getChild(at).getType() === DocumentApp.ElementType.PARAGRAPH &&
+          body.getChild(at).asParagraph().getText() === EYECATCH_LABEL) {
+        at++;
+      } else {
         body.insertParagraph(at, EYECATCH_LABEL).setHeading(DocumentApp.ParagraphHeading.NORMAL);
         at++;
       }
+      // 先に入れた候補の後ろに並べる（送った順に並ぶ）
+      while (at < body.getNumChildren() && isDocImageOf_(body.getChild(at), 'eyecatch')) at++;
     } else {
       const h = findHeadingIndex_(body, data.heading);
       if (h === -1) throw new Error('見出し「' + data.heading + '」がDocに見つかりません');
@@ -1847,10 +1901,24 @@ function isDocImageOf_(el, kind) {
   return false;
 }
 
+// 区切りだけの行に当てる。レビュー案内の文中にも「-- wp分割ライン-- は…」と出てくるので、行の一部に当てると取り違える
+// ダッシュはDoc変換で全角や長音記号になることがある
+const SPLIT_LINE_RE = /^[ \t　]*[-‐－—–ー─]*[ \t　]*wp[ \t　]*分割[ \t　]*ライン[ \t　]*[-‐－—–ー─]*[ \t　]*$/m;
+
 function findSplitLineIndex_(body) {
   for (let i = 0; i < body.getNumChildren(); i++) {
     const el = body.getChild(i);
-    if (el.getType() === DocumentApp.ElementType.PARAGRAPH && /wp\s*分割\s*ライン/.test(el.asParagraph().getText())) return i;
+    if (el.getType() === DocumentApp.ElementType.PARAGRAPH && SPLIT_LINE_RE.test(el.asParagraph().getText())) return i;
+  }
+  return -1;
+}
+
+/** タイトル（最初の見出し1）の位置。無ければ -1（＝先頭に置く）。 */
+function findTitleIndex_(body) {
+  for (let i = 0; i < body.getNumChildren(); i++) {
+    const el = body.getChild(i);
+    if (el.getType() === DocumentApp.ElementType.PARAGRAPH &&
+        el.asParagraph().getHeading() === DocumentApp.ParagraphHeading.HEADING1) return i;
   }
   return -1;
 }
@@ -1877,7 +1945,7 @@ function findHeadingIndex_(body, heading) {
 function placeDocImages_(cfg, md, images, fileBase, term) {
   const result = { md: md, featuredMedia: 0, warnings: [] };
   if (!images || !images.length) return result;
-  const splitAt = String(md).search(/^.*wp\s*分割\s*ライン.*$/m);
+  const splitAt = String(md).search(SPLIT_LINE_RE);
   const safeBase = String(fileBase).replace(/[^A-Za-z0-9._-]/g, '-').replace(/^-+|-+$/g, '') || 'glossary';
   let figureNo = 0;
   result.md = String(md).replace(/\[\[docimg:(\d+)\]\]/g, function (mark, idx, offset) {
@@ -2019,8 +2087,18 @@ function mdToHtml_(md) {
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx].replace(/\s+$/, '');
     if (/wp分割ライン/.test(line)) { flushPara(); flushList(); out.push('<!--nextpage-->'); continue; }
-    if (line.trim() === '') { flushPara(); flushList(); continue; }
+    if (line.trim() === '') {
+      flushPara();
+      // Docから書き出したMDは箇条書きの項目のあいだに空行が入る。次の行も項目なら同じ <ul> を続ける
+      // （閉じると関連用語が1項目ずつ別の <ul> に割れる）
+      let next = idx + 1;
+      while (next < lines.length && lines[next].trim() === '') next++;
+      if (!(inList && next < lines.length && /^\s*[-*]\s+/.test(lines[next]))) flushList();
+      continue;
+    }
     if (/^\s*</.test(line)) { flushPara(); flushList(); out.push(line); continue; }
+    // URLだけの行はWPの埋め込みカードになるので、<p> で包まずにそのまま置く（関連用語の既存記事リンク）
+    if (/^https?:\/\/\S+$/.test(line.trim())) { flushPara(); flushList(); out.push(line.trim()); continue; }
     let m;
     if ((m = line.match(/^(#{1,4})\s+(.*)$/))) {
       flushPara(); flushList();
