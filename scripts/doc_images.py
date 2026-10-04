@@ -27,6 +27,12 @@ Markdownから作るので画像を入れられず、DocumentApp なら画像デ
     4. 挿絵を作る（.env の OPENAI_API_KEY を使う）。作り直したい挿絵だけ --only illust-2 のように指定できる:
          python3 scripts/doc_images.py generate "drafts/{用語}.md"
        できたPNGを Read で見て確かめ、だめなら prompt を直して --only で作り直す。
+    4.5 挿絵に日本語のラベルを重ねる（画像生成AIに文字を描かせず、後からヒラギノで描く）:
+         python3 scripts/doc_images.py label "drafts/{用語}.md"
+       ラベルは images.json の各挿絵に "labels": [{"text": "見えない指示", "x": 0.05, "y": 0.67}] の形で書く。
+       x・y は札の左上の位置で、画像の幅・高さに対する割合（0〜1）。生成した画像を Read で見て、
+       指したい要素のすぐ近くで、要素に重ならない位置を選ぶ。label は生成直後の画像（*_raw.png）から
+       毎回描き直すので、位置を直して何度実行してもラベルは重ならない。
     5. Docへ送る:
          python3 scripts/doc_images.py send "drafts/{用語}.md" --doc-url "<DocURL>"
        送る前にDocから前回入れた画像（アイキャッチ候補と挿絵）を消すので、何度送り直しても重ならない。
@@ -69,6 +75,11 @@ TEXT: Absolutely no text, letters, numbers, labels, logos, or watermarks anywher
 SCENE:
 {scene}"""
 MAX_SIDE = 1600      # Docとwebhookを重くしないための長辺の上限
+# 挿絵のラベル。画像生成AIに日本語を描かせると崩れるので、生成後にヒラギノで重ねる
+LABEL_FONT = "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc"
+LABEL_INK = (26, 26, 26)
+LABEL_BORDER = (201, 163, 94)   # アイキャッチと同じマスタード
+LABEL_MAX_CHARS = 12            # 札は短い名詞句にする。長い説明は本文に書く
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 
@@ -93,7 +104,8 @@ def build_jobs(md_path: Path):
         if not it.get("heading"):
             sys.exit(f"{plan_file.name} の {n} 件目に heading がありません")
         jobs.append({"key": f"illust-{n}", "kind": "illustration", "heading": it["heading"].strip(),
-                     "prompt": (it.get("prompt") or "").strip(), "file": f"drafts/{slug}_{n}.png"})
+                     "prompt": (it.get("prompt") or "").strip(), "file": f"drafts/{slug}_{n}.png",
+                     "raw": f"drafts/{slug}_{n}_raw.png", "labels": it.get("labels") or []})
     return fm, jobs
 
 
@@ -188,6 +200,7 @@ def generate(md_path: Path, only):
         except Exception as e:
             return job, str(e)
         (BASE / job["file"]).write_bytes(data)
+        (BASE / job["raw"]).write_bytes(data)   # label はここから描き直す
         return job, ""
 
     # 1枚に数十秒かかるので並列に走らせる
@@ -201,6 +214,57 @@ def generate(md_path: Path, only):
             else:
                 print(f"  ok {job['key']}（{job['heading']}） → {job['file']}")
     return 1 if failed == len(jobs) else 0
+
+
+def draw_labels(raw: Path, out: Path, labels):
+    """raw の画像に札（白地・マスタードの枠・黒字）を重ねて out に書き出す。"""
+    from PIL import Image, ImageDraw, ImageFont
+    img = Image.open(raw).convert("RGB")
+    W, H = img.size
+    d = ImageDraw.Draw(img)
+    size = max(20, round(W * 0.022))
+    pad = round(size * 0.45)
+    font = ImageFont.truetype(LABEL_FONT, size)
+    for lb in labels:
+        text = str(lb["text"]).strip()
+        if len(text) > LABEL_MAX_CHARS:
+            print(f"  注意: ラベル「{text}」が{LABEL_MAX_CHARS}文字を超えている。短くする")
+        w = d.textlength(text, font=font)
+        bw, bh = w + pad * 2, size + pad * 2
+        x = min(max(0, float(lb["x"]) * W), W - bw)
+        y = min(max(0, float(lb["y"]) * H), H - bh)
+        d.rounded_rectangle([x, y, x + bw, y + bh], radius=round(size * 0.4),
+                            fill="white", outline=LABEL_BORDER, width=max(3, round(size * 0.11)))
+        d.text((x + pad, y + pad - round(size * 0.06)), text, font=font, fill=LABEL_INK)
+    img.save(out)
+
+
+def label(md_path: Path, only):
+    try:
+        import PIL  # noqa: F401
+    except ImportError:
+        sys.exit("Pillow が必要です: python3 -m pip install Pillow")
+    if not Path(LABEL_FONT).exists():
+        sys.exit(f"フォントが見つかりません: {LABEL_FONT}")
+    _, jobs = build_jobs(md_path)
+    jobs = [j for j in jobs if j["kind"] == "illustration" and (not only or j["key"] in only)]
+    done = 0
+    for j in jobs:
+        f, raw = BASE / j["file"], BASE / j["raw"]
+        if not f.exists():
+            print(f"  skip {j['key']}: {j['file']} が無い（先に generate）")
+            continue
+        if not raw.exists():
+            raw.write_bytes(f.read_bytes())   # 旧い記事は今の画像を生成直後の画像とみなす
+        if not j["labels"]:
+            f.write_bytes(raw.read_bytes())
+            print(f"  ok {j['key']}（{j['heading']}）: ラベルなし")
+            continue
+        draw_labels(raw, f, j["labels"])
+        done += 1
+        print(f"  ok {j['key']}（{j['heading']}）: ラベル {len(j['labels'])} 個")
+    print(f"[images] ラベルを重ねた挿絵 {done} 枚")
+    return 0
 
 
 def shrink(path: Path):
@@ -276,6 +340,10 @@ def main():
     g.add_argument("md_path")
     g.add_argument("--only", action="append", default=[],
                    help="作り直す挿絵のキー（illust-1 など）。複数指定できる")
+    lb = sub.add_parser("label", help="挿絵に日本語のラベルを重ねる")
+    lb.add_argument("md_path")
+    lb.add_argument("--only", action="append", default=[],
+                    help="ラベルを描き直す挿絵のキー（illust-1 など）。複数指定できる")
     s = sub.add_parser("send", help="drafts/ の画像をDocへ差し込む")
     s.add_argument("md_path")
     s.add_argument("--doc-url", required=True)
@@ -289,6 +357,8 @@ def main():
         sys.exit(render(md_path))
     if args.cmd == "generate":
         sys.exit(generate(md_path, args.only))
+    if args.cmd == "label":
+        sys.exit(label(md_path, args.only))
     sys.exit(send(md_path, args.doc_url, args.dry_run))
 
 
