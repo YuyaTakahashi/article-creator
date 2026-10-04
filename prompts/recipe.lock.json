@@ -1,19 +1,19 @@
 {
-  "version": "v17",
-  "hash": "aef52788149d3366e08742b2d4c3c108cd1821c87997d73b9ec86e8261eedd93",
-  "updated_at": "2026-09-26",
-  "note": "ヘーゲルの弁証法と恒常的注意力分散の公開版から抽出(v17)。PR #18 の5点（リード文3段落・語源の固有情報の採否・誰に効くかの枠を写さない・誰と使うかの採否・予告文と二段構え）に加え、定義セクションはリード文の例の続きで書き否定形の見出しにしない、冒頭の結論文で答えまで言い切る、段落末のまとめ直しを置かない、手法の例は途中を省かない、根拠として引く第三者に肩書きを添える、名称の由来の豆知識は書かない、を追加",
+  "version": "v18",
+  "hash": "9810921f633ce5feb42ab00d7578214efe4dd39f4003c5892156ab1e3885151f",
+  "updated_at": "2026-10-04",
+  "note": "執筆ルールを原則7つ＋形式6つ＋関門3つに正規化（出典台帳・成立条件メモ・通し例）。要点を運ぶ評価文は出典の数値で言い直す。提唱者が名前だけになるときは所属を添える",
   "files": {
-    "prompts/01_information_gathering.md": "0faa9e5f470624c36b54b7346fc779af9802320960c4334ad05c9be8db4a324f",
-    "prompts/02_polishing.md": "7d67ed02b0d7144a0c49a04726ba314866617858d048113228d1fff85a233ab1",
+    "prompts/01_information_gathering.md": "80d28b80835a6aa3767fbfe2dabb106518116c19babec680d13ad2c241595d10",
+    "prompts/02_polishing.md": "0be81b9b9ba380612aa6b950dd6f0ea980f5065ff89340aa772fe73ce72b593e",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
-    ".agent/skills/article-creator/SKILL.md": "cb86e48e02a46417a6a8a8fdbf991bcff2ee1e49ff4e7350d75a7734fc11b768",
-    ".agent/skills/article-review/SKILL.md": "c6f1ace509734fa9d8f70aacf3644cb5d7bd53d7ff409bb427d5b52f1d965ca5",
+    ".agent/skills/article-creator/SKILL.md": "21240ccb5dbcaf6767bd04f9f98f115d9e8b538b2660f3a1886125325081a418",
+    ".agent/skills/article-review/SKILL.md": "a616db92f0f71b895bc935f4a47e35fc7dc72fddfe84c2df29d05d026fd136e1",
     ".agent/skills/article-critic/SKILL.md": "d28bd02dbd63b40ff5f2a6ad370edcd063e0dabecb5323b383bfa6d01e87be8e",
-    ".agent/skills/article-critic/references/template-critic.md": "22391b49379ce7be3070d60f662452ed59c3614ea9a003a759e22fe2ffe84abb",
+    ".agent/skills/article-critic/references/template-critic.md": "42c7f16e9414e0b9421bc2c03a3056a7b9368b4ce25b8b01e9e6bc943dac3998",
     ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
-    ".agent/skills/article-critic/references/reader-critic.md": "1cb7b6f1c7193b43d04be9c617fb4baa666ec7ae6c5f312b3cd57d7f982d1435",
+    ".agent/skills/article-critic/references/reader-critic.md": "cac339e17219f68e844632b2f34d56345d82df61193584a14f68bbb7cb5d4b47",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
-    "CLAUDE.md": "f3c4768baadc34c826ae3729f868e9779a0c6c2f58b4c3887028fb746151e178"
+    "CLAUDE.md": "758a1fa0dfc9de0dde6af1f48a1845ef5877cca7b4dd57c2ec9398c303df7a0c"
   }
 }
