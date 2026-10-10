@@ -1,17 +1,17 @@
 {
-  "version": "v18",
-  "hash": "881c027feaf30f1d38576079eedacc959c4b471e31b660bfc5053dd9e84a63c4",
-  "updated_at": "2026-10-04",
-  "note": "執筆ルールを原則7つ＋形式6つ＋関門3つに正規化（出典台帳・成立条件メモ・通し例）。要点を運ぶ評価文は出典の数値で言い直す。提唱者が名前だけになるときは所属を添える",
+  "version": "v19",
+  "hash": "cec6936d256d5e272820c15cebd76e2c8d750383053c24295e2df0ade212b7c5",
+  "updated_at": "2026-10-10",
+  "note": "文章スタイルCriticを読者基準に改めた（社内文書向けのOPENLOGI表記・一人称回数を外し、漢語の名詞の連なり・場面から入っているかを追加。「〜と呼ばれる」等の自然な受動態は減点しない）",
   "files": {
     "prompts/01_information_gathering.md": "80d28b80835a6aa3767fbfe2dabb106518116c19babec680d13ad2c241595d10",
     "prompts/02_polishing.md": "67be6c7c67f3a29bf3372c9989515eadf53d078f95d77609d1e589cde3626876",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "21240ccb5dbcaf6767bd04f9f98f115d9e8b538b2660f3a1886125325081a418",
     ".agent/skills/article-review/SKILL.md": "a616db92f0f71b895bc935f4a47e35fc7dc72fddfe84c2df29d05d026fd136e1",
-    ".agent/skills/article-critic/SKILL.md": "d28bd02dbd63b40ff5f2a6ad370edcd063e0dabecb5323b383bfa6d01e87be8e",
+    ".agent/skills/article-critic/SKILL.md": "46c2f047d854527f79682ef4e478b78d6da1cebb84c13b00b66eb90d82f15af5",
     ".agent/skills/article-critic/references/template-critic.md": "42c7f16e9414e0b9421bc2c03a3056a7b9368b4ce25b8b01e9e6bc943dac3998",
-    ".agent/skills/article-critic/references/style-critic.md": "786d18ce470f9208d054ca813b1c6725cdf553b5ac7a66f0df8e44037925996c",
+    ".agent/skills/article-critic/references/style-critic.md": "435f837e43657e8b6b1b3f81185c36d40234c8c4c64cfba0f5cae3df9deaad4c",
     ".agent/skills/article-critic/references/reader-critic.md": "cac339e17219f68e844632b2f34d56345d82df61193584a14f68bbb7cb5d4b47",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
     "CLAUDE.md": "758a1fa0dfc9de0dde6af1f48a1845ef5877cca7b4dd57c2ec9398c303df7a0c"
