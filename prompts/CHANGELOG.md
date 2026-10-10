@@ -3,6 +3,16 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v19 — 2026-10-10
+
+文章スタイルCriticを読者基準に改めた（社内文書向けのOPENLOGI表記・一人称回数を外し、漢語の名詞の連なり・場面から入っているかを追加。「〜と呼ばれる」等の自然な受動態は減点しない）
+
+レシピhash: `cec6936d256d`
+
+変更されたファイル:
+  - .agent/skills/article-critic/SKILL.md
+  - .agent/skills/article-critic/references/style-critic.md
+
 ## v18 — 2026-10-04
 
 - 2026-10-04 版を据え置いたまま lock を更新（P6 の確かめ方に、組織と一覧・文書を分けて説明する例を追加（書きぶりの方針は変えない）） — 対象: prompts/02_polishing.md

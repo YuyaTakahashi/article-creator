@@ -1,6 +1,6 @@
 ---
 name: article-critic
-description: article-creatorが生成・リライトした記事を、テンプレ準拠Critic（UX TIMES用語集形式の構造遵守）・文章スタイルCritic（体言止め禁止・受動態回避・主語明示・OPENLOGI表記・一人称回数）・読み手目線Critic（difficulty/itパラメータ整合・専門用語の言い換え・具体性・冗長性）・読みやすさCritic（本多勝一『日本語の作文技術』軸：一文の長さ・修飾語順序・読点・接続詞・語の経済性）の4軸でレビューするスキル。以下のすべてで必ず使用する - article-creatorのStep 3末尾（リライト後のセルフチェック時）、article-creatorのStep 6直前（MDファイル保存前の最終ゲート）、yuyaから「この記事をCriticかけて」「記事レビューして」「品質チェックして」と明示的に依頼されたとき。各Criticは5項目×3点のルーブリックで評価し、合計11点以上で通過する（4軸AND判定）。10点以下のCriticがあれば呼び出し元エージェント（article-creator）に再生成を指示し、最大2回まで往復する。3回目で通過しない場合は「要人間判断」フラグつきで通過させる。スコアと判定はAGENT_REPORTS/article-critic-logs/にJSONで残し、将来のリグレッションデータとして蓄積する。yuyaのレビュー負荷を下げ、UX TIMESに投稿する前の品質ゲートとして機能する。article-creatorと併せて常にこのCriticを通す前提で動かす。
+description: article-creatorが生成・リライトした記事を、テンプレ準拠Critic（UX TIMES用語集形式の構造遵守）・文章スタイルCritic（体言止め禁止・行為者が消える受動態の回避・主語明示・漢語の名詞の連なり・場面から入っているか）・読み手目線Critic（difficulty/itパラメータ整合・専門用語の言い換え・具体性・冗長性）・読みやすさCritic（本多勝一『日本語の作文技術』軸：一文の長さ・修飾語順序・読点・接続詞・語の経済性）の4軸でレビューするスキル。以下のすべてで必ず使用する - article-creatorのStep 3末尾（リライト後のセルフチェック時）、article-creatorのStep 6直前（MDファイル保存前の最終ゲート）、yuyaから「この記事をCriticかけて」「記事レビューして」「品質チェックして」と明示的に依頼されたとき。各Criticは5項目×3点のルーブリックで評価し、合計11点以上で通過する（4軸AND判定）。10点以下のCriticがあれば呼び出し元エージェント（article-creator）に再生成を指示し、最大2回まで往復する。3回目で通過しない場合は「要人間判断」フラグつきで通過させる。スコアと判定はAGENT_REPORTS/article-critic-logs/にJSONで残し、将来のリグレッションデータとして蓄積する。yuyaのレビュー負荷を下げ、UX TIMESに投稿する前の品質ゲートとして機能する。article-creatorと併せて常にこのCriticを通す前提で動かす。
 ---
 
 # article-critic スキル
@@ -23,7 +23,7 @@ article-criticは常に4軸すべてを評価する（AND判定）。途中で1�
 
 **テンプレ準拠Critic** — UX TIMES用語集記事の構造遵守を問う。タイトル形式・最小限の説明の文字数と位置・H2の並び・禁止見出しの不在・導入リード文の形式。詳細は `references/template-critic.md` を読む。
 
-**文章スタイルCritic** — yuyaの個人スタイルガイド遵守を問う。体言止め・受動態・主語の曖昧さ・OPENLOGI表記・一人称回数。詳細は `references/style-critic.md` を読む。
+**文章スタイルCritic** — UX TIMESの読者が硬さで引っかからずに読めるかを問う。体言止め・行為者が消える受動態・主語の曖昧さ・漢語の名詞の連なり・場面から入っているか。詳細は `references/style-critic.md` を読む。
 
 **読み手目線Critic** — 呼び出し元が指定した difficulty / it パラメータとの整合と、読者がつまずかずに読めるかを問う。難易度整合・IT前提整合・専門用語の言い換え・具体例の効果・冗長性。詳細は `references/reader-critic.md` を読む。
 
