@@ -320,9 +320,28 @@ function matchGlossaryId_(text) {
   return m ? [m[0], m[1]] : null;
 }
 
+/** メッセージ内のGoogleドキュメントURLからDocのIDを拾う。無ければ空文字。 */
+function extractDocId_(text) {
+  const m = String(text || '').match(/docs\.google\.com\/document\/(?:u\/\d+\/)?d\/([A-Za-z0-9_-]{20,})/);
+  return m ? m[1] : '';
+}
+
+/** I列（記事Doc）に同じDocのIDを持つ行を返す。無ければ -1。URLを貼った依頼はこれを最優先で使う。 */
+function rowByDocId_(sheet, docId) {
+  if (!docId) return -1;
+  const n = Math.max(sheet.getLastRow() - 1, 1);
+  const urls = sheet.getRange(2, COL.DOC_URL, n, 1).getValues().flat();
+  for (let i = 0; i < urls.length; i++) {
+    if (extractDocId_(urls[i]) === docId) return i + 2;
+  }
+  return -1;
+}
+
 /** 「G-023」や用語名を { row, candidates } に解決する。見つからなければ row: -1。 */
 function resolveTermRow_(sheet, idOrTerm) {
   const s = String(idOrTerm).trim();
+  const docRow = rowByDocId_(sheet, extractDocId_(s));
+  if (docRow !== -1) return { row: docRow, candidates: [] };
   const m = matchGlossaryId_(s);
   if (m) {
     const gid = 'G-' + m[1].padStart(3, '0');
@@ -1260,10 +1279,14 @@ function handleWpDraftCommand(event, userMessage) {
   const sheet = getGlossarySheet_();
   const reply = event.thread_ts || event.ts;
 
-  // G-ID指定があればそれを優先。無ければ用語名で引く。
+  // 優先順: ①貼られたDocのURL（I列と照合） ②G-ID ③用語名
   let row = -1, label = '';
-  const idMatch = matchGlossaryId_(userMessage);
-  if (idMatch) {
+  const docRow = rowByDocId_(sheet, extractDocId_(userMessage));
+  const idMatch = docRow === -1 ? matchGlossaryId_(userMessage) : null;
+  if (docRow !== -1) {
+    row = docRow;
+    label = String(sheet.getRange(row, COL.ID).getValue());
+  } else if (idMatch) {
     label = 'G-' + idMatch[1].padStart(3, '0');
     const ids = sheet.getRange(2, COL.ID, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
     const idx = ids.indexOf(label);
@@ -1490,7 +1513,7 @@ function publishRowToWpDraftLocked_(sheet, row) {
   const categoryId = get(COL.CATEGORY_ID);
   const featuredMedia = get(COL.FEATURED_MEDIA);
   const wpPostId = get(COL.WP_POST_ID);
-  if (!docUrl) throw new Error('記事Doc(I列)が空です。先に記事を生成してください');
+  if (!docUrl) throw new Error(String(get(COL.ID) || ('行' + row)) + '（' + term + '）の記事Doc(I列)が空です。対象の用語が合っているか確認し、合っていれば先に記事を生成してください');
 
   const doc = fetchDocContent_(docUrl);
   // Docに残っている画像（アイキャッチ候補・挿絵）をWPメディアへ上げ、本文の目印を <figure> に置き換える
