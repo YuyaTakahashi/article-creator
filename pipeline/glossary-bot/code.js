@@ -247,7 +247,7 @@ function handleEyecatchPrompt_(event, userMessage) {
   let row = -1;
   let specified = ''; // 指定された用語名／G-ID（見つからなかった時の明示メッセージ用）
   let candidates = [];
-  const idMatch = userMessage.match(/G-?\s*(\d+)/i);
+  const idMatch = matchGlossaryId_(userMessage);
   if (idMatch) {
     specified = 'G-' + idMatch[1].padStart(3, '0');
     const ids = sheet.getRange(2, COL.ID, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
@@ -303,18 +303,36 @@ function actionMarkerInstructions_() {
     '\n「↑」「これ」「この用語」などの指示語は、文脈から実際の用語名に解決して合図に書く。操作の依頼でなければ合図は出さず普通に会話する。合図行はコードが処理して結果に差し替えるので、合図に加えて自分でも同じ内容を書かない。';
 }
 
+/** Slackのリンク表記 <https://…|…> と生のURLを取り除く。URLの中の「…G5…」をG-IDと取り違えないため。 */
+function stripSlackLinks_(text) {
+  return String(text || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/https?:\/\/\S+/gi, ' ');
+}
+
+/**
+ * メッセージから G-ID（「G-032」「G32」）を拾う。戻り値は String.match と同じ形（[1] が数字）か null。
+ * URLは先に落とし、英数字の途中にある「G5」（DocのIDなど）は拾わない。
+ * 以前は /G-?\s*(\d+)/i で拾っていたため、DocのURLを添えると別の行（例: G-005）を処理していた。
+ */
+function matchGlossaryId_(text) {
+  const m = stripSlackLinks_(text).match(/(?:^|[^A-Za-z0-9])G-?\s*(\d{1,4})(?![0-9])/i);
+  return m ? [m[0], m[1]] : null;
+}
+
 /** 「G-023」や用語名を { row, candidates } に解決する。見つからなければ row: -1。 */
 function resolveTermRow_(sheet, idOrTerm) {
   const s = String(idOrTerm).trim();
-  const m = s.match(/G-?\s*(\d+)/i);
+  const m = matchGlossaryId_(s);
   if (m) {
     const gid = 'G-' + m[1].padStart(3, '0');
     const ids = sheet.getRange(2, COL.ID, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
     const idx = ids.indexOf(gid);
     if (idx !== -1) return { row: idx + 2, candidates: [] };
   }
-  const term = s.replace(/G-?\s*\d+/i, '').trim();
-  return lookupTermRow_(sheet, term || s);
+  const plain = stripSlackLinks_(s);
+  const term = plain.replace(/(^|[^A-Za-z0-9])G-?\s*\d+(?![0-9])/i, '$1').trim();
+  return lookupTermRow_(sheet, term || plain);
 }
 
 /** LLM返信に含まれる合図 [[ADD:]] [[WP_DRAFT:]] [[EYECATCH:]] を実行し、合図を結果テキストに差し替えて返す。 */
@@ -546,7 +564,7 @@ function addToGlossaryIfNew(term, context, note) {
 
 function handleGenerateRequest(event, userMessage) {
   const sheet = getGlossarySheet_();
-  const idMatch = userMessage.match(/G-?\s*(\d+)/i);
+  const idMatch = matchGlossaryId_(userMessage);
 
   let row = -1, gid = '', term = '', status = '';
   if (idMatch) {
@@ -1244,7 +1262,7 @@ function handleWpDraftCommand(event, userMessage) {
 
   // G-ID指定があればそれを優先。無ければ用語名で引く。
   let row = -1, label = '';
-  const idMatch = userMessage.match(/G-?\s*(\d+)/i);
+  const idMatch = matchGlossaryId_(userMessage);
   if (idMatch) {
     label = 'G-' + idMatch[1].padStart(3, '0');
     const ids = sheet.getRange(2, COL.ID, Math.max(sheet.getLastRow() - 1, 1), 1).getValues().flat();
@@ -1282,7 +1300,7 @@ function handleWpDraftCommand(event, userMessage) {
 
 /** 「◯◯ をWP下書きに／WPに移行して」等から用語名を抜き出す（末尾の指示句を落とす）。 */
 function extractWpTerm_(message) {
-  return String(message)
+  return stripSlackLinks_(message)
     .replace(/[「」『』]/g, ' ')
     .replace(/[\s　、,]*[をに]?\s*(WP\s*)?下書き\s*(に|へ)?\s*(移行|作成|送信|送|化|する|し)?\s*(して(ください|ね)?|しといて|しておいて|お願いします?|よろしく)?[\s　！!。.]*$/i, '')
     .replace(/[\s　、,]*[をに]?\s*WP\s*(に|へ)?\s*(移行|反映|投稿)\s*(して(ください|ね)?|お願いします?|よろしく)?[\s　！!。.]*$/i, '')
