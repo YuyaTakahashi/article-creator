@@ -23,7 +23,7 @@ GPT で書き直しても Doc を作り直さないと、レビューする Doc 
   8. doc_images.py send で、アイキャッチ候補と挿絵を新しい Doc に入れる
   9. register_draft.py --id で用語DBを書き戻す（作り直しメモと旧Docリンク付き）
 """
-import argparse, json, re, subprocess, sys
+import argparse, json, os, re, subprocess, sys
 from datetime import date
 from pathlib import Path
 
@@ -106,9 +106,9 @@ def remap_images(plan_path, old_h2, new_h2):
     plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-def run_critic(topic, difficulty, it):
+def run_critic(topic, difficulty, it, attempt=1):
     prompt = (f"article-critic スキルで drafts/{topic}.md を評価する。作業ディレクトリは {REPO}。"
-              f"article_type=ux_glossary, topic={topic}, difficulty={difficulty}, it={it}, attempt_count=1, "
+              f"article_type=ux_glossary, topic={topic}, difficulty={difficulty}, it={it}, attempt_count={attempt}, "
               "caller=regenerate_gpt.py。記事は書き直さない。ログJSONはスキルの規定の場所に保存する。"
               "出力の最後の1行は次の形にする: "
               "CRITIC: verdict=<pass|regenerate|escalate> template=<n> style=<n> reader=<n> readability=<n> log=<ログのパス>")
@@ -125,6 +125,101 @@ def run_critic(topic, difficulty, it):
     # 認証切れ（Failed to authenticate）などで claude が動かなかったときは、その理由を見せる
     tail = " / ".join(((r.stderr or "") + (r.stdout or "")).strip().splitlines()[-2:])
     return f"CRITIC: 判定行を読めなかった（{tail[:200]}）。article-critic を手で通す"
+
+
+MAX_FIX = 2          # 直しは2回まで（3回目の評価で残った指摘は人間に上げる）
+MAX_CHANGE = 0.35    # 1回の直しで本文の35%を超える行が変わったら、部分修正の範囲を超えたとみなして採らない
+CRITIC_LOG_DIR = Path.home() / "workspace/agentic-solution/AGENT_REPORTS/article-critic-logs"
+
+
+def parse_critic(line, slug):
+    """CRITIC 行とログJSONから、判定・4軸の合計・直す指摘を取り出す。読めなければ None"""
+    if "verdict=" not in line:
+        return None
+    m = re.search(r"log=(\S+)", line)
+    log = Path(os.path.expanduser(m.group(1))) if m else None
+    if not log or not log.exists():
+        cands = sorted((CRITIC_LOG_DIR / date.today().isoformat()).glob(f"{slug}_*.json"))
+        log = cands[-1] if cands else None
+    if not log:
+        return None
+    d = json.loads(log.read_text(encoding="utf-8"))
+    totals = {k: v.get("total", 0) for k, v in d.get("scores", {}).items()}
+    return {"verdict": d.get("verdict", ""), "totals": totals, "sum": sum(totals.values()),
+            "points": d.get("regenerate_points", []), "log": str(log)}
+
+
+FIX_PROMPT = """あなたはUX TIMES用語集の編集者です。下の[記事]に対して、[直す指摘]に挙がった箇所だけを直してください。
+
+- 指摘に関係しない文は、一字も変えない。見出しの数・順番・文言も変えない
+- 事実は足さない。言い換え・前提・計算例・たとえが必要なときは、[出典台帳]の（前提）（働き）（手計算）（たとえ）（結果）の材料を使う
+- 指摘を直すために別の箇所を崩さない（同じ内容を2回書かない、本文を体言止めにしない、主語を消さない）
+- 「## 最小限の説明」の本文を直したときは、20〜35文字に収め、「〜する現象」「〜する手法」のように名詞で終わる定義の形を保つ（ここだけは名詞で終える。句点は付けない）
+
+前置きは不要です。直した記事全体（「## 最小限の説明」から「## 関連用語」まで）だけを出力してください。
+
+### [直す指摘]
+{points}
+
+### [記事]
+{article}
+
+### [出典台帳]
+{claims}
+"""
+
+
+def fix_with_gpt(topic, md_path, points, model):
+    """Critic の指摘を GPT に部分修正させ、drafts に戻す。変えすぎた直しは採らず False を返す"""
+    import difflib
+    from gpt_write import chat, load_env
+    load_env()
+    src = md_path.read_text(encoding="utf-8")
+    body = src[src.index("## 最小限の説明"):]
+    claims = (REPO / f"research/{topic}_claims.md").read_text(encoding="utf-8")
+    out = chat(model, [{"role": "user", "content": FIX_PROMPT.format(
+        points="\n".join(f"- {x}" for x in points), article=body, claims=claims)}])
+    if "## 最小限の説明" not in out:
+        print("警告: 直しの出力に「## 最小限の説明」が無い。採らない")
+        return False
+    new_body = out[out.index("## 最小限の説明"):]
+    a, b = body.splitlines(), new_body.splitlines()
+    changed = 1 - difflib.SequenceMatcher(None, a, b).ratio()
+    print(f"  直しで変わった行の割合: {changed:.0%}")
+    if changed > MAX_CHANGE:
+        print(f"警告: 変わった行が {MAX_CHANGE:.0%} を超えた。部分修正ではないので採らない")
+        return False
+    if body_h2(body) != body_h2(new_body):
+        print("警告: 直しで見出しが変わった。採らない")
+        return False
+    apply_turn3(md_path, new_body, model, "")
+    return True
+
+
+def critic_loop(topic, md_path, slug, model, difficulty, it):
+    """Critic → 指摘を部分修正 → 再評価を、指摘が無くなるまで回す。
+    止まる条件: 指摘が無い ／ 直しを MAX_FIX 回した ／ 点数が上がらなかった ／ 直しを採れなかった"""
+    best_text, best_sum, history = md_path.read_text(encoding="utf-8"), -1, []
+    for attempt in range(1, MAX_FIX + 2):
+        line = run_critic(topic, difficulty, it, attempt)
+        print(line)
+        r = parse_critic(line, slug)
+        if r is None:
+            return f"{line}（ループは止めた）"
+        history.append(f"{attempt}回目 {r['verdict']} {r['totals']}")
+        if r["sum"] <= best_sum:
+            md_path.write_text(best_text, encoding="utf-8")
+            return f"点数が上がらなかったので、前の版に戻して止めた（{' → '.join(history)}）。残る指摘: {r['points']}"
+        best_text, best_sum = md_path.read_text(encoding="utf-8"), r["sum"]
+        if not r["points"]:
+            return f"指摘なしで止めた（{' → '.join(history)}）"
+        if attempt > MAX_FIX:
+            return f"直しを{MAX_FIX}回しても指摘が残った。要人間判断（{' → '.join(history)}）。残る指摘: {r['points']}"
+        print(f"直し {attempt}回目: 指摘 {len(r['points'])} 件")
+        if not fix_with_gpt(topic, md_path, r["points"], model):
+            return f"直しを採れなかったので止めた（{' → '.join(history)}）。残る指摘: {r['points']}"
+        run(["python3", "scripts/stamp_version.py", str(md_path)])
+    return "想定外の終わり方"
 
 
 def create_doc(topic, doc_md):
@@ -190,8 +285,9 @@ def main():
     remap_images(REPO / f"drafts/{slug}-images.json", old_h2, body_h2(md.read_text(encoding="utf-8")))
     run(["python3", "scripts/stamp_version.py", str(md.relative_to(REPO))])
 
-    # 6. Critic（Doc化は止めない）
-    critic = "CRITIC: 省略（--skip-critic）" if a.skip_critic else run_critic(a.topic, a.difficulty, a.it)
+    # 6. Critic → 指摘の部分修正 → 再評価のループ（結果に関わらず Doc化は止めない）
+    critic = "CRITIC: 省略（--skip-critic）" if a.skip_critic else \
+        critic_loop(a.topic, md, slug, a.model, a.difficulty, a.it)
     print(critic)
 
     # 7〜9. Doc を作り直し、画像を入れ、用語DBに書き戻す
