@@ -405,6 +405,7 @@ caller: article-creator (final-gate)
 ```markdown
 ---
 title: "{topic}"
+english: "{英語名}"
 excerpt: "{最小限の説明}"
 category_id: {category_id}
 category_name: "{カテゴリ名}"
@@ -415,6 +416,7 @@ eyecatch_prompt: "{Step 8で生成したプロンプト文字列（改行はス�
 {-- wp分割ライン-- 以降の記事本文をそのままMarkdownで記載}
 ```
 
+- `english` には、出典台帳の英語の出典がこの用語を呼ぶときの呼び方を書く（例: `Hot Hand`、`Simon Effect`）。日本語の見出しに合わせて語を足さない（「ホットハンド現象」でも `Hot Hand`。英語圏で phenomenon を付けて呼ぶのは説明のときだけのため）。英語の呼び方が無い日本独自の用語は空にする。用語DBのC列（英語名）に入り、WPのカスタム項目「English」になる。本文の「用語（English）とは」の併記はレビューで外されることが多く、本文から拾う方法ではEnglish欄が空になっていた（2026-10-25 ホットハンド現象）
 - フロントマターの値にダブルクォーテーションを含む場合はシングルクォーテーションで囲む
 - 記事本文は `-- wp分割ライン--` 行の次の行から末尾までをそのままコピーする（変換・加工しない）
 - **`reviewed_at` はここで書かない。** これは `article-review` を実際に通した証跡であり、`scripts/mark_reviewed.py` だけが刻む。生成段で自分で書き足すと、推敲していない記事が投稿ゲートを通ってしまう
