@@ -1,8 +1,8 @@
 {
-  "version": "v22",
-  "hash": "176bf2863fb37c8ef84fd71d4c7a61ed35258393b026d82f61b84d3b6874ad5d",
+  "version": "v23",
+  "hash": "a6b1f5d5e2fb78d24605cbdd7779b910cdf283131030deac1fe24a2e4d54938d",
   "updated_at": "2026-10-25",
-  "note": "手計算の材料は数値で動く仕組みがある用語だけで探す",
+  "note": "読み手目線Criticの項目5に因果の飛躍（台帳の条件語の言い換えによる飛躍を含む）を足す",
   "files": {
     "prompts/01_information_gathering.md": "2a0840f7ee6472269e04236b189e84b5ddcb5efb34837e247c4ed7b9bcfaecd0",
     "prompts/02_polishing.md": "67be6c7c67f3a29bf3372c9989515eadf53d078f95d77609d1e589cde3626876",
@@ -12,7 +12,7 @@
     ".agent/skills/article-critic/SKILL.md": "edc21941394515caada585d3b575bc456e06671adc38c81de727f0ce6a9ca468",
     ".agent/skills/article-critic/references/template-critic.md": "d1e4ae471f4a55a62726d7e47c6a6fb0d5bd95955e933441fa984996401b195a",
     ".agent/skills/article-critic/references/style-critic.md": "435f837e43657e8b6b1b3f81185c36d40234c8c4c64cfba0f5cae3df9deaad4c",
-    ".agent/skills/article-critic/references/reader-critic.md": "cac339e17219f68e844632b2f34d56345d82df61193584a14f68bbb7cb5d4b47",
+    ".agent/skills/article-critic/references/reader-critic.md": "6cb8e089f1fd89f3756e5d446ab1b7c54934605361e5e231b241e36e50f6774d",
     ".agent/skills/article-critic/references/readability-critic.md": "a39ac4d8bc1df65b2a4f8d743c2973d76c1590dcace38aacbf015f15fe8e0df8",
     "CLAUDE.md": "758a1fa0dfc9de0dde6af1f48a1845ef5877cca7b4dd57c2ec9398c303df7a0c"
   }

@@ -3,6 +3,15 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v23 — 2026-10-25
+
+読み手目線Criticの項目5に因果の飛躍（台帳の条件語の言い換えによる飛躍を含む）を足す
+
+レシピhash: `a6b1f5d5e2fb`
+
+変更されたファイル:
+  - .agent/skills/article-critic/references/reader-critic.md
+
 ## v22 — 2026-10-25
 
 手計算の材料は数値で動く仕組みがある用語だけで探す
