@@ -189,8 +189,10 @@ def fix_with_gpt(topic, md_path, points, model):
     if changed > MAX_CHANGE:
         print(f"警告: 変わった行が {MAX_CHANGE:.0%} を超えた。部分修正ではないので採らない")
         return False
-    if body_h2(body) != body_h2(new_body):
-        print("警告: 直しで見出しが変わった。採らない")
+    # 見出しの文言は直してよい（Critic が見出しを指摘することがある）。数と固定の見出しの位置だけを守る
+    ob, nb = body_h2(body), body_h2(new_body)
+    if len(ob) != len(nb) or [h == "語源・提唱者" for h in ob] != [h == "語源・提唱者" for h in nb]:
+        print("警告: 直しで見出しの数か並びが変わった。採らない")
         return False
     apply_turn3(md_path, new_body, model, "")
     return True
@@ -282,13 +284,14 @@ def main():
     # 3〜5. drafts に反映し、挿絵の見出しを付け替え、版を刻む
     mini = apply_turn3(md, turn3.read_text(encoding="utf-8"), a.model, english)
     print(f"drafts を更新した（最小限の説明: {mini}）")
-    remap_images(REPO / f"drafts/{slug}-images.json", old_h2, body_h2(md.read_text(encoding="utf-8")))
     run(["python3", "scripts/stamp_version.py", str(md.relative_to(REPO))])
 
     # 6. Critic → 指摘の部分修正 → 再評価のループ（結果に関わらず Doc化は止めない）
     critic = "CRITIC: 省略（--skip-critic）" if a.skip_critic else \
         critic_loop(a.topic, md, slug, a.model, a.difficulty, a.it)
     print(critic)
+    # 挿絵の見出しは、ループで見出しの文言が変わったあとの本文に合わせる（数と順番は変わらない）
+    remap_images(REPO / f"drafts/{slug}-images.json", old_h2, body_h2(md.read_text(encoding="utf-8")))
 
     # 7〜9. Doc を作り直し、画像を入れ、用語DBに書き戻す
     mk = ["python3", "scripts/make_doc_md.py", str(md.relative_to(REPO))]
