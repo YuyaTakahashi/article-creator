@@ -106,6 +106,48 @@ def remap_images(plan_path, old_h2, new_h2):
     plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+PLACE_PROMPT = """記事の1つの節に、挿絵を1枚入れます。挿絵が絵で説明している内容に一番近い段落を、下の段落から1つ選んでください。
+挿絵は、その段落の直後に置きます。答えは段落の番号（数字）だけを出力してください。
+
+### [挿絵の内容（画像生成の指示）]
+{prompt}
+
+### [挿絵に入る文字]
+{labels}
+
+### [節の段落]
+{paras}
+"""
+
+
+def place_illustrations(md_path, plan_path, model):
+    """本文が書き直されたあと、各挿絵を「絵が説明している段落」の直後に置き直す。
+    見出しの直後に機械的に置くと、絵と文章がずれるため。after には段落の書き出し15字を入れる"""
+    if not plan_path.exists():
+        return
+    from gpt_write import chat, load_env
+    load_env()
+    text = md_path.read_text(encoding="utf-8")
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    for it in plan.get("illustrations", []):
+        h = it.get("heading", "").strip()
+        m = re.search(rf"^## {re.escape(h)}\n(.*?)(?=^## |\Z)", text, re.M | re.S)
+        if not m:
+            print(f"警告: 挿絵の見出し「{h}」が本文に無い。位置を決められない")
+            continue
+        paras = [x.strip() for x in m.group(1).split("\n\n") if x.strip() and not x.strip().startswith("<figure")]
+        if not paras:
+            continue
+        ans = chat(model, [{"role": "user", "content": PLACE_PROMPT.format(
+            prompt=it.get("prompt", ""), labels="、".join(l.get("text", "") for l in it.get("labels", [])),
+            paras="\n".join(f"{i}. {x}" for i, x in enumerate(paras, start=1)))}])
+        n = re.search(r"\d+", ans)
+        k = int(n.group()) if n and 1 <= int(n.group()) <= len(paras) else len(paras)
+        it["after"] = paras[k - 1][:15]
+        print(f"  挿絵の位置: {h} → {k}段落目の後（{it['after']}…）")
+    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def run_critic(topic, difficulty, it, attempt=1):
     prompt = (f"article-critic スキルで drafts/{topic}.md を評価する。作業ディレクトリは {REPO}。"
               f"article_type=ux_glossary, topic={topic}, difficulty={difficulty}, it={it}, attempt_count={attempt}, "
@@ -374,6 +416,7 @@ def main():
     print(critic)
     # 挿絵の見出しは、ループで見出しの文言が変わったあとの本文に合わせる（数と順番は変わらない）
     remap_images(REPO / f"drafts/{slug}-images.json", old_h2, body_h2(md.read_text(encoding="utf-8")))
+    place_illustrations(md, REPO / f"drafts/{slug}-images.json", a.model)
 
     # 7〜9. Doc を作り直し、画像を入れ、用語DBに書き戻す
     mk = ["python3", "scripts/make_doc_md.py", str(md.relative_to(REPO))]
