@@ -1,10 +1,10 @@
 {
-  "version": "v21",
-  "hash": "3f36457ac4ef0ddfe2b7dcf427e0127a70e72e601cece8675af8aab994182029",
+  "version": "v22",
+  "hash": "176bf2863fb37c8ef84fd71d4c7a61ed35258393b026d82f61b84d3b6874ad5d",
   "updated_at": "2026-10-25",
-  "note": "Criticの指摘に[構成修正]と行番号を付け、[部分修正]は段落単位で差し替える",
+  "note": "手計算の材料は数値で動く仕組みがある用語だけで探す",
   "files": {
-    "prompts/01_information_gathering.md": "98bbc4b19343bafa6c61821c27c6edbb3f22a14591b722ecbc94daff164b16ef",
+    "prompts/01_information_gathering.md": "2a0840f7ee6472269e04236b189e84b5ddcb5efb34837e247c4ed7b9bcfaecd0",
     "prompts/02_polishing.md": "67be6c7c67f3a29bf3372c9989515eadf53d078f95d77609d1e589cde3626876",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "608c2172ea1cdfe2089e78cc428c0a1bf137d43465fdba62be9431740be9064a",
