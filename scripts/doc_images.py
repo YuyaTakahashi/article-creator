@@ -18,8 +18,11 @@ Markdownから作るので画像を入れられず、DocumentApp なら画像デ
 
 使い方（Doc化の直後に、Macで実行する）:
     1. 挿絵の計画を drafts/{slug}-images.json に書く（prompt は英語。画像に文字を描かせない）:
-         {"illustrations": [{"heading": "効果", "prompt": "<その章の本文の例を描く英語の説明>"}]}
+         {"illustrations": [{"heading": "効果", "after": "<絵が説明している段落の書き出し15字ほど>",
+                             "prompt": "<その段落の例を描く英語の説明>"}]}
        heading は Doc の ## 見出しの文字と同じにする。挿絵が要らなければ illustrations を空にする。
+       after を書くと、その見出しの節の中で書き出しが一致する段落の直後に挿絵を置く（絵が説明している文章の直後に置くため）。
+       見つからないとき、after が無いときは見出しの直後に置く。
     2. アイキャッチのSVGを描く（1024×1024。書き方は style-guide-eyecatch.md）:
          drafts/{slug}-eyecatch-1.svg, drafts/{slug}-eyecatch-2.svg
     3. アイキャッチをPNGにする（Chrome のヘッドレスで描画する）:
@@ -107,7 +110,8 @@ def build_jobs(md_path: Path):
             sys.exit(f"{plan_file.name} の {n} 件目に heading がありません")
         jobs.append({"key": f"illust-{n}", "kind": "illustration", "heading": it["heading"].strip(),
                      "prompt": (it.get("prompt") or "").strip(), "file": f"drafts/{slug}_{n}.png",
-                     "raw": f"drafts/{slug}_{n}_raw.png", "labels": it.get("labels") or []})
+                     "raw": f"drafts/{slug}_{n}_raw.png", "labels": it.get("labels") or [],
+                     "after": (it.get("after") or "").strip()})
     return fm, jobs
 
 
@@ -328,11 +332,13 @@ def send(md_path: Path, doc_url: str, dry_run: bool, illustrations_only: bool = 
         data, mime = shrink(BASE / j["file"])
         alt = f"{title}のアイキャッチ" if j["kind"] == "eyecatch" else f"{j['heading']}のイメージ"
         res = post(env, {"action": "insert_doc_image", "doc_url": doc_url, "kind": j["kind"],
-                         "heading": j["heading"], "alt": alt, "mime": mime,
+                         "heading": j["heading"], "after": j.get("after", ""), "alt": alt, "mime": mime,
                          "name": Path(j["file"]).name, "data": data})
         where = f"（{j['heading']}）" if j["heading"] else ""
         if res.get("ok"):
             print(f"  ok {j['key']}{where} をDocに入れた")
+            if res.get("placed") == "heading_fallback":
+                print(f"     ※ after「{j['after']}」の段落が見つからず、見出しの直後に入れた。Docで位置を確かめる")
         else:
             failed += 1
             print(f"  NG {j['key']}{where}: {res.get('error')}")
