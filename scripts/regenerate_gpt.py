@@ -115,11 +115,16 @@ def run_critic(topic, difficulty, it):
     print("$ claude -p （article-critic）", flush=True)
     try:
         r = subprocess.run(["claude", "-p", prompt, "--dangerously-skip-permissions"],
-                           cwd=REPO, text=True, capture_output=True, timeout=1200)
+                           cwd=REPO, text=True, capture_output=True, timeout=1200,
+                           stdin=subprocess.DEVNULL)
     except subprocess.TimeoutExpired:
         return "CRITIC: 20分で終わらなかった。あとで article-critic を手で通す"
     lines = [l for l in r.stdout.splitlines() if l.startswith("CRITIC:")]
-    return lines[-1] if lines else "CRITIC: 判定行を読めなかった。ログを確かめる"
+    if lines:
+        return lines[-1]
+    # 認証切れ（Failed to authenticate）などで claude が動かなかったときは、その理由を見せる
+    tail = " / ".join(((r.stderr or "") + (r.stdout or "")).strip().splitlines()[-2:])
+    return f"CRITIC: 判定行を読めなかった（{tail[:200]}）。article-critic を手で通す"
 
 
 def create_doc(topic, doc_md):
