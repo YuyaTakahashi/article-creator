@@ -1207,6 +1207,10 @@ function updateRow(body) {
   set(COL.WP_URL, body.wp_url);
   set(COL.GENERATED_AT, body.generated_at);
   set(COL.NOTE, body.note);
+  // 英語名（C列）。WPのカスタム項目「English」の元になる。人が入れた値を上書きしないよう、空のときだけ書く
+  if (body.english && !String(sheet.getRange(row, COL.TERM_EN).getValue() || '').trim()) {
+    sheet.getRange(row, COL.TERM_EN).setValue(String(body.english).trim());
+  }
   set(COL.SLUG, body.slug);
   set(COL.EXCERPT, body.excerpt);
   set(COL.CATEGORY_ID, body.category_id);

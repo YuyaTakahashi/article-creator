@@ -238,6 +238,7 @@ def main():
         "doc_url": args.doc_url,
         "generated_at": date.today().isoformat(),
         "slug": fm.get("slug", ""),
+        "english": fm.get("english", ""),
         "excerpt": fm.get("excerpt", ""),
         "eyecatch_prompt": fm.get("eyecatch_prompt", ""),
         "creator_version": fm.get("creator_version", ""),
