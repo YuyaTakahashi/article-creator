@@ -1865,6 +1865,7 @@ function insertDocImageAction_(data) {
     const body = doc.getBody();
     const blob = Utilities.newBlob(Utilities.base64Decode(data.data), data.mime || 'image/png', data.name || 'image.png');
     let at;
+    let placed = 'heading';
     if (data.kind === 'eyecatch') {
       // タイトルの直後（レビューする人が最初に見る場所）に案内行と候補を並べる。wp分割ラインより前なのでWPの本文には入らない
       if (findSplitLineIndex_(body) === -1) throw new Error('Docに「wp分割ライン」が見つからないので、アイキャッチを本文と区別できません');
@@ -1882,7 +1883,13 @@ function insertDocImageAction_(data) {
       const h = findHeadingIndex_(body, data.heading);
       if (h === -1) throw new Error('見出し「' + data.heading + '」がDocに見つかりません');
       at = h + 1;
-      // 同じ見出しに2枚目以降を入れるときは、先に入れた挿絵の後ろに並べる
+      // 挿絵は、絵が説明している段落の直後に置く（見出しの直後だと、絵が何の説明か読み手に伝わらない）。
+      // 段落は after（その段落の書き出し）で探し、見出しの節の中で見つからなければ見出しの直後に入れる
+      if (data.after) {
+        const a = findParagraphInSection_(body, h, data.after);
+        if (a !== -1) { at = a + 1; placed = 'after'; } else { placed = 'heading_fallback'; }
+      }
+      // 同じ位置に2枚目以降を入れるときは、先に入れた挿絵の後ろに並べる
       while (at < body.getNumChildren() && isDocImageOf_(body.getChild(at), 'illustration')) at++;
     }
     const p = body.insertParagraph(at, '');
@@ -1896,7 +1903,7 @@ function insertDocImageAction_(data) {
     const w = img.getWidth(), hgt = img.getHeight();
     if (w > maxW) { img.setWidth(maxW); img.setHeight(Math.round(hgt * maxW / w)); }
     doc.saveAndClose();
-    return jsonOut({ ok: true });
+    return jsonOut({ ok: true, placed: placed });
   } catch (e) {
     return jsonOut({ ok: false, error: String(e && e.message || e) });
   }
@@ -1965,6 +1972,28 @@ function findTitleIndex_(body) {
 }
 
 /** 見出しの文字で段落を探す。空白・全角半角の違いは吸収する。 */
+/**
+ * 見出し h の節（次の見出しまで）の本文段落から、書き出しが after と一致する段落を探す。
+ * 空白と全角半角の違いは無視し、先頭一致で見つからなければ部分一致で探す。人が1字直していても拾えるよう、after は段落の書き出し15字ほどにする。
+ */
+function findParagraphInSection_(body, h, after) {
+  const key = function (s) { return String(s || '').normalize('NFKC').replace(/[\s　]/g, ''); };
+  const want = key(after);
+  if (!want) return -1;
+  let contains = -1;
+  for (let i = h + 1; i < body.getNumChildren(); i++) {
+    const el = body.getChild(i);
+    if (el.getType() !== DocumentApp.ElementType.PARAGRAPH) continue;
+    const p = el.asParagraph();
+    if (p.getHeading() !== DocumentApp.ParagraphHeading.NORMAL) break;
+    const t = key(p.getText());
+    if (!t) continue;
+    if (t.indexOf(want) === 0) return i;
+    if (contains === -1 && t.indexOf(want) !== -1) contains = i;
+  }
+  return contains;
+}
+
 function findHeadingIndex_(body, heading) {
   const key = function (s) { return String(s || '').normalize('NFKC').replace(/[\s　]/g, ''); };
   const want = key(heading);
