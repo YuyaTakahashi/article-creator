@@ -110,6 +110,7 @@ def run_critic(topic, difficulty, it, attempt=1):
     prompt = (f"article-critic スキルで drafts/{topic}.md を評価する。作業ディレクトリは {REPO}。"
               f"article_type=ux_glossary, topic={topic}, difficulty={difficulty}, it={it}, attempt_count={attempt}, "
               "caller=regenerate_gpt.py。記事は書き直さない。ログJSONはスキルの規定の場所に保存する。"
+              "regenerate_points の各項目には、スキルの規定どおり [部分修正] か [要リサーチ] と、reader/item4: の形の項目を必ず付ける。"
               "出力の最後の1行は次の形にする: "
               "CRITIC: verdict=<pass|regenerate|escalate> template=<n> style=<n> reader=<n> readability=<n> log=<ログのパス>")
     print("$ claude -p （article-critic）", flush=True)
@@ -133,7 +134,7 @@ CRITIC_LOG_DIR = Path.home() / "workspace/agentic-solution/AGENT_REPORTS/article
 
 
 def parse_critic(line, slug):
-    """CRITIC 行とログJSONから、判定・4軸の合計・直す指摘を取り出す。読めなければ None"""
+    """CRITIC 行とログJSONから、判定・2点以下の項目・指摘（部分修正／要リサーチ）を取り出す。読めなければ None"""
     if "verdict=" not in line:
         return None
     m = re.search(r"log=(\S+)", line)
@@ -145,8 +146,18 @@ def parse_critic(line, slug):
         return None
     d = json.loads(log.read_text(encoding="utf-8"))
     totals = {k: v.get("total", 0) for k, v in d.get("scores", {}).items()}
-    return {"verdict": d.get("verdict", ""), "totals": totals, "sum": sum(totals.values()),
-            "points": d.get("regenerate_points", []), "log": str(log)}
+    bad = {f"{k}/item{it['id']}" for k, v in d.get("scores", {}).items()
+           for it in v.get("items", []) if it.get("score", 3) < 3}
+    points = d.get("regenerate_points", [])
+    research = [x for x in points if "[要リサーチ]" in x]
+    local = [x for x in points if x not in research]
+    return {"verdict": d.get("verdict", ""), "totals": totals, "bad": bad,
+            "local": local, "research": research, "log": str(log)}
+
+
+def point_items(points):
+    """指摘の文から「reader/item4」の形の項目を拾う"""
+    return {f"{a}/item{n}" for x in points for a, n in re.findall(r"([a-z]+)/item(\d+)", x)}
 
 
 FIX_PROMPT = """あなたはUX TIMES用語集の編集者です。下の[記事]に対して、[直す指摘]に挙がった箇所だけを直してください。
@@ -199,29 +210,45 @@ def fix_with_gpt(topic, md_path, points, model):
 
 
 def critic_loop(topic, md_path, slug, model, difficulty, it):
-    """Critic → 指摘を部分修正 → 再評価を、指摘が無くなるまで回す。
-    止まる条件: 指摘が無い ／ 直しを MAX_FIX 回した ／ 点数が上がらなかった ／ 直しを採れなかった"""
-    best_text, best_sum, history = md_path.read_text(encoding="utf-8"), -1, []
+    """Critic → [部分修正] の指摘だけを GPT で直す → 再評価、を回す。
+    採る条件: 直しを狙った項目が1つ以上解消し、新しく2点以下になった項目が無いこと（合計点は採点の揺れが大きいので見ない）。
+    止まる条件: [部分修正] の指摘が無い ／ 直しを MAX_FIX 回した ／ 解消ゼロか新しい2点が出た（前の版に戻す）／ 直しを採れなかった。
+    [要リサーチ] の指摘はループに入れず、最後に人間へ上げる"""
+    history, research = [], []
+    prev, prev_text = None, None
     for attempt in range(1, MAX_FIX + 2):
         line = run_critic(topic, difficulty, it, attempt)
         print(line)
         r = parse_critic(line, slug)
         if r is None:
             return f"{line}（ループは止めた）"
-        history.append(f"{attempt}回目 {r['verdict']} {r['totals']}")
-        if r["sum"] <= best_sum:
-            md_path.write_text(best_text, encoding="utf-8")
-            return f"点数が上がらなかったので、前の版に戻して止めた（{' → '.join(history)}）。残る指摘: {r['points']}"
-        best_text, best_sum = md_path.read_text(encoding="utf-8"), r["sum"]
-        if not r["points"]:
-            return f"指摘なしで止めた（{' → '.join(history)}）"
+        history.append(f"{attempt}回目 {r['totals']}")
+        if prev is not None:
+            targets = point_items(prev["local"])
+            resolved = sorted(targets - r["bad"])
+            new_bad = sorted(r["bad"] - prev["bad"])
+            print(f"  解消した項目: {resolved or 'なし'} ／ 新しく2点以下になった項目: {new_bad or 'なし'}")
+            if new_bad or not resolved:
+                md_path.write_text(prev_text, encoding="utf-8")
+                why = f"新しい2点 {new_bad}" if new_bad else "狙った項目が1つも解消しない"
+                return (f"{why}ので、直す前の版に戻して止めた（{' → '.join(history)}）。"
+                        f"残る指摘: {prev['local']}{_research_note(research or prev['research'])}")
+        research = r["research"]
+        if not r["local"]:
+            return f"部分修正の指摘なしで止めた（{' → '.join(history)}）{_research_note(research)}"
         if attempt > MAX_FIX:
-            return f"直しを{MAX_FIX}回しても指摘が残った。要人間判断（{' → '.join(history)}）。残る指摘: {r['points']}"
-        print(f"直し {attempt}回目: 指摘 {len(r['points'])} 件")
-        if not fix_with_gpt(topic, md_path, r["points"], model):
-            return f"直しを採れなかったので止めた（{' → '.join(history)}）。残る指摘: {r['points']}"
+            return (f"直しを{MAX_FIX}回しても指摘が残った。要人間判断（{' → '.join(history)}）。"
+                    f"残る指摘: {r['local']}{_research_note(research)}")
+        print(f"直し {attempt}回目: 部分修正 {len(r['local'])} 件（要リサーチ {len(r['research'])} 件は回さない）")
+        prev, prev_text = r, md_path.read_text(encoding="utf-8")
+        if not fix_with_gpt(topic, md_path, r["local"], model):
+            return f"直しを採れなかったので止めた（{' → '.join(history)}）。残る指摘: {r['local']}{_research_note(research)}"
         run(["python3", "scripts/stamp_version.py", str(md_path)])
     return "想定外の終わり方"
+
+
+def _research_note(research):
+    return f"\n要リサーチ（台帳に材料が無く、本文の直しでは解消しない。yuyaさんの判断待ち）: {research}" if research else ""
 
 
 def create_doc(topic, doc_md):
