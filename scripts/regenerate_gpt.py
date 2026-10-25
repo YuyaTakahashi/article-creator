@@ -110,7 +110,7 @@ def run_critic(topic, difficulty, it, attempt=1):
     prompt = (f"article-critic スキルで drafts/{topic}.md を評価する。作業ディレクトリは {REPO}。"
               f"article_type=ux_glossary, topic={topic}, difficulty={difficulty}, it={it}, attempt_count={attempt}, "
               "caller=regenerate_gpt.py。記事は書き直さない。ログJSONはスキルの規定の場所に保存する。"
-              "regenerate_points の各項目には、スキルの規定どおり [部分修正] か [要リサーチ] と、reader/item4: の形の項目を必ず付ける。"
+              "regenerate_points の各項目には、スキルの規定どおり [部分修正]・[構成修正]・[要リサーチ] のどれかと、reader/item4: の形の項目を付け、[部分修正] には L25 の形の行番号を必ず書く。"
               "出力の最後の1行は次の形にする: "
               "CRITIC: verdict=<pass|regenerate|escalate> template=<n> style=<n> reader=<n> readability=<n> log=<ログのパス>")
     print("$ claude -p （article-critic）", flush=True)
@@ -150,9 +150,10 @@ def parse_critic(line, slug):
            for it in v.get("items", []) if it.get("score", 3) < 3}
     points = d.get("regenerate_points", [])
     research = [x for x in points if "[要リサーチ]" in x]
-    local = [x for x in points if x not in research]
-    return {"verdict": d.get("verdict", ""), "totals": totals, "bad": bad,
-            "local": local, "research": research, "log": str(log)}
+    structure = [x for x in points if "[構成修正]" in x]
+    local = [x for x in points if x not in research and x not in structure]
+    return {"verdict": d.get("verdict", ""), "totals": totals, "bad": bad, "local": local,
+            "escalate": structure + research, "log": str(log)}
 
 
 def point_items(points):
@@ -160,19 +161,25 @@ def point_items(points):
     return {f"{a}/item{n}" for x in points for a, n in re.findall(r"([a-z]+)/item(\d+)", x)}
 
 
-FIX_PROMPT = """あなたはUX TIMES用語集の編集者です。下の[記事]に対して、[直す指摘]に挙がった箇所だけを直してください。
+FIX_PROMPT = """あなたはUX TIMES用語集の編集者です。[直す指摘]に挙がった段落だけを書き直してください。
 
-- 指摘に関係しない文は、一字も変えない。見出しの数・順番・文言も変えない
+- 書き直してよいのは、[直す段落]に挙げた行番号の段落だけ。[記事]のほかの段落は読むための文脈で、直さない
+- 前後の段落とつながるように書く（同じ内容を2回書かない、前の段落を受ける言葉を残す）
 - 事実は足さない。言い換え・前提・計算例・たとえが必要なときは、[出典台帳]の（前提）（働き）（手計算）（たとえ）（結果）の材料を使う
-- 指摘を直すために別の箇所を崩さない（同じ内容を2回書かない、本文を体言止めにしない、主語を消さない）
-- 「## 最小限の説明」の本文を直したときは、20〜35文字に収め、「〜する現象」「〜する手法」のように名詞で終わる定義の形を保つ（ここだけは名詞で終える。句点は付けない）
+- 本文は体言止めにしない。主語を消さない。一文は60字前後を目安にし、長い修飾を重ねない
+- 見出しの行（## で始まる行）を直すときは「## 」を残す。見出しの数は変えない
+- 最小限の説明の行を直すときは、20〜35文字に収め、「〜する現象」のように名詞で終える（句点は付けない）
+- 段落を消すときは空文字にする。1つの段落を2つに分けるときは、値の中で空行（\\n\\n）を使う
 
-前置きは不要です。直した記事全体（「## 最小限の説明」から「## 関連用語」まで）だけを出力してください。
+出力は JSON だけにする。キーは行番号（"L25" の形）、値は差し替える段落の本文。[直す段落]にない行番号は出力しない。
 
 ### [直す指摘]
 {points}
 
-### [記事]
+### [直す段落]
+{targets}
+
+### [記事]（行番号つき）
 {article}
 
 ### [出典台帳]
@@ -180,42 +187,80 @@ FIX_PROMPT = """あなたはUX TIMES用語集の編集者です。下の[記事]
 """
 
 
+def numbered(text):
+    return "\n".join(f"L{i}: {l}" for i, l in enumerate(text.split("\n"), start=1))
+
+
+def target_lines(text, points):
+    """指摘の L 番号のうち、差し替えてよい行（本文の段落・見出し・最小限の説明）を返す"""
+    lines = text.split("\n")
+    body_start = next(i for i, l in enumerate(lines) if l.startswith("## 最小限の説明"))
+    out = set()
+    for x in points:
+        for n in re.findall(r"L(\d+)", x):
+            k = int(n) - 1
+            if body_start < k < len(lines) and lines[k].strip() and not lines[k].startswith("-- wp") \
+                    and lines[k].strip() not in ("## 最小限の説明", "## 関連用語", "## 語源・提唱者") \
+                    and not lines[k].startswith("- "):
+                out.add(int(n))
+    return sorted(out)
+
+
 def fix_with_gpt(topic, md_path, points, model):
-    """Critic の指摘を GPT に部分修正させ、drafts に戻す。変えすぎた直しは採らず False を返す"""
-    import difflib
+    """指摘された段落だけを GPT に書き直させ、スクリプトで差し替える。ほかの段落は1文字も変わらない。
+    差し替えた段落の本文の集合を返す（あとで、新しい指摘が直した段落の中か外かを見分けるため）。採れなければ None"""
     from gpt_write import chat, load_env
     load_env()
-    src = md_path.read_text(encoding="utf-8")
-    body = src[src.index("## 最小限の説明"):]
+    text = md_path.read_text(encoding="utf-8")
+    targets = target_lines(text, points)
+    if not targets:
+        print("警告: 指摘に差し替えられる行番号が無い。直さない")
+        return None
+    lines = text.split("\n")
     claims = (REPO / f"research/{topic}_claims.md").read_text(encoding="utf-8")
     out = chat(model, [{"role": "user", "content": FIX_PROMPT.format(
-        points="\n".join(f"- {x}" for x in points), article=body, claims=claims)}])
-    if "## 最小限の説明" not in out:
-        print("警告: 直しの出力に「## 最小限の説明」が無い。採らない")
-        return False
-    new_body = out[out.index("## 最小限の説明"):]
-    a, b = body.splitlines(), new_body.splitlines()
-    changed = 1 - difflib.SequenceMatcher(None, a, b).ratio()
-    print(f"  直しで変わった行の割合: {changed:.0%}")
-    if changed > MAX_CHANGE:
-        print(f"警告: 変わった行が {MAX_CHANGE:.0%} を超えた。部分修正ではないので採らない")
-        return False
-    # 見出しの文言は直してよい（Critic が見出しを指摘することがある）。数と固定の見出しの位置だけを守る
-    ob, nb = body_h2(body), body_h2(new_body)
-    if len(ob) != len(nb) or [h == "語源・提唱者" for h in ob] != [h == "語源・提唱者" for h in nb]:
-        print("警告: 直しで見出しの数か並びが変わった。採らない")
-        return False
-    apply_turn3(md_path, new_body, model, "")
-    return True
-
+        points="\n".join(f"- {x}" for x in points),
+        targets="\n".join(f"L{n}: {lines[n-1]}" for n in targets),
+        article=numbered(text), claims=claims)}])
+    try:
+        patch = json.loads(out[out.index("{"):out.rindex("}") + 1])
+    except ValueError:
+        print("警告: 直しの出力が JSON でない。採らない")
+        return None
+    patch = {int(k.lstrip("L")): v for k, v in patch.items() if k.lstrip("L").isdigit()}
+    extra = set(patch) - set(targets)
+    if extra:
+        print(f"警告: 指示していない行 {sorted(extra)} を直そうとした。その分は捨てる")
+    replaced = set()
+    for n in sorted(set(patch) & set(targets), reverse=True):
+        old, new = lines[n - 1], str(patch[n]).strip()
+        if old.startswith("## ") and new and not new.startswith("## "):
+            new = "## " + new.lstrip("# ").strip()
+        if old.startswith("## ") and not new:
+            print(f"警告: 見出し L{n} を消そうとした。見出しは残す")
+            continue
+        parts = [x.strip() for x in new.split("\n\n") if x.strip()] if new else []
+        if parts:
+            lines[n - 1:n] = [y for k, x in enumerate(parts) for y in ([x] if k == 0 else ["", x])]
+        else:  # 段落を消す（後ろの空行も一緒に消す）
+            end = n + 1 if n < len(lines) and not lines[n].strip() else n
+            del lines[n - 1:end]
+        replaced.update(parts)
+        print(f"  L{n} を差し替えた")
+    new_text = "\n".join(lines)
+    if body_h2(new_text) and len(body_h2(new_text)) != len(body_h2(text)):
+        print("警告: 見出しの数が変わった。採らない")
+        return None
+    body = new_text[new_text.index("## 最小限の説明"):]
+    apply_turn3(md_path, body, model, "")  # 最小限の説明を excerpt に写す
+    return replaced
 
 def critic_loop(topic, md_path, slug, model, difficulty, it):
-    """Critic → [部分修正] の指摘だけを GPT で直す → 再評価、を回す。
-    採る条件: 直しを狙った項目が1つ以上解消し、新しく2点以下になった項目が無いこと（合計点は採点の揺れが大きいので見ない）。
-    止まる条件: [部分修正] の指摘が無い ／ 直しを MAX_FIX 回した ／ 解消ゼロか新しい2点が出た（前の版に戻す）／ 直しを採れなかった。
-    [要リサーチ] の指摘はループに入れず、最後に人間へ上げる"""
-    history, research = [], []
-    prev, prev_text = None, None
+    """Critic → [部分修正] の段落だけを差し替え → 記事全体を再評価（整合性チェック）、を回す。
+    採る条件: 解消した項目の数が、新しく2点以下になった項目の数より多いこと（合計点は採点の揺れが大きいので見ない）。
+    新しい指摘のうち、差し替えた段落の中のものは次の回に直す。差し替えていない段落に出たものは人間に上げる。
+    [構成修正] と [要リサーチ] はループに入れず人間に上げる。直しは MAX_FIX 回まで"""
+    history, prev, prev_text, replaced, outside = [], None, None, set(), []
     for attempt in range(1, MAX_FIX + 2):
         line = run_critic(topic, difficulty, it, attempt)
         print(line)
@@ -223,32 +268,42 @@ def critic_loop(topic, md_path, slug, model, difficulty, it):
         if r is None:
             return f"{line}（ループは止めた）"
         history.append(f"{attempt}回目 {r['totals']}")
+        hist = " → ".join(history)
+        local = r["local"]
         if prev is not None:
             targets = point_items(prev["local"])
             resolved = sorted(targets - r["bad"])
             new_bad = sorted(r["bad"] - prev["bad"])
             print(f"  解消した項目: {resolved or 'なし'} ／ 新しく2点以下になった項目: {new_bad or 'なし'}")
-            if new_bad or not resolved:
+            if len(resolved) <= len(new_bad):
                 md_path.write_text(prev_text, encoding="utf-8")
-                why = f"新しい2点 {new_bad}" if new_bad else "狙った項目が1つも解消しない"
-                return (f"{why}ので、直す前の版に戻して止めた（{' → '.join(history)}）。"
-                        f"残る指摘: {prev['local']}{_research_note(research or prev['research'])}")
-        research = r["research"]
-        if not r["local"]:
-            return f"部分修正の指摘なしで止めた（{' → '.join(history)}）{_research_note(research)}"
+                return (f"解消（{len(resolved)}）が新しい2点（{len(new_bad)}）を上回らないので、直す前の版に戻して止めた（{hist}）。"
+                        f"残る指摘: {prev['local']}{_research_note(prev['escalate'] + outside)}")
+            # 新しい指摘を、差し替えた段落の中（次に直す）と外（人間に上げる）に分ける
+            cur = md_path.read_text(encoding="utf-8").split("\n")
+            def inside(x):
+                ns = [int(n) for n in re.findall(r"L(\d+)", x)]
+                return any(0 < n <= len(cur) and cur[n - 1].strip() in replaced for n in ns)
+            old_items = point_items(prev["local"])
+            keep = [x for x in local if inside(x) or point_items([x]) & old_items]
+            outside += [x for x in local if x not in keep]
+            local = keep
+        if not local:
+            return f"直す指摘なしで止めた（{hist}）{_research_note(r['escalate'] + outside)}"
         if attempt > MAX_FIX:
-            return (f"直しを{MAX_FIX}回しても指摘が残った。要人間判断（{' → '.join(history)}）。"
-                    f"残る指摘: {r['local']}{_research_note(research)}")
-        print(f"直し {attempt}回目: 部分修正 {len(r['local'])} 件（要リサーチ {len(r['research'])} 件は回さない）")
-        prev, prev_text = r, md_path.read_text(encoding="utf-8")
-        if not fix_with_gpt(topic, md_path, r["local"], model):
-            return f"直しを採れなかったので止めた（{' → '.join(history)}）。残る指摘: {r['local']}{_research_note(research)}"
+            return f"直しを{MAX_FIX}回しても指摘が残った。要人間判断（{hist}）。残る指摘: {local}{_research_note(r['escalate'] + outside)}"
+        print(f"直し {attempt}回目: 部分修正 {len(local)} 件（構成修正・要リサーチ {len(r['escalate'])} 件は回さない）")
+        prev, prev_text = dict(r, local=local), md_path.read_text(encoding="utf-8")
+        got = fix_with_gpt(topic, md_path, local, model)
+        if got is None:
+            return f"直しを採れなかったので止めた（{hist}）。残る指摘: {local}{_research_note(r['escalate'] + outside)}"
+        replaced |= got
         run(["python3", "scripts/stamp_version.py", str(md_path)])
     return "想定外の終わり方"
 
 
 def _research_note(research):
-    return f"\n要リサーチ（台帳に材料が無く、本文の直しでは解消しない。yuyaさんの判断待ち）: {research}" if research else ""
+    return f"\nyuyaさんの判断待ち（構成修正・要リサーチ・直していない段落に出た指摘）: {research}" if research else ""
 
 
 def create_doc(topic, doc_md):
