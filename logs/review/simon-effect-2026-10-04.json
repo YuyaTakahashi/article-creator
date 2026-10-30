@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "file": "drafts/サイモン効果.md",
+  "title": "サイモン効果",
+  "slug": "simon-effect",
+  "creator_version": "v17",
+  "reviewed_at": "2026-10-04",
+  "reviewed_by": "article-review",
+  "critic_verdict": "pass",
+  "fixed": [
+    "運転実験の逆転を削除",
+    "急いだ反応ほど誤りが増えるを削除",
+    "遅れの大きさを20〜30ミリ秒に",
+    "Simonの所属をアイオワ大学の記載に合わせた",
+    "受動態2か所と指示語1か所"
+  ],
+  "note": "Doc正本と同期。出典で確認できない文を削除し、運転実験（Müsseler 2009）は刺激反応適合性のため削除。最小限の説明をyuya決定の文に変更。挿絵3枚を本文に合わせて再生成",
+  "recorded_at": "2026-10-04T01:13:41+09:00"
+}

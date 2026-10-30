@@ -1,0 +1,26 @@
+[Mon Sep 28 00:59:09 JST 2026] 週次バッチ開始（week 2026-W40）
+OK: レシピは v17（aef52788149d）のまま
+[Mon Sep 28 00:59:14 JST 2026] レシピ版を用語くんに通知: v17 → {"ok":true,"version":"v17","previous":"v16","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次ドラフト生成バッチ、完了した。
+
+## ✅ 処理結果（3本すべて生成・Doc化・書き戻し済み）
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-027 | クロスモーダル | レビュー待ち | [Doc](https://docs.google.com/document/d/1We_KykuZem3e1AQAkaNDGZtcGd0LU4b2XCugtJly8GM/edit) |
+| G-028 | コンテキスト汚染攻撃 | レビュー待ち | [Doc](https://docs.google.com/document/d/1CLH8Gel6soxcrNrtJ71v81rCjOrAFaoTFuwK2e3T6-w/edit) |
+| G-029 | サイモン効果 | レビュー待ち | [Doc](https://docs.google.com/document/d/1JqT6-P4ggwxb2tbWP-By4pLAv8l_Q1EBk-cyxat-GMo/edit) |
+
+**選定理由**: 作り直しリクエスト（U列=TRUE）は0件、生成リクエスト（G列=TRUE）も0件、提案元にSlackを含む行も0件だった。そのため優先③（備考の「公開記事N本」の降順、同数はID昇順）に落ち、全50件の提案中がN=1で並んでいたためID昇順の上位3件を取った。
+
+**見送り・escalate**: なし。WP重複チェックは3件とも「重複なし」で通過した（クロスモーダルはマルチモーダル等3本、コンテキスト汚染攻撃はプロンプトインジェクション1本、サイモン効果はストループ効果等3本に語が出てくるだけで、同名記事は無かった）。article-critic は Step 5.5 と Step 8.5 の2回とも通し、いずれも pass で終えた。
+
+**版**: 3本とも v17 / recipe_hash `aef52788149d` を刻印済み。`reviewed_at` は付けていない。
+
+**肖像（X列）**: Wikipedia の pageimages で提唱者を引いたところ、Charles Spence（クロスモーダルの語源・提唱者セクションに登場）だけ画像があり、X列に控えた。Hoggan・Brewster・J. Richard Simon はページ自体が無いか画像が無く、DeepMind は個人の提唱者がいないため、G-028・G-029 は `[]`（スキップ）になっている。
+
+**Slack**: 指示どおり投稿していない。今週の3本は用語くんの月曜レポート（11時 `sendMondayReport`）が拾う。
+
+⚠️ ひとつ申し送り: コンテキスト汚染攻撃の `category_id` に **562（AI）** を入れた。スキルのカテゴリ表には無い値だが、WP上に実在し公開済みの「プロンプトインジェクション」「マルチモーダル」も562を使っているのでこれに揃えた。`article-creator` の SKILL.md のカテゴリ表に562が載っていないので、次にスキルを触るときに追記しておくのが良さそう。
+[Mon Sep 28 01:22:51 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W40.marker

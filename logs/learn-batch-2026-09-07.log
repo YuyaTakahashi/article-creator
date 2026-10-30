@@ -1,0 +1,30 @@
+[Mon Sep  7 01:22:35 JST 2026] 学習バッチ判定: 未確認の公開記事 2 件
+[Mon Sep  7 01:22:35 JST 2026] 学習バッチ開始（2 件）
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+## 実行結果
+
+✅ 完了
+
+**処理した記事: 2本**（`logs/gaps/2026-09-07/`）
+
+| 記事 | 版 | 段落 | 手が入った箇所 |
+|---|---|---|---|
+| IaC（G-013） | v1 | 18→15 | 3 |
+| ループエンジニアリング（G-077） | v3 | 36→44 | 8 |
+
+**分類の内訳**（記録した10項目、ノイズ・表記ゆれ等は落とした）
+
+- (A) 既存ルールが守られていない: 5件 — 語源の固有名詞の系譜 ×2、セクション冒頭の結論文 ×2（IaC は定義セクションごと削除）、効果セクションの「誰に効くか書き分け」段落の削除 ×1
+- (B) ルール自体が無い: 5件 — リード文の具体例が定義の言い直しになる ×2、2度目の括弧注、初出企業名への業種説明、専門語の和語比喩（「使い捨て」）
+
+2記事に共通して起きたのは**語源・提唱者への人名・製品名の積み上げ**で、どちらも最大の削減対象になった（IaC は7組→1組、ループは5組→2組）。次に多いのが**セクション冒頭の1文結論段落の削除**で、通算5記事目にあたる。
+
+⚠️ 両稿とも v10〜v15 より前の生成（v1・v3）。v13〜v15 で入れた指示の効果はこの差分では検証できないため、観測とproposalの両方にその旨を明記した。
+
+**未反映: 3本**（CAGR / IaC / ループエンジニアリング）→ しきい値到達のため改訂案を作成
+
+- `prompts/learned/observations.md` に 2026-09-07 の節を追記
+- `prompts/learned/proposal-2026-09-07.md` に改訂案3件（①語源の固有名詞を3組までに制限 ②冒頭結論文を義務から条件つきの許可へ ③リード文の具体例は2文以内・定義に無い情報を足しているか確認）
+
+③は IaC の削除意図が差分から確定できないため「案」で止めた。「誰に効くか書き分け」の削除は1件のみなので提案には入れず、proposal末尾に候補として記録している。Slackへの投稿はしていない。
+[Mon Sep  7 01:29:45 JST 2026] 学習バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/learn-done-2026-W37.marker

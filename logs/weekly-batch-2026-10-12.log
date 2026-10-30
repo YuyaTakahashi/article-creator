@@ -1,0 +1,32 @@
+[Mon Oct 12 01:35:58 JST 2026] 週次バッチ開始（week 2026-W42）
+OK: レシピは v19（cec6936d256d）のまま
+[Mon Oct 12 01:36:02 JST 2026] レシピ版を用語くんに通知: v19 → {"ok":true,"version":"v19","previous":"v19","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次バッチ完了しました。
+
+## サマリー
+作り直しリクエスト（U列）は0件。生成リクエスト（G列=TRUE）の G-094 を最優先で拾い、残り2枠を提案中の行からID昇順で埋めて3本を生成・Doc化・書き戻しまで通しました。見送り・escalate はありません。Slack投稿は月曜レポート（用語くん 11:00 `sendMondayReport`）に委譲済みです。
+
+## 処理した3件
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-094 | 勾配消失・勾配爆発 | レビュー待ち | https://docs.google.com/document/d/1Hw-Ifx1Pe-qFrdgd32f-U7Ch3t-Tx5ugUZUpGij2MsM/edit |
+| G-033 | ジェイルブレイク | レビュー待ち | https://docs.google.com/document/d/1SOuEMtl9tPBNI2AR_AQ-mOI-MZ6e1wCNNATQutcfSsA/edit |
+| G-034 | スタイルガイド | レビュー待ち | https://docs.google.com/document/d/1WzSqMAkSxSHkEoZ64QfT4Vx9tcqL9Sz2vZUG_KvA0rU/edit |
+
+選定根拠：G-094 は Slack 由来の生成リクエスト（優先①）。提案元に「Slack」を含む行は他に無く、備考の「公開記事N本」はすべて N=1 で同数のため、ID昇順で G-033・G-034 を採りました。
+
+## 各工程の結果
+
+✅ **重複チェック** 3件ともタイトル・slug一致の既存記事なし（本文に語が出るだけの記事は参考表示のみ）
+✅ **出典収集** WebSearch＋WebFetch。台帳と成立条件メモを `research/` に作成。読めなかった出典（arXiv の生PDF 2件、Schmidhuberサーベイ）は台帳末尾に記録し、事実の根拠には使っていません
+✅ **article-critic** Step 5.5 / Step 8.5 の2回とも通過。ログは `AGENT_REPORTS/article-critic-logs/2026-10-12/` に6件
+✅ **レシピ版** 3件とも v19 / `cec6936d256d` を刻印
+✅ **画像** アイキャッチ2案×3＝6枚（SVG）、挿絵2枚×3＝6枚（gpt-image-2＋日本語ラベル）をDocに差し込み済み。スタイルガイドの挿絵1枚は衣服のボタンが描かれたため1回だけ作り直しました
+✅ **書き戻し** 3件とも `ステータス=レビュー待ち`・Doc URL・slug・excerpt・category_id・eyecatch_prompt・v19/hash が入り、G-094 は G列が FALSE に落ちてリクエストが消化されたことをシート再読み込みで確認
+
+## ⚠️ 1点だけ申し送り
+
+用語DBのB列は `勾配消失・勾配爆発（Vanishing Gradient / Exploding Gradient）` のまま（Slack登録時の文字列）ですが、記事タイトルは F2 に従い日本語のみの「勾配消失・勾配爆発」にしています。WP投稿時はフロントマターの `title` が使われるので実害はありません。B列も揃えるなら手で直すのが早いです。
+[Mon Oct 12 02:11:07 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W42.marker

@@ -1,0 +1,30 @@
+[Mon Oct 19 00:05:30 JST 2026] 週次バッチ開始（week 2026-W43）
+OK: レシピは v19（cec6936d256d）のまま
+[Mon Oct 19 00:05:34 JST 2026] レシピ版を用語くんに通知: v19 → {"ok":true,"version":"v19","previous":"v19","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次バッチ完了です。Slack投稿はしていません（月曜レポートに委譲）。
+
+## ✅ 生成した3本（すべて status=レビュー待ち）
+
+| ID | 用語 | カテゴリ | Doc |
+|---|---|---|---|
+| G-095 | 低位安定 | マーケティング・ビジネス(358) | [Doc](https://docs.google.com/document/d/1cVBgHCjNEYOuauc9UwKcG6_hitDZl_hqK47aGOUTdxA/edit) |
+| G-035 | ソフト・ラベリング | テクノロジー・技術(418) | [Doc](https://docs.google.com/document/d/15BjbtGirzaOTm7pBKJLXsrC2KVU1isM15Abnh-CBGTQ/edit) |
+| G-037 | デザイン思考 | ツール・フレームワーク・方法論(22) | [Doc](https://docs.google.com/document/d/1E7PBcRR54JToJLNWIpJ5HDlry2rh4bWa9seH--AWImM/edit) |
+
+各Docにアイキャッチ2案＋挿絵（ソフト・ラベリング3枚／デザイン思考3枚／低位安定2枚、日本語ラベル入り）を入れ済み。レシピ版は3本とも v19 / cec6936d256d。用語DBのM〜T・X列まで書き戻し、G列フラグも消化しました。
+
+## ⚠️ 選定を1件差し替えました（要判断）
+
+- **作り直しリクエスト（U列=TRUE）は0件**。G列=TRUEは G-001 のみでしたが status=公開済みのため対象外。
+- 優先②（提案元にSlack）で **G-095 低位安定**、優先③（公開記事1本・ID昇順）で **G-035 ソフト・ラベリング → G-036 テリトリーマップ** の順でした。
+- **G-036 テリトリーマップは生成せず、提案中のまま残しました。** 英語・日本語の両方で一次情報源を探しましたが、設計領域の「territory map」を定義した文献が見つかりません。英語の "territory map" は営業区域マッピングのソフトを指す別概念で、日本語で唯一該当するのは UX TIMES 自身の記事（ステークホルダーマップ内の1文と、2018年の Jamin Hegeman 講演レポートの1文）だけでした。自社記事を出典にすると循環参照になり、成立条件を作文するしかなくなるため止めています。
+- 代わりに優先③の次点 **G-037 デザイン思考** を入れました（WP重複なし）。
+
+テリトリーマップの扱いは3択です。A. 見送り（status=見送り、備考に理由）／B. ステークホルダーマップ記事側の記述を出典付きに直してから書く／C. そのまま提案中で保留（現状）。**Aを推します** — 用語として独立記事にするだけの一次情報が存在しないので、放置すると毎週この順番で引っかかり続けます。
+
+## 補足
+
+- 低位安定の原典（経産省 DXレポート2.1 本文PDF）は 403 で取得できませんでした。同一文言を引用している独立2媒体（ビジネス+IT／ネットコマース）で照合し、その旨を `research/低位安定_claims.md` に明記してあります。
+- 照合（Step 6）で削った主なもの: 低位安定の「数か月かかる」等の推論、語源の評価段落、デザイン思考の「この記事を境に」という因果の断定。
+[Mon Oct 19 00:49:39 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W43.marker

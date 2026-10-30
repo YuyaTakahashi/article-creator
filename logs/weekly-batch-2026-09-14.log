@@ -1,0 +1,57 @@
+[Mon Sep 14 11:00:51 JST 2026] 週次バッチ開始（week 2026-W38）
+OK: レシピは v16（98565a4937e0）のまま
+[Mon Sep 14 11:01:09 JST 2026] レシピ版を用語くんに通知: v16 → {"ok":false,"error":"HTTP Error 404: Not Found"}
+
+## 処理結果（2026-09-14 / week 2026-W38）
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-021 | アクティブラーニング | レビュー待ち | https://docs.google.com/document/d/1abLnabEV6R8vzzeQ4aVrwgx7AT3T7qUVL4FartUVCac/edit |
+| G-023 | エッジAI | レビュー待ち | https://docs.google.com/document/d/1JHr6ZnM-gGEtoMX6AkQOhNPd_drJMTepATKDrn7P7eQ/edit |
+| G-025 | オープンソース | レビュー待ち | https://docs.google.com/document/d/1_0qXpIalITwlozEsB-Arcgi2aRddSvN31vEY_o4ZBtY/edit |
+| G-022 | エコシステム戦略 | 見送り | 既存「エコシステム」と部分一致 https://uxdaystokyo.com/articles/glossary/ecosystem/ |
+| G-024 | オブジェクト指向 | 見送り | 既存「OOUI」と部分一致 https://uxdaystokyo.com/articles/glossary/ooui/ |
+
+### 選定の経緯
+- 作り直しリクエスト（U列=TRUE）0件。生成リクエスト（G列=TRUE）は提案中の行に0件。提案元にSlackを含む提案中の行も0件。
+- 優先③（備考の「公開記事N本」降順・ID昇順）で G-021 から順に充当。G-022・G-024 が重複チェックで止まったため、G-023・G-025 を繰り上げて3本にした。
+
+### 内訳
+- 3本を drafts/ に保存し stamp_version.py で v16（98565a4937e0）を刻印。_baseline にも初稿を控えた
+- article-critic を Step 5.5 / 8.5 の2回とも実施。escalate なし。ログは AGENT_REPORTS/article-critic-logs/2026-09-14/ に6件
+- 提唱者の顔写真：エッジAI＝Mahadev Satyanarayanan、オープンソース＝Christine Peterson を挿入。アクティブラーニングは Dana Angluin の肖像が Wikipedia に無いためスキップ
+- Slack投稿なし（月曜レポートに委譲）
+
+### 申し送り
+1. 書き戻し完了が 11:14〜11:28 で、sendMondayReport（11:00）より後になった。今週の3本は本日のレポートに載っていない
+2. GAS Web App が 302→404 を返す。update_row の書き込み自体は成功している（シート再読込で5行とも確認済み）が、レスポンスの ok:true は取れない。11:01 のレシピ版 notify も 404 で、到達したか未確認
+3. G-001「ヒューマン・イン・ザ・ループ」の G列が TRUE のまま（ステータスは公開済み）。先週からの持ち越し
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次バッチ完了。
+
+## 処理結果（2026-09-14 / week 2026-W38）
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-021 | アクティブラーニング | ✅ レビュー待ち | [Doc](https://docs.google.com/document/d/1abLnabEV6R8vzzeQ4aVrwgx7AT3T7qUVL4FartUVCac/edit) |
+| G-023 | エッジAI | ✅ レビュー待ち | [Doc](https://docs.google.com/document/d/1JHr6ZnM-gGEtoMX6AkQOhNPd_drJMTepATKDrn7P7eQ/edit) |
+| G-025 | オープンソース | ✅ レビュー待ち | [Doc](https://docs.google.com/document/d/1_0qXpIalITwlozEsB-Arcgi2aRddSvN31vEY_o4ZBtY/edit) |
+| G-022 | エコシステム戦略 | 見送り | 既存「[エコシステム](https://uxdaystokyo.com/articles/glossary/ecosystem/)」と部分一致 |
+| G-024 | オブジェクト指向 | 見送り | 既存「[OOUI](https://uxdaystokyo.com/articles/glossary/ooui/)」と部分一致 |
+
+### 選定の経緯
+作り直しリクエスト（U列）0件、生成リクエスト（G列）を持つ提案中の行0件、提案元にSlackを含む行も0件。優先③（備考の「公開記事N本」降順・ID昇順）でID順に充当し、G-022・G-024 が重複チェックで止まったため G-023・G-025 を繰り上げて3本にした。
+
+### 内訳
+- 3本とも drafts/ 保存 →『v16』刻印 → Doc化 → 用語DBの H/I/K/M/N/O/R/S/T 列へ書き戻し。シートを読み直して5行とも反映を確認済み
+- article-critic は Step 5.5 / 8.5 の2回とも実施、escalate なし
+- 提唱者の顔写真：エッジAI に Mahadev Satyanarayanan、オープンソースに Christine Peterson を挿入。アクティブラーニングは Dana Angluin の肖像が Wikipedia に無いためスキップ
+- Slack投稿なし（月曜レポートに委譲）
+
+### ⚠️ 申し送り3点
+1. **今週の3本は本日の月曜レポートに載っていない。** バッチ本体の起動が 11:00:51、書き戻し完了が 11:14〜11:28 で、sendMondayReport（11:00）に間に合わなかった。起動時刻の見直しが要る
+2. **GAS Web App が 302→404 を返す。** update_row の書き込み自体は成功している（シート再読込で確認済み）が、`ok:true` は取れない。11:01 のレシピ版 notify も同じ 404 で、こちらは到達したか確認できていない
+3. 2件の見送りは、いずれも**完全一致ではなく部分一致**による停止（「エコシステム戦略」⊃「エコシステム」、「オブジェクト指向」⊂「OOUI」）。別記事として立てる価値があるなら、備考にその旨を書いたので手動でステータスを戻せる。先週から持ち越しの G-001 の G列 TRUE も未処理のまま
+
+3本のDocはいつでもレビューできます。見送り2件を書き直させるか、このまま閉じるかはどうしますか？
+[Mon Sep 14 11:30:48 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W38.marker
