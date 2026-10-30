@@ -1,0 +1,37 @@
+[Mon Sep 21 01:44:07 JST 2026] 週次バッチ開始（week 2026-W39）
+OK: レシピは v16（98565a4937e0）のまま
+[Mon Sep 21 01:44:09 JST 2026] レシピ版を用語くんに通知: v16 → {"ok":true,"version":"v16","previous":"v16","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次バッチ完了。
+
+## 処理結果（2026-09-21 / week 2026-W39）
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-086 | アテンションエコノミー | ✅ レビュー待ち | [Doc](https://docs.google.com/document/d/1uOousLn3etfY5wGLPKLEhlxu03JXzwQiS9kWdiabPiU/edit) |
+| G-087 | ヘーゲルの弁証法 | ✅ レビュー待ち | [Doc](https://docs.google.com/document/d/1Bh0Bgw33ODQXTMxQS5rq6cLuyMQBQDr6jjDEOBU9m-w/edit) |
+| G-026 | カスタマーサクセス | ✅ レビュー待ち | [Doc](https://docs.google.com/document/d/1pWCPBNWLdWTJMw_Vp8li3xhgTBJlHkH5xmF0kunQhWw/edit) |
+
+見送り0件、escalate 0件。
+
+### 選定の経緯
+作り直しリクエスト（U列=TRUE）0件、生成リクエスト（G列=TRUE）を持つ「提案中」の行も0件。優先②の提案元にSlackを含む行が G-086・G-087 の2件あったのでこれを先に取り、残り1枠を優先③（備考の「公開記事N本」降順・同数はID昇順）で埋めて G-026 にした。提案中53件のうち「公開記事2本」以上はなく全件N=1だったため、ID最小の G-026 が繰り上がった。
+
+### 内訳
+- 3本とも重複チェック通過 → drafts/ 保存 → `v16`（98565a4937e0）刻印 → Doc化 → 用語DBの H/I/K/L/M/N/O/R/S/T 列へ書き戻し。シートを読み直して3行とも反映を確認済み
+- article-critic は Step 5.5 / 8.5 の2回とも実施。カスタマーサクセスが1回目に文章スタイル軸で regenerate（受動態5か所）となり、修正後の最終ゲートで通過
+- 提唱者の顔写真：アテンションエコノミーに Herbert A. Simon、カスタマーサクセスに Marc Benioff、ヘーゲルの弁証法に Hegel を挿入（3本とも肖像あり）
+- Slack投稿なし（月曜レポートに委譲）
+
+### ⚠️ 申し送り3点
+
+1. **G-087 の記事タイトルを「ヘーゲルの弁証法」に変えた。** 依頼名は「ヘーゲルの法則（Hegelian Dialectic）」だったが、タイトルに英語を併記しないルールがあり、かつ Hegelian Dialectic の定着した日本語名は「弁証法」なので、こちらを採った。理由は備考（L列）に残してある。シートのB列は依頼名のままなので、直すならそこだけ手で変えてほしい。
+
+2. **GAS Web App の 302→404 は先週から続いている。** update_row の書き込み自体は届いており（シート再読込で3行とも確認済み）、レスポンスの `ok:true` だけが取れない。今日は3回中1回だけ正常に返ってきたので、恒常的な失敗ではなく不安定な状態に見える。
+
+3. **用語DBの `updateRow` は、ステータスが「レビュー待ち」になると GAS 側から Slack に1件ずつ通知を飛ばす実装になっている。** バッチ本体からは投稿していないが、今回の3件で通知が出ている可能性がある。月曜レポートと重複させたくないなら、GAS側にバッチ用の `silent` 相当を足すのが早い。
+
+あわせて、先週から持ち越しの G-001（ステータス公開済みなのに G列 TRUE）はまだ立ったままで、今回も選定対象外だった。
+
+3本のDocはいつでもレビューできます。3点目の Slack 二重通知、GAS を直しますか？それとも月曜レポート側を調整しますか？
+[Mon Sep 21 02:04:53 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W39.marker

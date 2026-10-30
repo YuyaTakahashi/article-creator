@@ -3,6 +3,45 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v23 — 2026-10-25
+
+読み手目線Criticの項目5に因果の飛躍（台帳の条件語の言い換えによる飛躍を含む）を足す
+
+レシピhash: `a6b1f5d5e2fb`
+
+変更されたファイル:
+  - .agent/skills/article-critic/references/reader-critic.md
+
+## v22 — 2026-10-25
+
+手計算の材料は数値で動く仕組みがある用語だけで探す
+
+レシピhash: `176bf2863fb3`
+
+変更されたファイル:
+  - prompts/01_information_gathering.md
+
+## v21 — 2026-10-25
+
+Criticの指摘に[構成修正]と行番号を付け、[部分修正]は段落単位で差し替える
+
+レシピhash: `3f36457ac4ef`
+
+変更されたファイル:
+  - .agent/skills/article-critic/SKILL.md
+
+## v20 — 2026-10-25
+
+台帳に説明の材料（前提・働き・手計算・たとえ・結果）と例の筋・応用例を集める／技術系用語は定義の前に前提1〜2文を許す（テンプレCritic）／Criticの指摘に[部分修正][要リサーチ]を付ける
+
+レシピhash: `851bc041f543`
+
+変更されたファイル:
+  - .agent/skills/article-creator/SKILL.md
+  - .agent/skills/article-critic/SKILL.md
+  - .agent/skills/article-critic/references/template-critic.md
+  - prompts/01_information_gathering.md
+
 ## v19 — 2026-10-10
 
 文章スタイルCriticを読者基準に改めた（社内文書向けのOPENLOGI表記・一人称回数を外し、漢語の名詞の連なり・場面から入っているかを追加。「〜と呼ばれる」等の自然な受動態は減点しない）

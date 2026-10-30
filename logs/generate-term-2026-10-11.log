@@ -1,0 +1,31 @@
+[Sun Oct 11 05:43:48 JST 2026] 単発生成: バイソシエーション
+OK: レシピは v19（cec6936d256d）のまま
+[Sun Oct 11 05:44:02 JST 2026] レシピ版を用語くんに通知: v19 → {"ok":false,"error":"HTTP Error 404: Not Found"}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+完了しました。
+
+```
+対象用語   : バイソシエーション
+用語DB     : G-093 / ステータス = レビュー待ち
+Doc        : https://docs.google.com/document/d/1kxh2AA1ZlhtiMOJTZJTwBO-7HIdXKQdN9dXp9eNH0Tw/edit
+保存先     : drafts/バイソシエーション.md
+レシピ版   : v19（cec6936d256d）
+カテゴリ   : 思考・マインド・バイアス（ID: 20）
+```
+
+補足（判断が要った点だけ）：
+
+- **重複チェック**: `check_duplicate.py` は終了コード0（既存記事なし）。新規生成で進めた。
+- **出典**: ディープリサーチは使わず WebSearch。Koestler『The Act of Creation』(1964) の全文を archive.org から取得できたので、定義・マトリックスの定義・グーテンベルクの経緯・ドン・キホーテの例は**原典の該当ページを直接引用**して台帳（`research/バイソシエーション_claims.md`、C01〜C45）に入れた。
+- **1点だけ注意事項**: Koestler が引くグーテンベルクの書簡（Frère Cordelier 宛）は、Koestler 自身が「本物らしい響きがある」と但し書きを付けている出所の怪しい史料。本文では史実として書かず「ケストラー氏が引いた書簡によれば」と帰属させてある。レビュー時にここを削ると通し例が成立しなくなるので、残す前提で読んでほしい。
+- **critic**: 5.5 で pass（15/12/11/13）→ 指摘6点を反映 → 最終ゲートで 15/14/15/15。ログは `AGENT_REPORTS/article-critic-logs/2026-10-11/` に2件。
+- **画像**: アイキャッチ2案（SVG。抽象の2平面図／ぶどう圧搾機＋印章）と挿絵3枚（グーテンベルクの工房・ドン・キホーテの三面・OpenIDEOの橋渡し）をDocに入れた。挿絵にはヒラギノで日本語の札を3枚ずつ重ねてある。
+
+Slackへの投稿はしていない（告知は月曜レポート側）。
+[Sun Oct 11 06:08:10 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-10-11.log
+[Sun Oct 11 08:10:46 JST 2026] 単発生成: アクティブラーニング
+OK: レシピは v19（cec6936d256d）のまま
+[Sun Oct 11 08:10:49 JST 2026] レシピ版を用語くんに通知: v19 → {"ok":true,"version":"v19","previous":"v19","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+API Error: Can't reach the API server — check your internet or DNS (ENOTFOUND)
+[Sun Oct 11 08:37:16 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-10-11.log

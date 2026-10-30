@@ -1,0 +1,67 @@
+{
+  "illustrations": [
+    {
+      "heading": "自信の低い順に人へ渡す",
+      "prompt": "A wide shallow tray on the left holds a large crowd of identical small cards standing upright like filed documents; every card is blank except for two thin grey placeholder lines. In the center, a simple flat-vector robot sorts these cards onto a long horizontal balance beam resting on a single central pivot: most cards have already slid to the far left end or the far right end of the beam and rest there in two settled piles, while exactly three cards sit balanced right on top of the central pivot, tilting slightly, unable to fall either way. The robot lifts only those three balanced middle cards and hands them across to a person seated on the right, who holds a pen and marks each of the three cards. A thin curved arrow loops from the marked cards in the person's hand back to the robot. The two settled piles at the ends of the beam are never handed over and stay untouched.",
+      "labels": [
+        {
+          "text": "見出しの山",
+          "x": 0.03,
+          "y": 0.78
+        },
+        {
+          "text": "五分五分",
+          "x": 0.46,
+          "y": 0.82
+        },
+        {
+          "text": "人が答える",
+          "x": 0.7,
+          "y": 0.8
+        }
+      ]
+    },
+    {
+      "heading": "自信の低い順に人へ渡す",
+      "prompt": "Two side-by-side panels separated by one thin vertical divider line down the middle. Both panels show the same flat-vector robot standing in front of the same crowd of upright blank cards. LEFT PANEL: the robot reaches for the cards nearest to it, each already carrying one clear solid blue badge shape, and presses its own small stamp onto them by itself, stacking them into a growing pile at its own feet; a person stands at the far left edge of the panel with arms hanging down and empty hands, clearly left out of the action. RIGHT PANEL: the robot instead picks out the cards whose badge is split half blue and half grey, holds them up, and hands them across to a person seated on the right who marks each card with a pen and passes it back along a short curved arrow; the cards with solid blue badges stay behind in the crowd, untouched. The contrast to read at a glance: on the left the robot answers by itself and the person is unused, on the right the robot gives away the cards it cannot judge and the person answers them.",
+      "labels": [
+        {
+          "text": "半教師あり",
+          "x": 0.03,
+          "y": 0.04
+        },
+        {
+          "text": "自分で付ける",
+          "x": 0.09,
+          "y": 0.82
+        },
+        {
+          "text": "人に尋ねる",
+          "x": 0.52,
+          "y": 0.06
+        }
+      ]
+    },
+    {
+      "heading": "効き目はデータや答える人で変わる",
+      "prompt": "Two side-by-side panels separated by one thin vertical divider line down the middle. Both panels show exactly the same setup: the same flat-vector robot handing the same small stack of blank cards to a person seated at a desk, with a simple line chart drawn on the wall panel behind them. A long flat dashed grey reference line runs across the chart in both panels at the same height. LEFT PANEL: the seated person wears a lab coat and glasses, marks each card steadily with a pen, and the solid line on the chart behind climbs steeply and ends well above the dashed grey reference line. RIGHT PANEL: the seated person wears plain casual clothes, hesitates with the pen hovering uncertainly above a card while two cards have slipped to the floor, and the solid line on the chart behind stays flat and low, ending clearly below the same dashed grey reference line. Same robot, same cards, different person, opposite results.",
+      "labels": [
+        {
+          "text": "無作為の線",
+          "x": 0.145,
+          "y": 0.09
+        },
+        {
+          "text": "専門家が答える",
+          "x": 0.04,
+          "y": 0.9
+        },
+        {
+          "text": "初心者が答える",
+          "x": 0.7,
+          "y": 0.9
+        }
+      ]
+    }
+  ]
+}

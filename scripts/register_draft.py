@@ -97,7 +97,18 @@ def find_row(rows, term):
     for i, r in enumerate(rows[1:], start=2):
         if len(r) > 1 and norm(r[1]) == norm(term):
             return i, str(r[0]).strip(), r
+    # B列に「勾配消失・勾配爆発（Vanishing Gradient / Exploding Gradient）」のように
+    # 英語名を括弧で添えた行は、末尾の括弧書きを外して照合する。
+    # 外さないと、ファイル名（日本語名のみ）と一致せず、同じ用語の行が新しく生える。
+    for i, r in enumerate(rows[1:], start=2):
+        if len(r) > 1 and norm(strip_paren(r[1])) == norm(strip_paren(term)):
+            return i, str(r[0]).strip(), r
     return None, None, None
+
+
+def strip_paren(s):
+    """末尾の括弧書き（全角・半角）を外す。「FDE（Forward Deployed Engineer）」→「FDE」"""
+    return re.sub(r"\s*[（(][^（）()]*[）)]\s*$", "", unicodedata.normalize("NFKC", str(s)).strip())
 
 
 def post(env, payload, dry_run=False):
@@ -219,6 +230,9 @@ def main():
         row_no, gid, row = find_row(rows, term)
     if gid:
         print(f"用語DB: {gid}（{row_no}行目）に反映する")
+    elif args.regenerated_from:
+        # 作り直しなら元の行が必ずあるはず。見つからないまま新しい行を足すと重複になるので止める
+        sys.exit(f"用語DB: 作り直しなのに「{term}」の行が見つからない。--id G-xxx で指定する")
     else:
         print(f"用語DB: 「{term}」が見つからないので新しい行を作る")
         res = post(env, {"action": "add_term", "silent": True, "term": term,
