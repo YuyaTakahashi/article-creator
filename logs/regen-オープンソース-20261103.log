@@ -1,0 +1,54 @@
+用語DB: G-025 / 前の版 v16 / 旧Doc https://docs.google.com/document/d/1_0qXpIalITwlozEsB-Arcgi2aRddSvN31vEY_o4ZBtY/edit
+$ python3 scripts/gpt_write.py オープンソース --model gpt-6.1-sol --difficulty 0.3 --it 0.3
+saved: pipeline/gpt/オープンソース_turn1.md, pipeline/gpt/オープンソース_turn2.md (model=gpt-6.1-sol)
+saved: pipeline/gpt/オープンソース_turn3_gpt-6.1-sol.md (model=gpt-6.1-sol)
+saved: pipeline/gpt/オープンソース_meta.json (english=Open Source)
+drafts を更新した（最小限の説明: ソフトウェアを誰でも使い、調べ、直し、配れる公開のあり方）
+$ python3 scripts/stamp_version.py drafts/オープンソース.md
+オープンソース.md: v23
+$ claude -p （article-critic）
+CRITIC: verdict=pass template=15 style=13 reader=12 readability=13 log=/Users/takahashi_yuya/workspace/agentic-solution/AGENT_REPORTS/article-critic-logs/2026-11-03/open-source_20261103-110031.json
+直し 1回目: 部分修正 7 件（構成修正・要リサーチ 1 件は回さない）
+  L55 を差し替えた
+  L47 を差し替えた
+  L45 を差し替えた
+  L41 を差し替えた
+  L29 を差し替えた
+  L25 を差し替えた
+$ python3 scripts/stamp_version.py /Users/takahashi_yuya/workspace/article-creator/drafts/オープンソース.md
+オープンソース.md: v23
+$ claude -p （article-critic）
+CRITIC: verdict=pass template=15 style=15 reader=12 readability=14 log=/Users/takahashi_yuya/workspace/agentic-solution/AGENT_REPORTS/article-critic-logs/2026-11-03/open-source_20261103-110149.json
+  解消した項目: ['readability/item2', 'style/item2', 'style/item5'] ／ 新しく2点以下になった項目: なし
+直し 2回目: 部分修正 4 件（構成修正・要リサーチ 2 件は回さない）
+  L51 を差し替えた
+  L45 を差し替えた
+  L29 を差し替えた
+  L25 を差し替えた
+  L23 を差し替えた
+  L19 を差し替えた
+$ python3 scripts/stamp_version.py /Users/takahashi_yuya/workspace/article-creator/drafts/オープンソース.md
+オープンソース.md: v23
+$ claude -p （article-critic）
+CRITIC: verdict=pass template=14 style=14 reader=12 readability=13 log=~/workspace/agentic-solution/AGENT_REPORTS/article-critic-logs/2026-11-03/open-source_20261103-110349.json
+  解消した項目: なし ／ 新しく2点以下になった項目: ['readability/item2', 'style/item2', 'template/item5']
+解消（0）が新しい2点（3）を上回らないので、直す前の版に戻して止めた（1回目 {'template': 15, 'style': 13, 'reader': 12, 'readability': 13} → 2回目 {'template': 15, 'style': 15, 'reader': 12, 'readability': 14} → 3回目 {'template': 14, 'style': 14, 'reader': 12, 'readability': 13}）。残る指摘: ['[部分修正] reader/item5: L25 因果の飛躍と重複。2文目を「元の提供者が利用条件を変え、新しい条件はオープンソースの定義に当てはまらなくなった」とし、なぜ別の開発を始めたかをつなぐ（台帳C42・C43）。経緯の詳細（2024年3月・7.2.4）はL45に任せ、リードは場面の提示にとどめる', '[部分修正] reader/item5: L45 1〜2文目はL25・L29の再掲。「Valkeyのもとになったのは、Redis（レディス）…」を削り、2024年3月・Redis 7.2.4・定義外という新情報だけを残す。読み（レディス）はRedisの初出であるL29に移す', '[部分修正] readability/item5: L23「プログラムの中身と利用条件を公開し、…公開のあり方」の『公開』の重複を解く。例「プログラムの中身と利用条件を誰にでも示し、どんな目的でも、使い、調べ、直し、配れるようにするソフトウェアの公開のあり方」など、F4のexcerptとの整合はL19に影響しない範囲で', '[部分修正] readability/item5: L51 2文目「以下は研究で効果を測った例ではなく、利用条件を確認する作業の例である。」を削る']
+yuyaさんの判断待ち（構成修正・要リサーチ・直していない段落に出た指摘）: ['[部分修正] reader/item3: L47「Linux Foundation」に「オープンソースの開発を支える非営利団体」程度の言い換えを添える（台帳に団体の性格の記述が無ければ[要リサーチ]に切り替える）。L25「サービスとしての提供」は「インターネット越しに機能を貸し出すサービスでの利用」のように日常語に開く', '[要リサーチ] reader/item3: L29・L45 Redis/Valkeyが何をするソフトウェアかが本文に無く、it=0.3の読者は通し例の場面を思い浮かべにくい。台帳C41〜C45に機能の記述が無いため、Redisの用途（データを一時的に保存して素早く取り出すソフトなど）の出典を足す必要がある']
+挿絵の計画が無い（open-source-images.json）。アイキャッチだけを入れる
+$ python3 scripts/make_doc_md.py drafts/オープンソース.md --old-doc-url https://docs.google.com/document/d/1_0qXpIalITwlozEsB-Arcgi2aRddSvN31vEY_o4ZBtY/edit
+書き出した: pipeline/doc-ready/オープンソース.md
+*（版：v23 ／ レシピhash a6b1f5d5e2fb ／ 生成日 2026-11-03 ／ この行はレビュー用で、WordPressには載りません）*
+Docを作った: https://docs.google.com/document/d/1p0J13vD0H4ifyx79f62IwZTfLqUesbAmtq8fHXZ046E/edit
+$ python3 scripts/doc_images.py send drafts/オープンソース.md --doc-url https://docs.google.com/document/d/1p0J13vD0H4ifyx79f62IwZTfLqUesbAmtq8fHXZ046E/edit
+[images] drafts/open-source-images.json が無いので、挿絵は扱わない
+  skip eyecatch-1: drafts/open-source-eyecatch-1.png が無い（render / generate で作るか、計画から外す）
+  skip eyecatch-2: drafts/open-source-eyecatch-2.png が無い（render / generate で作るか、計画から外す）
+送る画像がありません。先に render / generate を実行してください。
+$ python3 scripts/register_draft.py drafts/オープンソース.md --id G-025 --doc-url https://docs.google.com/document/d/1p0J13vD0H4ifyx79f62IwZTfLqUesbAmtq8fHXZ046E/edit --regenerated-from v16 --old-doc-url https://docs.google.com/document/d/1_0qXpIalITwlozEsB-Arcgi2aRddSvN31vEY_o4ZBtY/edit
+用語DB: G-025（26行目）に反映する
+初稿を控えた: drafts/_baseline/オープンソース_v23.md
+完了: G-025 / status=レビュー待ち / https://docs.google.com/document/d/1p0J13vD0H4ifyx79f62IwZTfLqUesbAmtq8fHXZ046E/edit
+
+完了: G-025 / https://docs.google.com/document/d/1p0J13vD0H4ifyx79f62IwZTfLqUesbAmtq8fHXZ046E/edit
+解消（0）が新しい2点（3）を上回らないので、直す前の版に戻して止めた（1回目 {'template': 15, 'style': 13, 'reader': 12, 'readability': 13} → 2回目 {'template': 15, 'style': 15, 'reader': 12, 'readability': 14} → 3回目 {'template': 14, 'style': 14, 'reader': 12, 'readability': 13}）。残る指摘: ['[部分修正] reader/item5: L25 因果の飛躍と重複。2文目を「元の提供者が利用条件を変え、新しい条件はオープンソースの定義に当てはまらなくなった」とし、なぜ別の開発を始めたかをつなぐ（台帳C42・C43）。経緯の詳細（2024年3月・7.2.4）はL45に任せ、リードは場面の提示にとどめる', '[部分修正] reader/item5: L45 1〜2文目はL25・L29の再掲。「Valkeyのもとになったのは、Redis（レディス）…」を削り、2024年3月・Redis 7.2.4・定義外という新情報だけを残す。読み（レディス）はRedisの初出であるL29に移す', '[部分修正] readability/item5: L23「プログラムの中身と利用条件を公開し、…公開のあり方」の『公開』の重複を解く。例「プログラムの中身と利用条件を誰にでも示し、どんな目的でも、使い、調べ、直し、配れるようにするソフトウェアの公開のあり方」など、F4のexcerptとの整合はL19に影響しない範囲で', '[部分修正] readability/item5: L51 2文目「以下は研究で効果を測った例ではなく、利用条件を確認する作業の例である。」を削る']
+yuyaさんの判断待ち（構成修正・要リサーチ・直していない段落に出た指摘）: ['[部分修正] reader/item3: L47「Linux Foundation」に「オープンソースの開発を支える非営利団体」程度の言い換えを添える（台帳に団体の性格の記述が無ければ[要リサーチ]に切り替える）。L25「サービスとしての提供」は「インターネット越しに機能を貸し出すサービスでの利用」のように日常語に開く', '[要リサーチ] reader/item3: L29・L45 Redis/Valkeyが何をするソフトウェアかが本文に無く、it=0.3の読者は通し例の場面を思い浮かべにくい。台帳C41〜C45に機能の記述が無いため、Redisの用途（データを一時的に保存して素早く取り出すソフトなど）の出典を足す必要がある']
