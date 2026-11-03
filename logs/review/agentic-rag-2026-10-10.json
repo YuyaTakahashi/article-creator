@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "file": "drafts/agentic RAG.md",
+  "title": "エージェンティックRAG",
+  "slug": "agentic-rag",
+  "creator_version": "v19",
+  "reviewed_at": "2026-10-10",
+  "reviewed_by": "claude-cowork",
+  "critic_verdict": "pass",
+  "fixed": [
+    "8"
+  ],
+  "note": "Doc修正案2タブ再同期。RAG定義の検索工程、精度→文書を拾える割合、大統領例を仮定表現に、時間段落の未定義語、Adaptive-RAG表現、語源リンク復元",
+  "recorded_at": "2026-10-10T23:39:31+09:00"
+}

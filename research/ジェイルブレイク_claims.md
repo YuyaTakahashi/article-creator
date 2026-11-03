@@ -1,0 +1,35 @@
+# 出典台帳：ジェイルブレイク
+
+収集日: 2026-10-12 / 収集方法: WebSearch + WebFetch（ディープリサーチ未実施）
+
+```
+C01 | ジェイルブレイクは、モデルに安全上の取り決めを丸ごと無視させる入力を与える、プロンプトインジェクションの一形態である | https://genai.owasp.org/llmrisk/llm01-prompt-injection/ | "Jailbreaking is a form of prompt injection where the attacker provides inputs that cause the model to disregard its safety protocols entirely."
+C02 | プロンプトインジェクションとジェイルブレイクはLLMセキュリティにおいて関連する概念で、しばしば同じ意味で使われる | https://genai.owasp.org/llmrisk/llm01-prompt-injection/ | "prompt injection and jailbreaking are related concepts in LLM security, they are often used interchangeably"
+C03 | ジェイルブレイクを実際に防ぐには、モデルの訓練と安全機構を更新し続ける必要がある | https://genai.owasp.org/llmrisk/llm01-prompt-injection/ | "effective prevention of jailbreaking requires ongoing updates to the model's training and safety mechanisms"
+C04 | 安全訓練を受けたモデルへのジェイルブレイク攻撃とは、制限された振る舞いを求めるプロンプトPに対し、作り替えたプロンプトP′を送って、その話題に沿った応答を引き出そうとすることである | https://arxiv.org/abs/2307.02483 (ar5iv版で閲覧) | "A jailbreak attack on a safety-trained model is an attempt to elicit an on-topic response to a prompt P for restricted behavior by submitting a modified prompt P′."
+C05 | 失敗モードの1つは「目標のぶつかり」で、モデルの能力と安全の目標が衝突するときに起きる。モデルは言語モデリング・指示への追従・安全の3つに向けて訓練されている | https://arxiv.org/abs/2307.02483 (ar5iv版で閲覧) | "Competing objectives arise when a model's capabilities and safety goals conflict" / models are "trained for language modeling, instruction following, and safety."
+C06 | もう1つの失敗モードは「一般化のずれ」で、能力は及んでいる領域に安全訓練が及ばないときに起きる | https://arxiv.org/abs/2307.02483 (ar5iv版で閲覧) | "Mismatched generalization occurs when safety training fails to generalize to a domain for which capabilities exist."
+C07 | 組み合わせ攻撃は、独自に用意したデータセットでGPT-4に94%、Claude v1.3に81〜84%の成功率を出した | https://arxiv.org/abs/2307.02483 (ar5iv版で閲覧) | "combination attacks achieved 94% success on GPT-4 and 81-84% on Claude v1.3"（WebFetch の読み取り結果）
+C08 | 著者らは、安全の仕組みは土台のモデルと同じくらい作り込まれているべきで、規模を大きくするだけでは目標のぶつかりは解けないと論じている | https://arxiv.org/abs/2307.02483 (ar5iv版で閲覧) | "safety mechanisms should be as sophisticated as the underlying model" / "scaling alone will not resolve competing objectives"
+C09 | ジェイルブレイクプロンプトは、安全装置を回避してLLMに有害な内容を生成させるために意図して作られる | https://arxiv.org/abs/2308.03825 (ar5iv版で閲覧) | "Jailbreak prompts are deliberately crafted to bypass safeguards and manipulate LLMs into generating harmful content."
+C10 | 最初のジェイルブレイクプロンプトは DAN（doing anything now の略）で、2023年1月8日からRedditで広まった | https://arxiv.org/abs/2308.03825 (ar5iv版で閲覧) | "the original jailbreak prompt, DAN (short for doing anything now)" / dissemination beginning "January 8th, 2023"
+C11 | 2022年12月から2023年12月までに1,405件のジェイルブレイクプロンプトを集め、131のジェイルブレイクコミュニティを特定した | https://arxiv.org/abs/2308.03825 (ar5iv版で閲覧) | "1,405 jailbreak prompts spanning from December 2022 to December 2023" / "131 jailbreak communities"
+C12 | 主な手口は、プロンプトインジェクション・権限昇格・だまし・仮想化である | https://arxiv.org/abs/2308.03825 (ar5iv版で閲覧) | Main techniques include "prompt injection," "privilege escalation," "deception," and "virtualization."
+C13 | ジェイルブレイクプロンプトは通常のプロンプトの平均1.5倍の長さで、平均トークン数は555である | https://arxiv.org/abs/2308.03825 (ar5iv版で閲覧) | "significantly longer, averaging 1.5× the length of regular prompts, with a mean token count of 555"
+C14 | 特に効く5件のプロンプトは ChatGPT(GPT-3.5) と GPT-4 で 0.95 の攻撃成功率を出し、最も古いものは240日を超えてオンラインに残っている | https://arxiv.org/abs/2308.03825 (ar5iv版で閲覧) | "Five highly effective jailbreak prompts achieve 0.95 attack success rates on ChatGPT (GPT-3.5) and GPT-4, and the earliest one has persisted online for over 240 days."
+C15 | 外部の安全装置は、ジェイルブレイクプロンプトに対して成功率を 0.091・0.030・0.019 しか下げられなかった | https://arxiv.org/abs/2308.03825 (ar5iv版で閲覧) | "External safeguards demonstrate limited ASR reductions on jailbreak prompts" with reductions of "0.091, 0.030, and 0.019"
+C16 | メニーショット・ジェイルブレイクの基本は、人間とAIアシスタントの偽の対話を1つのプロンプトの中に入れることである | https://www.anthropic.com/research/many-shot-jailbreaking (2024-04-02) | "The basis of many-shot jailbreaking is to include a faux dialogue between a human and an AI assistant within a single prompt for the LLM."
+C17 | 偽の対話が数件なら安全訓練どおりの応答が返るが、非常に多くの偽対話を最後の質問の前に並べると違う応答になる。研究では256件まで試した | https://www.anthropic.com/research/many-shot-jailbreaking (2024-04-02) | "in cases where a handful of faux dialogues are included instead of just one, the safety-trained response from the model is still triggered...However, simply including a very large number of faux dialogues preceding the final question—in our research, we tested up to 256—produces a very different response."
+C18 | この手法は Anthropic 自身のモデルにも、他社のモデルにも効く | https://www.anthropic.com/research/many-shot-jailbreaking (2024-04-02) | "The technique...is effective on Anthropic's own models, as well as those produced by other AI companies."
+C19 | プロンプトをモデルに渡す前に分類して書き換える手法が、ある場合に攻撃成功率を61%から2%へ下げた | https://www.anthropic.com/research/many-shot-jailbreaking (2024-04-02) | "One such technique substantially reduced the effectiveness of many-shot jailbreaking — in one case dropping the attack success rate from 61% to 2%," involving "classification and modification of the prompt before it is passed to the model."
+C20 | コンピュータセキュリティにおけるジェイルブレイクは、ベンダーがハードウェアやソフトウェアに固く組み込もうとした制限を取り除く行為と定義される | https://en.wikipedia.org/wiki/Jailbreak_(computer_science) | "In computer security, jailbreaking is defined as the act of removing limitations that a vendor attempted to hard-code or hard-wire into its hardware and/or software."
+C21 | この語が現代の意味で最初に使われたのは iPhone / iOS のジェイルブレイクのコミュニティである | https://en.wikipedia.org/wiki/Jailbreak_(computer_science) | "was first used in its modern meaning in the iPhone/iOS jailbreaking community."
+C22 | AIへのジェイルブレイク攻撃では、利用者がシステムを本来の意図と違う振る舞いにでき、ベンダーがモデルに与えた指示（システムプロンプト）を明かさせたり、異常・有害な応答をさせたりできる | https://en.wikipedia.org/wiki/Jailbreak_(computer_science) | "In jailbreaking attacks on artificial intelligence systems, users are able to manipulate the system to behave differently than it was intended, making it possible to reveal information about how the model was instructed by the vendor (the 'system prompt') or to induce it to respond in an anomalous or harmful way."
+C23 | この種の攻撃は通常、決まった言い回しの型でAIに入力するだけでよく、ソフトウェアは普通は必要ない | https://en.wikipedia.org/wiki/Jailbreak_(computer_science) | "These attacks typically simply require prompting the AIs with specific phrasal templates – no software is typically required."
+C25 | OWASP の生成AIセキュリティプロジェクトは、大規模言語モデルのリスクを番号付きで並べた一覧を公開しており、プロンプトインジェクションはその1番目（LLM01）に置かれている | https://genai.owasp.org/llmrisk/llm01-prompt-injection/ | ページのタイトルが "LLM01:2025 Prompt Injection - OWASP Gen AI Security Project"（番号 LLM01 と年次 2025 を含む）
+C24 | 2024年、複数のAI企業の連合が HackAPrompt.com を設立し、新しく効果的なジェイルブレイク手法を見つけることを促す競技を開いた | https://en.wikipedia.org/wiki/Jailbreak_(computer_science) | "In 2024, a consortium of AI firms founded HackAPrompt.com, a competition to encourage users to find new and effective AI jailbreaking techniques."
+```
+
+## 読めなかった出典
+
+- https://proceedings.neurips.cc/paper_files/paper/2024/file/ea456e232efb72d261715e33ce25f208-Paper-Conference.pdf （Many-shot Jailbreaking の NeurIPS 版 PDF。解析できず。内容は Anthropic の公開記事 C16〜C19 で代替した）

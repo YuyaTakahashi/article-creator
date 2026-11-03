@@ -1,0 +1,35 @@
+[Mon Oct  5 00:23:21 JST 2026] 週次バッチ開始（week 2026-W41）
+OK: レシピは v18（881c027feaf3）のまま
+[Mon Oct  5 00:23:24 JST 2026] レシピ版を用語くんに通知: v18 → {"ok":true,"version":"v18","previous":"v18","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次ドラフト生成バッチ、完了しました。
+
+## 実行結果（2026-10-05）
+
+**Step 1 の選定**：作り直しリクエスト（U列=TRUE）は0件、生成リクエスト（G列=TRUE）で提案中の行も0件、提案元にSlackを含む提案中の行も0件でした。優先③（備考の「公開記事N本」が多い順→ID昇順）で、N=1 の最上位3件を取りました。
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-030 | サービスデザイン | レビュー待ち | https://docs.google.com/document/d/1V9hTiQscWaRDzL-P_KHAYKpmx77I2uD9uZDrbr8APcM/edit |
+| G-031 | シグニファイア | レビュー待ち | https://docs.google.com/document/d/1VNVYIZh_QQSp4MT61MppPDBYpLvmZ9bf-s8cVEuB_wo/edit |
+| G-032 | システムインテグレーター | レビュー待ち | https://docs.google.com/document/d/1fSjtckS1VUqG5IWS2beNBVoQ2G5rp66b2DHYgkwHYDk/edit |
+
+見送り・escalate は0件です。3件とも critic の4軸を通過しました（Step 5.5・Step 8.5 の2回）。
+
+**各件で実施したこと**
+- WP重複チェック（3件とも同タイトル・同slugの既存記事なし）
+- 出典台帳 `research/{用語}_claims.md` と成立条件メモ `research/{用語}_conditions.md` を作成し、本文の事実文と突き合わせ
+- `stamp_version.py` で v18 / `881c027feaf3` を刻印
+- アイキャッチ2案（SVG）＋挿絵3枚（OpenAI・日本語ラベル付き）をDocに投入
+- `register_draft.py` でスプレッドシートに書き戻し（status・Doc・slug・excerpt・category_id・eyecatch_prompt・レシピ版・flag:false を確認済み）
+- `reviewed_at` は3件とも未付与（article-review 未通過のため）
+
+**照合で削った／直した箇所**
+- サービスデザイン：Birgit Mager の2012年の定義は原文ページが404で読めなかったため本文に入れず
+- シグニファイア：初稿の「1988年に出した『誰のためのデザイン?』の初版」を、1988年の原題と食い違うため本人の発言（1988年にこの語をデザインへ持ち込んだ）に差し替え
+- システムインテグレーター：ベンダーロックイン・多重下請け・低位安定の出典を2018年の『DXレポート』と誤って帰属していたのを、2021年の『DXレポート2.1』に訂正。出典のない「渡す範囲と残す範囲を契約前に分けておく」という記述を削除
+
+**Step 5**：指示どおりSlackには投稿していません。告知は月曜11時の用語くんレポートに委ねます。
+
+⚠️ 1点だけ共有です。G-001「ヒューマン・イン・ザ・ループ」はステータスが「公開済み」なのに G列（生成する）が TRUE のまま残っています。今回の選定条件（ステータス=提案中）には入らないので触っていませんが、消化されずに残ったフラグに見えます。次回バッチでも拾われないので、手で FALSE に落とすか確認いただくのがよさそうです。
+[Mon Oct  5 00:57:19 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W41.marker

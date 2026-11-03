@@ -1,0 +1,34 @@
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+画像だけ作って Doc に入れ終えた。記事MD・Doc本文・用語DBは触っていない（`git status` でMD未変更を確認済み）。
+
+## ✅ 作った画像
+
+| キー | ファイル | 中身 |
+|---|---|---|
+| eyecatch-1 | `drafts/active-learning-eyecatch-1.png`（SVG同名） | 見出しの列から迷う3枚だけが浮き上がり、人へ渡って答えがAIへ戻る輪 |
+| eyecatch-2 | `drafts/active-learning-eyecatch-2.png`（SVG同名） | 大量の見出し → AIが絞り込む漏斗 → 数件だけ人へ |
+| illust-1 | `drafts/active-learning_1.png` | 天秤の両端に寄った見出しは放置し、真ん中で釣り合う3枚だけをAIが人へ渡す。札「見出しの山／五分五分／人が答える」 |
+| illust-2 | `drafts/active-learning_2.png` | 左＝自信のある件にAIが自分で印を押し人は手持ち無沙汰、右＝半々の件を人に渡して答えてもらう。札「半教師あり／自分で付ける／人に尋ねる」 |
+| illust-3 | `drafts/active-learning_3.png` | 同じAI・同じカードで、白衣の人は線が破線を超え、初心者は破線を下回る。札「無作為の線／専門家が答える／初心者が答える」 |
+
+計画は `drafts/active-learning-images.json`（挿絵3枚、すべて今の本文の債券見出しの例で統一）。
+
+## ✅ Docへの挿入結果
+
+https://docs.google.com/document/d/10-VQBNnuL0feiFuH-NipXO5Ob6ooFBMH-nfZEhii76M/edit
+
+```
+ok eyecatch-1 をDocに入れた
+ok eyecatch-2 をDocに入れた
+ok illust-1（自信の低い順に人へ渡す） をDocに入れた
+ok illust-2（自信の低い順に人へ渡す） をDocに入れた
+ok illust-3（効き目はデータや答える人で変わる） をDocに入れた
+```
+
+アイキャッチ2案はタイトル直後（wp分割ラインより前）に並べたので、レビューで要らないほうを消せる。挿絵は `自信の低い順に人へ渡す` に2枚（ループと半教師あり対比）、`効き目はデータや答える人で変わる` に1枚を入れた。
+
+## 補足
+
+- 作り直しは使っていない。初回生成の5枚をそのまま採用した。アイキャッチだけ、1案は矢印の起点が白いカード群から出ているように見えるようSVGを直して再render、2案はモチーフが1案と重なっていたので漏斗の構図に描き直して再renderした（挿絵のOpenAI再生成は0回）。
+- 手書き文字の実験・音声書き起こしは題材にしていない。
+- 挿絵の中に文字は描かせず、日本語の札は `label` で後から重ねた。

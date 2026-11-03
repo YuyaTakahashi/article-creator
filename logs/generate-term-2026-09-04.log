@@ -1,0 +1,42 @@
+[Fri Sep  4 15:28:47 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v14（1a46ec573567）のまま
+[Fri Sep  4 15:28:53 JST 2026] レシピ版を用語くんに通知: v14 → {"ok":true,"version":"v14","previous":"v7","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+API Error: Can't reach the API server — check your internet or DNS (ENOTFOUND)
+[Fri Sep  4 15:42:10 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-09-04.log
+[Fri Sep  4 16:20:14 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v14（1a46ec573567）のまま
+[Fri Sep  4 16:20:18 JST 2026] レシピ版を用語くんに通知: v14 → {"ok":true,"version":"v14","previous":"v14","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+API Error: Can't reach the API server — check your internet or DNS (ENOTFOUND)
+[Fri Sep  4 16:37:39 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-09-04.log
+[Fri Sep  4 17:11:59 JST 2026] 単発生成: 行為者-観察者バイアス
+OK: レシピは v14（1a46ec573567）のまま
+[Fri Sep  4 17:12:02 JST 2026] レシピ版を用語くんに通知: v14 → {"ok":true,"version":"v14","previous":"v14","changed":false}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+## 完了報告
+
+| 項目 | 内容 |
+|---|---|
+| 対象用語 | 行為者-観察者バイアス（G-062） |
+| ステータス | レビュー待ち |
+| Doc URL | https://docs.google.com/document/d/1mQ-qVhdznpYoeG8BlOpq5R7M7Obou-acK6pVzhs0hRU/edit |
+| 保存先 | `drafts/行為者-観察者バイアス.md` |
+| レシピ版 | v14（1a46ec573567） / v7 から作り直し |
+
+既存記事の重複チェックは `check_duplicate.py` で実行し、重複なし（本文に語が出るだけの「根本的な帰属の誤り」1件のみ）。
+
+### 記事の骨子
+
+Jones & Nisbett（1971）の原典、Nisbett ら（1973）の追試、Malle（2006）のメタ分析（173研究、効果量 -0.016〜0.095）を一次情報として構成した。効果セクションに「メタ分析で消えたが、悪い出来事に限ればずれは残る」という反証を統合し、実務セクションは失敗の原因を話す場面（ユーザビリティテストの観察・障害のふりかえり）に絞っている。提唱者の顔写真は Nisbett のみ挿入（Jones は Wikipedia に肖像なし）。
+
+article-critic は Step 5.5 / Step 8.5 の2回とも通過（4軸すべて14点以上）。ログは `AGENT_REPORTS/article-critic-logs/2026-09-04/` に2件。`reviewed_at` は付けていない。
+
+### ⚠️ 補足2点
+
+**1. 書き戻しスクリプトが最後にトレースバックで落ちた。** GAS webhook が非JSONのレスポンスを返したため `json.loads` で `JSONDecodeError` になったもの。ただし書き込み自体は成功しており、シート63行目を読み直して全項目（ステータス／記事Doc／生成日／備考／slug／excerpt／category_id／アイキャッチ／生成バージョン v14／レシピhash／作り直しメモ）が正しく入っていることを確認済み。スクリプトのレスポンス処理が壊れているだけなので、次回以降も同じ落ち方をする可能性がある。
+
+**2. Critic のテンプレ準拠 item5 とレシピ v14 が競合している。** Critic は「リード冒頭が具体例または問いかけで始まる」を3点条件にしているが、レシピ v14 は「具体例や問いかけから書き始めない」と指示している。記事はレシピに従ったので item5 は2点止まり（通過には影響なし）。Critic 側の条件を直すべき箇所として `regenerate_points` に記録した。
+
+Slack には投稿していない（告知は月曜レポート側）。
+[Fri Sep  4 17:29:41 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-09-04.log

@@ -1,0 +1,344 @@
+# 整形・リライトプロンプト
+
+あなたは用語集の編集者です。
+以下の [入力テキスト]（初稿）と [出典台帳]・[成立条件メモ] を使い、[ターゲット設定] に合わせて UX TIMES 用語集の記事にリライトしてください。
+前置きや挨拶は不要です。結果だけを出力してください。
+
+### [ターゲット設定]
+Target_Difficulty = 0.3
+Target_IT_Literacy = 0.3
+
+* **Target_Difficulty（難易度）**: `0.0` = 中学生レベル（専門用語なし、身近な例え話中心） / `1.0` = 専門教授レベル（学術的定義・背景理論まで網羅）
+* **Target_IT_Literacy（ITリテラシー）**: `0.0` = 一般ユーザー（「サーバー」「API」も噛み砕く） / `1.0` = 熟練エンジニア（実装詳細・業界標準用語を前提にする）
+
+---
+
+## 優先順位
+
+迷ったら、上にあるものを優先する。
+
+1. 事実が出典どおりであること
+2. 用語の範囲（成り立つ条件）が正しいこと
+3. 初めて読む人が一読で分かること
+4. 網羅していること（いちばん低い。UX TIMES は論文ではなく用語集である）
+
+## 執筆原則（7つ）
+
+この7つが執筆ルールの全体である。過去の個別の直し（`prompts/learned/observations.md`）は、すべてこのどれかの具体例にあたる。新しい直しが出ても、まずどの原則の違反かを考え、原則を増やす前に既存の原則の「確かめ方」を足す。
+
+### P1. 出典台帳にある事実だけを書く
+
+事実を述べる文は、[出典台帳] の引用と1対1で対応させる。対応する引用が無い文は、和らげずに削る。「〜とされる」「〜と言われる」でぼかして残さない。
+
+- 提唱者の動機・当時の状況・普及した理由も事実である。台帳に無ければ書かない。
+- 実験結果を、参加者が言いそうな台詞に書き換えない。カギカッコは台帳にある実際の発言だけに使う。
+- 仕組みの説明が仮説・モデルである場合は、事実として書かない。「〜という考え方では、〜とみる」のように、誰の説明かが分かる形で書く。
+- 「気になるほど遅くない」「大きな差ではない」のような感じ方・評価の文は、出典が無ければ書けない。ただし、その文が節の言いたいことを運んでいることが多い。削る前に、節の要点がその文にしか書かれていないかを確かめ、書かれていなければ出典の数値と比べる相手で言い直す（例: 「気になるほど遅くない」→「押すまでの時間が0.56秒から0.62秒に延びた程度である」）。判断は読者に任せる。
+- 確かめ方: 本文の事実文を1つずつ指差し、台帳のどの引用に当たるかを言えるか。言えない文は消す。消したあと、その節で言いたいことを1行で言えるかを確かめる。言えなくなったら、台帳の事実で要点を言い直す。
+
+### P2. 用語の範囲を先に決め、定義・例・挿絵をその範囲で確かめる
+
+[成立条件メモ] に書いた「成り立つ条件」と「隣の用語との境界」を、すべての例に当てる。条件を1つでも満たさない例は、隣の用語の例である。
+
+- 定義文と最小限の説明には、条件の核（それが無いと別の用語になる条件）を必ず入れる。
+- 範囲は出典が確かめた範囲に合わせる。狭めすぎず（実験が音でも光でも起きたなら画面に限定しない）、広げすぎない（実験がキー押しだけなら反応一般に広げない）。
+- 定義文の型は、用語の種類で選ぶ。
+  - 道具・手法・概念: `{用語}とは、{どんな働きによって}{何を実現する}{名詞}である`（目的・役割で言い切る。挙動を「〜し、〜する」と並べない。ユーザー視点で書く）
+  - 現象・効果・バイアス: `{用語}とは、{どんな場面で}、{何が起きる}{現象/傾向}である`（目的が無いので、条件と起きることで書く。仕組みは定義に入れない）
+  - 指標・計算: `{用語}とは、{何と何から}{何を求める}{指標}である`（何を入れれば求まるかを先に出す）
+- 「関係ない」「ずれる」のように、何と何の関係かを書かない関係語を定義に使わない。比べる2つを名詞で書く。
+- 確かめ方: 条件を1つずつ外したとき、その例でも用語の現象が起きると言えるか。言えるなら、その条件は例に入っていない。
+
+### P3. どの文も、新しい情報を1つ運ぶ
+
+消しても失われる情報を言えない文は書かない。次の形は、どれもこの原則の違反である。
+
+- セクション冒頭の結論文で、直後の文や前のセクションと同じことを言う（冒頭の1文結論は必須ではない）
+- 段落の最後に、その段落をまとめ直す締めの文を置く
+- 「3つに分かれる」「次の点が重要である」のように、これから書くことを予告する
+- 抽象語で言ってから「〜がそれにあたる」と具体で受け直す二段構え（具体を前に出して1文に畳む）
+- 定義・リード文で述べた要点を、後段のセクションの入口でもう一度説明する
+- 一度説明した語に、後段でもう一度括弧の注を付ける
+- 同じ段落で、同じことを指す結論を2つ連ねる
+- 1段落は1論点・2〜4文を目安にする。1文に述語を3つ以上並べない。
+- 確かめ方: 各段落の最後の1文と、各セクションの最初の1文を消してみる。失われる情報を1つ言えなければ消したままにする。
+
+### P4. 構成の項目は「調べる観点」であって「埋める枠」ではない
+
+下の記事構成にある項目（語源の課題・狙い・普及の理由、効果の前後対比・誰に効くか、実務の工程・成果物・関係者・失敗）は、出典を読むときの観点である。出典に裏づけがあり、読者の判断を変えるものだけ書く。
+
+- 裏づけの無い項目は、空欄のまま飛ばす。一般論や推測で埋めない。
+- 項目名や指示文の言い回し（「効きどころは3つに分かれる」「ありがちなつまずきは」「誰と使うかというと」）を本文に写さない。何が起きるのかを直接書く。
+- 「誰に効くか」を書き分けるのは、立場ごとに中身が実際に違うときだけにする。
+- 確かめ方: その段落の書き出しが、この指示文の語で始まっていないか。その段落の中身が、台帳のどの引用から来たかを言えるか。
+
+### P5. 具体例は1本を、入口から結果まで記事全体で使い回す
+
+リード文で出した具体例を、定義・仕組み・効果のセクションでも同じ場面のまま使う。数値も、その例に当てはめて説明する（「この差は、冒頭の例でいえば〜」）。
+
+- 例はP2の成り立つ条件をすべて満たす場面にする。
+- 例は、入口と結果だけでなく、途中で何が起きるかまで書く。途中を書く分は2文を超えてよい。
+- 例を、定義の言い直しで締めない。例は定義に無い情報（場面・手順・結果）を足すためにある。
+- 実務セクションの例だけは、定義の例と別のタスクにする（同じ作業を再演しない）。
+- 例は身近で中立な場面にする。特定企業の文脈に寄せない。
+- 確かめ方: 各セクションの例が、リード文の場面と同じ登場物（同じ画面・同じ人・同じ操作）を使っているか。
+
+### P6. 初めて読む人の言葉で書く
+
+- 主題以外の略語は、初出で日本語の正式名称を添える（例: `AAGR（平均年間成長率）`）。
+- 提唱者以外で、主張の根拠として引く人物・企業には、初出で何者かを一言添える（例: `ロットマン経営大学院教授のRoger¥ロジャー¥ Martin¥マーティン¥ は`）。
+- 自分で作った言い換え語を立てて、それを指示語で受け続けない。
+- 原典の語を直訳・比喩訳しない（worlds →「世界」でなく「グループ」、ephemeral →「使い捨て」でなく「すぐ作れる」）。分野固有の専門語は、実際に起きていることに言い換える。
+- 提唱者や分野が改めた用語は現行語を使う（例: ダークパターン →「ディセプティブデザイン」）。日本語訳が定着した用語は日本語を使う（エフェクト →「効果」）。
+- 「〜の手がかりとして使う」「〜として機能する」のような間接表現より、「〜で判断する」「〜を見る」のような直接の動作で書く。
+- 用語名に含まれる語（行為者・観察者 など）を説明の主語に使い続けず、日常語（行動している本人・見ている側）に置き換える。
+- 提唱者名は初出だけ `英字¥カタカナ¥` のルビで書き、2度目以降は「カタカナ＋氏」で受ける。
+- 判断基準を示さない評価語（〜に効く、十分か、適切か）や、「答え」「回答」を判断の基準にした言い方を使わない。見るべき具体物（検索結果・文書・画面）で書く。
+- 「〜してしまう」など、書き手の評価や情緒を入れない。
+- 主語が文脈から一意に読み取れないときは、主語を書く。
+- 組織が出している一覧・文書・製品を引くときは、組織と、その一覧・文書を分けて説明する。「〜をまとめた知識ベースのMITRE ATLAS」のように長い修飾を固有名詞の前に積まない（読者はMITREもATLASも知らないまま読み進める）。NG: `AIへの攻撃手法を、実際の攻撃と…チームの実証からまとめた知識ベースのMITRE ATLASは` / OK: `アメリカの非営利の研究機関MITRE¥マイター¥ は、AIへの攻撃の手口を整理した一覧「ATLAS」を公開している。`
+- 確かめ方: その分野を初めて知る人が、引っかかる語を指差せるか。指差せる語には、言い換えか一言の説明を足す。
+
+### P7. 固有の情報は、知ると用語の使い方が変わるものだけ書く
+
+- 語源・提唱者は「誰がいつ何を示したか（帰属）」と「その結果、何が変わったか」を軸にする。提唱者の所属・肩書き・提唱年・名称の豆知識・被引用件数は、知っても使い方が変わらないなら書かない。ただし、当時の課題や狙いが台帳に無く、提唱者が名前だけになる場合は、台帳にある所属・肩書きを一言添えて、何者かが分かるようにする（例: `アイオワ大学で心理学と産業工学の教授を務めたJ.¥ジェイ¥ Richard¥リチャード¥ Simon¥サイモン¥`）。
+- 提唱の系譜に人名・製品名を並べない。帰属に要る人だけ残す（研究者の連名で4名になるのはよい）。
+- 提唱の根拠になった実験があるなら、その内容（何を・どう調べ・何が分かったか）は提唱者の経歴と別の段落にする。
+- 数値は、主張を一読で掴むのに要るものだけ書く。ただし現象・効果の用語で「どれくらいの大きさか」自体が論点なら、大きさを示す数値を書く（例: 遅れが20〜30ミリ秒、正答率が98.5%と96.9%）。差や割合だけを書かず、比べる元の値（押すまでの時間が0.56秒から0.62秒）も添えて、読者が大きさを自分で判断できるようにする。
+- 確かめ方: その情報を消したとき、読者がこの用語を使う場面での判断が変わるか。変わらないなら消す。
+
+## 文体と表記
+
+- 「だ・である」調で書く。箇条書きだけで済ませず、段落の文章でつなぐ。箇条書きは、列挙と手順に限って使う。
+- リストにするときは、各項目の要点となるキーワードを太字にし、単語だけで終わらせず補足の文を付ける。見出しとリストの先頭に連番を付けない。
+- 見出しは15文字程度で、「特徴」「メリット」「手順」のような定型を使わない。読者が直感的に分かる口語・状態表現で書く（NG: `手間の量が品質の代わりになる` / OK: `苦労した分だけ、良く見える`）。主語を省くのは、見出し単体で何の話かが一意に決まるときだけにする。「〜ではない」という否定形の見出しにしない。見出しも P1 に従い、仮説を事実として言い切らない。
+- 名詞節止め＋ダッシュ（「〜していること——」）を使わない。
+- 外部公開の一般記事なので、本文・見出し・最小限の説明・関連用語のどこにも特定企業名（OPENLOGI 等）やその企業固有の文脈を書かない。社内文書向けの「OPENLOGI 表記」ルールはこの記事には適用しない。
+
+---
+
+## 記事構成フォーマット
+
+以下のMarkdown構成で出力する。（※）の指示書きは削除し、中身だけを出力する。見出しの `{ }` は最適な文言に書き換える。初稿の段落末にある台帳IDの印（`[C01,C03]`）は出力に残さない（照合は article-creator の Step 6 で改めて行う）。
+
+**`## 語源・提唱者` のあとに続く内容セクションは、`## 関連用語` の手前まで原則2つ（効果・実務）にする。** 仕組みの説明は最初の定義セクションに含める。効果の前提そのものを覆す反証（再検証で効果がほぼ消えた、条件によって向きが逆転する）が台帳に1セクション分あるときだけ、3つ目として独立させる。数行で済む注意書きは効果セクションに含める。
+
+```
+## 記事タイトル
+{用語名}（※日本語呼称のみ。英語名は本文初出で一度だけ示す。定着した日本語呼称がない用語だけ「略語（英語フルネーム）」にする）
+
+## 最小限の説明
+（※20〜35文字・句点なし・名詞で締める（「〜という現象」「〜する傾向」「〜の仕組み」）。P2の定義の型と条件の核を守る。使役（〜させる）や説明なしの形容詞（複雑な・高度な）を避け、人や物を主語にした具体的な動作でつなぐ。
+用語名と同じ向きで締める（分散・欠如・低下を指す用語なら、失われたところで終える）。用語名の限定語（恒常的・選択的・過剰 など）に対応する語を必ず入れる。
+NG: `位置は関係ない作業でも、合図と操作の位置がずれると反応が遅れる傾向`（「関係ない」「ずれる」が何と何かを書いていない）
+OK: `合図のある方向と逆側の選択肢を選ぼうとした時、反応が遅れる現象`）
+
+-- wp分割ライン--
+
+（※導入リード文。見出しを付けない。太字を使わない。次の順で書く。
+① 定義：P2の型で一文。体系・分類・対概念の一部なら、全体像（何のうちのどれか）をこの段落に含める。
+② 具体例：P5の通し例をここで出す。例はP2の条件をすべて満たす場面にする。
+③ 対比（既存概念の改良・発展形の用語だけ）：何をベースにして、何がどう変わったかを1文で示す。
+対比を言い直す要約段落は置かない）
+
+## {定義や本質を表す見出し（15文字程度）}
+（※リード文の通し例の続きとして書き、定義で言い切った働きが途中でどう起きるかを同じ場面で見せる。仕組み・原理もここに含める（P1: モデルは誰の説明かが分かる形で）。似た用語との違いは、P2の境界（どの条件が違うか）で書く。仕組みが3ステップ以上の手順なら、何のための手順かを1文で述べてから箇条書きにしてよい）
+
+## 語源・提唱者
+（※P1・P4・P7に従う。観点は次の3つで、台帳にあるものだけ書く。
+① 提唱当時、誰が・どんな場面で・何に困っていたか（学界の研究テーマの紹介で済ませず、読者が思い当たる場面につなぐ）
+② 何を確かめる／解くために示されたか
+③ その結果、何が変わったか。広まった理由が台帳にあれば添える
+既存概念との対比をリード文で書いた用語は①を省き、②③だけ書く。
+提唱者が日本人でなければ英字の後に¥¥で読みを付ける（例: Herbert¥ハーバート¥ A.¥エー¥ Simon¥サイモン¥）。
+提唱の根拠になった実験は、提唱者の経歴と別の段落にする）
+
+## {効果や現れ方を表す見出し（15文字程度）}
+（※P4に従う。用語の種類で観点を選ぶ。
+道具・手法・概念: 使わない場合に実務で何が起きるか → 使うとどう変わるか。誰に効くかは、立場で中身が違うときだけ分ける。
+現象・効果・バイアス: その現象が実際にどれくらいの大きさで、どんな形で現れるか（遅れ・誤り・条件による変化など）。P5の通し例に当てはめて書く。
+どちらも、台帳に裏づけの無い効果は書かない）
+
+## {実務でどう使われるかを表す見出し（15文字程度）}
+（※中心となる使い方をひとつに絞る。観点は重要度順に、どの工程で使うか → 何が成果物として残るか → 誰と使うか → 失敗しやすい点と回避策。台帳に裏づけの無い観点は後ろから落とす。例は定義の例と別のタスクにする。研究で効果を測っていない当てはめ（作例）を書くときは、事実として書かず、設計の手順として書く。正式な工程外の応用（会議・レビュー）が台帳にあれば末尾に足す。純粋な現象の名称で使い方が台帳に無ければ、このセクションは省略してよい）
+
+## 関連用語
+ - （関連用語1）
+ - （関連用語2）
+（※日本語の用語名だけを並べ、英語併記・訳注を付けない。本文で既に定義した語は重ねない。P2の境界に出てきた隣の用語はここに入れる）
+```
+
+---
+
+### [出典台帳]
+# 出典台帳：アクティブラーニング（機械学習）
+
+収集日: 2026-10-11 / 収集方法: WebSearch + WebFetch（PDFはローカルで pdftotext 済み）
+
+主な出典
+- S = Burr Settles, "Active Learning Literature Survey", Computer Sciences Technical Report 1648, University of Wisconsin–Madison, 2009（Updated 2010-01-26） https://sfu-db.github.io/cmpt884-fall16/Papers/settles.activelearning.pdf
+- LG = David D. Lewis and William A. Gale, "A Sequential Algorithm for Training Text Classifiers", SIGIR '94, pp.3-12 https://arxiv.org/pdf/cmp-lg/9407020
+- AWS = Amazon SageMaker AI 開発者ガイド「Automate data labeling」 https://docs.aws.amazon.com/sagemaker/latest/dg/sms-automated-labeling.html
+- ERIC = ERIC Digest ED340272（Bonwell & Eison 1991 の要約） https://eric.ed.gov/?id=ED340272
+
+---
+
+C01 | アクティブラーニングの中心にある考えは、学習アルゴリズムが自分の学ぶデータを選べるなら、より少ない教師ラベルで高い精度に届くというものである | S | "The key idea behind active learning is that a machine learning algorithm can achieve greater accuracy with fewer training labels if it is allowed to choose the data from which it learns."
+
+C02 | 学習側はラベルなしデータの形で質問を出し、人間の注釈者などのオラクルがそれにラベルを付ける | S | "An active learner may pose queries, usually in the form of unlabeled data instances to be labeled by an oracle (e.g., a human annotator)."
+
+C03 | ラベルなしデータは大量に手に入るのに、ラベルを得るのは難しい・時間がかかる・高くつく、という場面でアクティブラーニングが動機づけられる | S | "Active learning is well-motivated in many modern machine learning problems, where unlabeled data may be abundant or easily obtained, but labels are difficult, time-consuming, or expensive to obtain."
+
+C04 | 教師あり学習がうまく動くには、数百から数千のラベル付き事例で学習させる必要があることが多い | S | "Consider that, for any supervised learning system to perform well, it must often be trained on hundreds (even thousands) of labeled instances."
+
+C05 | 音声の書き起こしでは、単語の単位で注釈を付ける作業が実際の音声の10倍（1分の音声に10分）、音素の単位では400倍（1分に7時間近く）かかる | S | "Zhu (2005a) reports that annotation at the word level can take ten times longer than the actual audio (e.g., one minute of speech takes ten minutes to label), and annotating phonemes can take 400 times as long (e.g., nearly seven hours). The problem is compounded for rare languages or dialects."
+
+C06 | 情報抽出では、簡単なニュース記事でも人名・組織名や関係の箇所を見つけるのに30分以上かかることがあり、遺伝子や疾患の注釈には博士号を持つ生物学者が必要になる | S | "Locating entities and relations can take a half-hour or more for even simple newswire stories (Settles et al., 2008a). Annotations for other knowledge domains may require additional expertise, e.g., annotating gene and disease mentions for biomedical information extraction usually requires PhD-level biologists."
+
+C07 | 機械学習のアクティブラーニングは、教育分野にある同名の指導法と精神的には通じるが、混同してはならない | S | "Note that this kind of active learning is related in spirit, though not to be confused, with the family of instructional techniques by the same name in the education literature (Bonwell and Eison, 1991)."
+
+C08 | 教育分野の active learning は、学生が何かを行い、自分が行っていることについて考えることを伴う指導方略と定義されている（受け身で講義を聞くことの対義） | ERIC | "instructional strategies that involve students in doing things and thinking about what they are doing, as opposed to passive listening to a lecture."
+
+C09 | プールベースのサンプリングでは、少数のラベル付きデータ L と大量のラベルなしデータ U があり、質問はプールから選ばれる | S | "This motivates pool-based sampling (Lewis and Gale, 1994), which assumes that there is a small set of labeled data L and a large pool of unlabeled data U available. Queries are selectively drawn from the pool"
+
+C10 | 不確実性サンプリングは、ラベルの付け方が最も分からない事例を学習側が質問する枠組みで、おそらく最も単純でよく使われる | S | "Perhaps the simplest and most commonly used query framework is uncertainty sampling (Lewis and Gale, 1994). In this framework, an active learner queries the instances about which it is least certain how to label."
+
+C11 | 二値分類で確率モデルを使う場合、不確実性サンプリングは陽性である事後確率が0.5に最も近い事例を質問する | S | "when using a probabilistic model for binary classification, uncertainty sampling simply queries the instance whose posterior probability of being positive is nearest 0.5 (Lewis and Gale, 1994; Lewis and Catlett, 1994)."
+
+C12 | 3クラス以上では、最も確からしいラベルの確率が低い事例を選ぶ方法、1位と2位の確率の差が小さい事例を選ぶ方法（マージンサンプリング）、エントロピーを使う方法がある | S | "a more general uncertainty sampling variant might query the instance whose prediction is the least confident" / "margin sampling (Scheffer et al., 2001)" / "A more general uncertainty sampling strategy (and possibly the most popular) uses entropy (Shannon, 1948) as an uncertainty measure"
+
+C13 | 2つのガウス分布から作った400件の二次元データで、無作為に選んだ30件で学習したロジスティック回帰は正解率70%、不確実性サンプリングで選んだ30件では90%だった | S | "(b) A logistic regression model trained with 30 labeled instances randomly drawn from the problem domain. The line represents the decision boundary of the classifier (70% accuracy). (c) A logistic regression model trained with 30 actively queried instances using uncertainty sampling (90%)."
+
+C14 | 20 Newsgroups の野球とホッケーの文書2,000件を見分ける課題で、30件を新たにラベル付けした時点の正解率は不確実性サンプリングが81%、無作為が73%だった | S | "After labeling 30 new instances, the accuracy of uncertainty sampling is 81%, while the random baseline is only 73%."
+
+C15 | 最初期の場面はメンバーシップクエリ学習（Angluin 1988）で、学習側は入力空間の任意の事例のラベルを要求でき、典型的には自分で事例を新しく作り出す | S | "One of the first active learning scenarios to be investigated is learning with membership queries (Angluin, 1988). In this setting, the learner may request labels for any unlabeled instance in the input space, including (and typically assuming) queries that the learner generates de novo, rather than those sampled from some underlying natural distribution."
+
+C16 | Lang と Baum は1992年に手書き文字を分類するニューラルネットの学習でメンバーシップクエリを人に答えさせたが、学習側が生成した質問画像の多くは認識できる記号を含まず、自然な意味を持たない人工的な合成文字だった | S | "For example, Lang and Baum (1992) employed membership query learning with human oracles to train a neural network to classify handwritten characters. They encountered an unexpected problem: many of the query images generated by the learner contained no recognizable symbols, only artificial hybrid characters that had no natural semantic meaning."
+
+C17 | 任意の事例を人が答えにくいという限界に対処するため、ストリームベースとプールベースの場面が提案された | S | "The stream-based and pool-based scenarios (described in the next sections) have been proposed to address these limitations."
+
+C18 | ストリームベースの選択的サンプリング（Cohn et al., 1990, 1994）は、ラベルなし事例を1件ずつ実際の分布から取り出し、学習側が質問するか捨てるかを決める | S | "An alternative to synthesizing queries is selective sampling (Cohn et al., 1990, 1994). ... each unlabeled instance is typically drawn one at a time from the data source, and the learner must decide whether to query or discard it."
+
+C19 | ストリームベースは順に走査して1件ずつ質問するかを決め、プールベースは集合全体を評価して順位を付けてから最良の質問を選ぶ | S | "The main difference between stream-based and pool-based active learning is that the former scans through the data sequentially and makes query decisions individually, whereas the latter evaluates and ranks the entire collection before selecting the best query."
+
+C20 | Lewis と Gale は1994年に不確実性サンプリングを提案し、一定の性能に届くまでに人手で分類する学習データの量を最大500分の1に減らした | LG | "An algorithm for sequential sampling during machine learning of statistical classifiers was developed and tested on a newswire text categorization task. This method, which we call uncertainty sampling, reduced by as much as 500-fold the amount of training data that would have to be manually classified to achieve a given level of effectiveness."
+
+C21 | 経済的にラベル付けできる量より多くのテキストがあることが多く、無作為抽出は通常うまくいかない。1000件に1件しか該当しない場合、500件しかラベル付けできなければ無作為標本は通常500件すべてが非該当になり、該当と非該当を見分ける学習にならない | LG | "There is often more text available than can be economically labeled, so a subset or sample of the data must be chosen to label. Random sampling will usually not be effective. If only 1 in 1000 texts are class members (not atypical), and only 500 texts can be labeled, then a random sample will usually contain 500 negative examples and no positive ones. This will not support training a classifier to distinguish positive from negative examples."
+
+C22 | 不確実性サンプリングの手順は、(1)初期分類器を作る (2)教師が答えてくれる間、現在の分類器を各ラベルなし事例に当て、クラス所属が最も不確かなb件を見つけ、そのb件に教師がラベルを付け、全ラベル付き事例で新しい分類器を学習する、の繰り返しである | LG | "1. Create an initial classifier / 2. While teacher is willing to label examples / (a) Apply the current classifier to each unlabeled example / (b) Find the b examples for which the classifier is least certain of class membership / (c) Have the teacher label the subsample of b examples / (d) Train a new classifier on all labeled examples"
+
+C23 | 1回に選ぶ件数 b は理想的には1件だが、事例を採点して選ぶ処理が高くつく場合は大きい値が適切なことがある | LG | "Ideally b, the number of examples selected on each iteration, would be 1, but larger values may be appropriate if scoring and selecting examples is expensive."
+
+C24 | 初期分類器は重要な役割を果たす。それが無いと、頻度の低いクラスの事例に偶然ぶつかるまで長く無作為抽出が続きかねない | LG | "Note that the initial classifier plays an important role, since without it there may be a long period of random sampling before examples of a low frequency class are stumbled upon."
+
+C25 | 実験は1988年から1993年初頭のAP通信の見出し371,454件を使い、学習用319,463件とテスト用51,991件に無作為に分けた | LG | "The titles of 371,454 items which appeared on the AP newswire between 1988 and early 1993 were divided randomly into a training set of 319,463 titles and a test set of 51,991 titles."
+
+C26 | 使った10カテゴリは出現頻度が低く、例えば bonds カテゴリは学習セットに470件（頻度0.0015）だった | LG | Table 1: "bonds 470 0.0015 60 0.0012" / "The categories were chosen to have relatively low frequencies, while still providing a reasonable number of positive examples in both the training and test sets."
+
+C27 | 各試行は該当する3件から初期分類器を作り、4件ずつ249回の不確実性サンプリングを行って合計999件にした | LG | "we instead used a starting subsample of 3 positive examples of the category randomly selected from the training set. ... On each run, the 3 starting examples were used to train an initial classifier, after which 249 iterations of uncertainty sampling with a subsample size of 4 were carried out"
+
+C28 | 多くの場合、無作為抽出では10万件以上でやっと届く性能に、不確実性サンプリングは1000件未満で届いた。1000件を無作為に選んで学習した場合の性能は大きく劣った。ある場合には、同じ性能に届くのに無作為だと500倍の件数が要った | LG | "In most cases effectiveness levels reached by random sampling only with 100,000 or more training examples are reached by uncertainty sampling with less than 1000 examples, while training on 1000 randomly selected examples gives greatly inferior results. In some cases, reaching a given level of effectiveness requires 500 times as many randomly selected examples as examples selected by uncertainty sampling."
+
+C29 | 10カテゴリのうち6つで、999件の不確実性標本で学習した分類器の平均F値が319,463件すべてで学習したものを上回った。著者らはこれを自分たちの学習方法が大きな学習セットを活かせていない兆候とみなし、特徴選択が最も疑わしいとした | LG | "For 6 of 10 categories, the mean F=1 for a classifier trained on a uncertainty sample of 999 examples actually exceeds that from training on the full training set of 319,463 examples. This means that some aspect of our classifier training is not making effective use of large training sets. Feature selection is the most likely villain."
+
+C30 | 10カテゴリのうち tickertalk ではどの方法もうまくいかなかった | LG | "Results for 9 categories are presented, omitting tickertalk on which no strategy worked well."
+
+C31 | 最初の3件の選び方が悪いと初期分類器が効かず、追加の該当事例が見つかるまでにかなりの遅れが出た。最終的な分類器の質にばらつきが残った | LG | "When a subsample was badly unrepresentative of the category, the initial classifier was ineffective, and there was a considerable delay before uncertainty sampling started to find additional positive examples."
+
+C32 | アクティブラーナーと協調して作られた学習セットは質問を選んだモデルの種類に結びついており、ラベル付き事例は自然な分布からの独立同分布標本ではなく偏った分布になる。モデルの種類を変えると、その学習セットは新しいモデルには同じように役立たなくなりうる | S | "consider that a training set built in cooperation with an active learner is inherently tied to the model that was used to generate it (i.e., the class of the model selecting the queries). Therefore, the labeled instances are a biased distribution, not drawn i.i.d. from the underlying natural density. If one were to change model classes—as we often do in machine learning when the state of the art advances—this training set may no longer be as useful to the new model class"
+
+C33 | Schein と Ungar は2007年に、同じモデルの種類（ロジスティック回帰）を使った場合でも、アクティブラーニングが受動的学習より多くのラベル付き事例を必要とすることがあると示した | S | "Somewhat surprisingly, Schein and Ungar (2007) showed that active learning can sometimes require more labeled instances than passive learning even when using the same model class, in their case logistic regression."
+
+C34 | Guo と Schuurmans は2008年に、既成の質問戦略をバッチモードで近視眼的に使うと、しばしば無作為抽出よりずっと悪くなることを見つけた | S | "Guo and Schuurmans (2008) found that off-the-shelf query strategies, when myopically employed in a batch-mode setting (Section 6.1) are often much worse than random sampling."
+
+C35 | 注釈者の熟練度によってアクティブラーニングの効き方が変わるという報告がある。領域の専門家はアクティブラーナーにうまく使われ、初心者は受動的学習のほうが向いていた | S | "Baldridge and Palmer (2009) found a curious inconsistency in how well active learning helps that seems to be correlated with the proficiency of the annotator (specifically, a domain expert was better utilized by an active learner than a domain novice, who was better suited to a passive learner)."
+
+C36 | 大規模な注釈プロジェクトでアクティブラーニングを使った研究者の91%が期待は完全または部分的に満たされたと答えた一方、回答者の20%は「自分の場面でうまくいくと確信できない」という理由で使わないことを選んだ | S | "Tomanek and Olsson (2009) report in a survey that 91% of researchers who used active learning in large-scale annotation projects had their expectations fully or partially met. Despite these findings, the survey also states that 20% of respondents opted not to use active learning in such projects, specifically because they were 'not convinced that [it] would work well in their scenario.'"
+
+C37 | 注釈のコストが事例ごとに大きく変わる領域があり、コストを無視するアクティブラーニングは無作為選択（受動的学習）と変わらない結果になることがある | S | "In some domains, annotation costs are not (approximately) constant across instances, and can vary considerably. ... Consequently, active learning approaches which ignore cost may perform no better than random selection (i.e., passive learning)."
+
+C38 | 注釈のコストは事例に内在するとは限らず、誰が注釈するかで変わる | S | "The cost of annotating an instance may not be intrinsic, but may instead vary based on the person doing the annotation."
+
+C39 | 実用的な応用での本当の止めどきは、学習側が自分で決める閾値よりずっと手前に来る、経済的その他の外部要因で決まる | S | "However, in my own experience, the real stopping criterion for practical applications is based on economic or other external factors, which likely come well before an intrinsic learner-decided threshold."
+
+C40 | 半教師あり学習とアクティブラーニングは同じ問題に逆方向から取り組む。半教師ありは学習側が知っていると思う部分を活用し、アクティブは未知の部分を探りにいく | S | "While semi-supervised methods exploit what the learner thinks it knows about the unlabeled data, active methods attempt to explore the unknown aspects."
+
+C41 | 自己訓練では最も自信のあるラベルなし事例を予測ラベルごと学習セットに加えるが、不確実性サンプリングは最も自信のない事例を質問に選ぶ | S | "Typically the most confident unlabeled instances, together with their predicted labels, are added to the training set, and the process repeats. A complementary technique in active learning is uncertainty sampling (see Section 3.1), where the instances about which the model is least confident are selected for querying."
+
+C42 | 人のラベルの質は高いとは限らない。ある事例は人にも機械にも本質的に難しく、人は時間とともに気が散ったり疲れたりして注釈の質にばらつきが出る | S | "First, some instances are implicitly difficult for people and machines, and second, people can become distracted or fatigued over time, introducing variability in the quality of their annotations."
+
+C43 | SageMaker Ground Truth の自動データラベリングは、まず入力データの無作為標本を人に回し、返ってきたラベルから学習用と検証用のデータを作って自動ラベリング用のモデルを学習・検証する | AWS | "When Ground Truth starts an automated data labeling job, it selects a random sample of input data objects and sends them to human workers. / When the labeled data is returned, it is used to create a training set and a validation set. Ground Truth uses these datasets to train and validate the model used for auto-labeling."
+
+C44 | 検証データへの推論で出た信頼度と品質指標から信頼度の閾値を決め、閾値を満たした対象は自動でラベル付け済みとみなし、信頼度の低い対象を人に回して、そのラベルでモデルを更新する | AWS | "The auto labeling component will use these quality metrics and confidence scores to create a confidence score threshold that ensures quality labels. ... Ground Truth selects data points with low confidence scores from this dataset and sends them to human workers. / Ground Truth uses the existing human-labeled data and this additional labeled data from human workers to update the model."
+
+C45 | この繰り返しは、データセットがすべてラベル付けされるか、人の注釈予算に達するなどの停止条件を満たすまで続く | AWS | "The process is repeated until the dataset is fully labeled or until another stopping condition is met. For example, auto-labeling stops if your human annotation budget is reached."
+
+C46 | 画像分類とテキスト分類では、自動で付けたラベルの正確さが人の付けるラベルに対して95%以上になる信頼度の水準が使われる | AWS | "For image classification and text classification, Ground Truth uses logic to find a label-prediction confidence level that corresponds to at least 95% label accuracy. This means Ground Truth expects the accuracy of the automated labels to be at least 95% when compared to the labels that human labelers would provide for those examples."
+
+C47 | 自動データラベリングは数千件規模のデータに向く。許容される最小の対象数は1,250件だが、5,000件以上を強く推奨している | AWS | "Automated data labeling is most appropriate when you have thousands of data objects. The minimum number of objects allowed for automated data labeling is 1,250, but we strongly suggest providing a minimum of 5,000 objects."
+
+C48 | Settles のサーベイは University of Wisconsin–Madison の Computer Sciences Technical Report 1648 として2009年に出され、この分野で初の大規模なサーベイだと著者自身が書いている | S | "Burr Settles. Active Learning Literature Survey. Computer Sciences Technical Report 1648, University of Wisconsin–Madison. 2009." / "This is the first large-scale survey of the active learning literature."
+
+C49 | アクティブラーニングは統計の分野では「クエリ学習」「最適実験計画」と呼ばれることもある、機械学習の一分野である | S | "Active learning (sometimes called 'query learning' or 'optimal experimental design' in the statistics literature) is a subfield of machine learning and, more generally, artificial intelligence."
+
+---
+
+## 読めなかった出典
+
+- https://link.springer.com/content/pdf/10.1007/BF00993277.pdf （Cohn, Atlas, Ladner 1994 "Improving Generalization with Active Learning"）… 303リダイレクトで Springer の認証に飛び、本文を読めなかった。この論文の内容は Settles のサーベイ経由（C18）でのみ扱い、原文の引用は使わない。
+
+---
+
+## 追加（初稿執筆中に台帳へ足したもの）
+
+C50 | Lewis と Gale の所属は AT&T ベル研究所（ニュージャージー州マレーヒル）である | LG | "David D. Lewis (lewis@research.att.com) and William A. Gale (gale@research.att.com) / AT&T Bell Laboratories; Murray Hill, NJ 07974; USA"
+
+C51 | プールベースの場面は、応用を扱う論文ではストリームベースよりずっとよく見られる | S | "While the pool-based scenario appears to be much more common among application papers, one can imagine settings where the stream-based approach is more appropriate."
+
+C52 | Settles のサーベイの著者所蔵版は burrsettles.com で公開されている（2026-10-11 に取得して同一文書であることを確認した） | https://burrsettles.com/pub/settles.activelearning.pdf | 取得したPDFの表題行が "Active Learning Literature Survey / Burr Settles / Computer Sciences Technical Report 1648 / University of Wisconsin–Madison" であることを確認
+
+
+### [成立条件メモ]
+# 成立条件メモ：アクティブラーニング（機械学習）
+
+用語の種類: 道具・手法・概念（機械学習の学習データを集める手法）
+
+## 成り立つ条件
+
+- 条件1: ラベルの付いていないデータは大量に手に入るのに、ラベルを付ける側の手間・時間・費用が制約になっている（C03, C04, C05, C21）
+- 条件2: **次にどのデータへラベルを付けてもらうかを、学習中のモデル自身が選ぶ**（C01, C02, C10）… これが核。これが無いと別の用語になる
+- 条件3: 選ばれた件に答える相手（人間の注釈者などのオラクル）がいて、その答えが学習に戻る（C02, C22）
+- 条件4: 選ぶ→答えてもらう→学習し直す、を繰り返す（C22, C45）
+
+## 隣の用語との境界
+
+- **教師あり学習（受動的学習）**: 学習データが与えられるか無作為に引かれ、モデルは選ばない。条件2が無い（C13, C28）
+- **半教師あり学習・自己訓練**: ラベルなしデータを活かす点は同じだが、モデルが最も自信のある件に自分でラベルを付けて取り込む。人には聞かない。アクティブラーニングは最も自信のない件を人に聞く。条件3が無い（C40, C41）
+- **メンバーシップクエリ合成**: 学習側がデータを新しく作り出して尋ねる。手元のデータの中から選ぶのではない。人が答えられない質問が生まれる（C15, C16）。アクティブラーニングの初期の場面ではあるが、いま一般に指す形（プールから選ぶ）とは別
+- **不確実性サンプリング**: アクティブラーニングで「どれを選ぶか」を決める方法のひとつ。アクティブラーニングのほうが広い（C10）
+- **教育分野のアクティブラーニング**: 学ぶのは人間で、機械がデータを選ぶ話ではない。名前が同じだけで別物（C07, C08）
+
+## 出典が確かめた範囲
+
+- 課題: テキスト分類（AP通信の見出し／20 Newsgroups の野球とホッケー）、二次元の人工データ、情報抽出、音声認識、画像分類、意味的領域分割、物体検出
+- 効き目の測り方: 同じ精度に届くまでに人が答えた件数（学習曲線）
+- 反証も報告されている: 同じモデルの種類でも受動的学習より多くのラベルが要った例（C33）、まとめて選ぶ場面では無作為より大きく劣ることが多い（C34）、コストを無視すると無作為と変わらない（C37）
+- 言語・媒体は英語のテキストと画像が中心。日本語データでの効果は台帳に無い
+
+## 通し例（記事全体で使い回す）
+
+**AP通信の見出し319,463件から「貯蓄債券」の話題だけを見分ける分類器を作る**（Lewis & Gale 1994）
+
+- 条件1を満たす: 学習用の見出しが319,463件あり、人が全部に答えるのは現実的でない（C25）。しかも該当は470件（0.15%）しかないので、無作為に1000件選んで答えてもほぼ非該当ばかりになる（C21, C26）
+- 条件2を満たす: 学習中の分類器が、該当である確率を0.5付近と見積もった見出しを選ぶ（C11, C22）
+- 条件3を満たす: 選ばれた4件に人が答え、その答えを足して学習し直す（C27）
+- 条件4を満たす: これを249回繰り返し、合計999件になった（C27）
+- 結果: 無作為なら10万件以上答えてやっと届く性能に、999件で届いた（C28）
+
+## 実務セクションで使う別の例
+
+**画像やテキストの分類データを作る案件での自動データラベリング**（C43〜C47）。通し例（見出しの分類）と工程は同じだが、タスクが違う。信頼度の高い件は機械が自動でラベルを付け、低い件だけ人に回す点が足されている。
+
+
+### [入力テキスト]
+（直前のメッセージであなたが書いた初稿を使う）

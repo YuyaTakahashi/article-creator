@@ -1,0 +1,46 @@
+[Sat Oct 10 17:01:06 JST 2026] 単発生成: agentic RAG
+NG: レシピが v18 から変わっているのに版が上がっていない
+   - .agent/skills/article-critic/SKILL.md
+   - .agent/skills/article-critic/references/style-critic.md
+   → python3 scripts/recipe_version.py bump --note "変更内容の1行説明"
+[Sat Oct 10 17:01:06 JST 2026] 警告: レシピ版が未確定(+dirty)のまま生成する。bump しておくこと
+[Sat Oct 10 17:01:10 JST 2026] レシピ版を用語くんに通知: v18+dirty → {"ok":true,"version":"v18+dirty","previous":"v18","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+[Sat Oct 10 17:07:03 JST 2026] v18実行を中断（v19で再生成するため）
+[Sat Oct 10 17:07:03 JST 2026] 単発生成: agentic RAG
+OK: レシピは v19（cec6936d256d）のまま
+[Sat Oct 10 17:07:06 JST 2026] レシピ版を用語くんに通知: v19 → {"ok":true,"version":"v19","previous":"v18+dirty","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+Warning: no stdin data received in 3s, proceeding without it. If piping from a slow command, redirect stdin explicitly: < /dev/null to skip, or wait longer.
+用語DBへの書き戻しまで完了した。
+
+## 完了報告
+
+| 項目 | 内容 |
+|---|---|
+| 対象用語 | agentic RAG（記事タイトル：エージェンティックRAG） |
+| ステータス | **レビュー待ち**（G-078） |
+| Doc URL | https://docs.google.com/document/d/1rPEH78rdjeZK5xF4_VvP_50gVkAhJm5ezmSi4Mh3J8w/edit |
+| カテゴリ | テクノロジー・技術（418） / slug: `agentic-rag` |
+| レシピ版 | v19（hash `cec6936d256d`） ※ v3 からの作り直し |
+| 保存先 | `drafts/agentic RAG.md` |
+
+### 経緯と判断
+
+G-078 は 2026-08-30 に **v3** で生成済みのレビュー待ち行だった。現行レシピは v19 なので、作り直し扱いで処理した。旧Doc（v3）は消さずに残し、備考に `旧版v3:` として記録してある。
+
+⚠️ 旧ドラフトMDを先に退避せず上書きした。`drafts/` は gitignore 対象で git にも無かったため、旧Docを `gws drive files export` で書き出して `drafts/_archive/agentic RAG_v3_2026-08-30.md` に復元した。前後比較はできる状態にある。
+
+### 内容面
+
+- 通し例は「社内の規程を検索して答える質問応答システムに、去年と今年の規程の差分を尋ねる」1本をリード・定義・語源・効果で使い回した
+- 効果セクションは 2026-06 の比較研究（arXiv 2606.05658）の実測値を使い、**効く場合と外す場合の両方**を書いた。構造のある社内知識ベースでは上位5件の的中が 0.833→1.000 に上がる一方、多段推論ベンチマーク MuSiQue では 1.000→0.063 に落ち、応答時間は 21→48秒 / 22→75秒 に延びる
+- Step 6 の台帳照合で5件修正。台帳に無かった「計算という道具」と「検索を複数回まわす設計は以前からある」という事実主張を削除した
+- 提唱者の顔写真（F5）は**入れていない**。単独の提唱者がいない用語で、RAG原典の Patrick Lewis も Wikipedia の同名ページが別人のため、誤った肖像を避けた
+
+### 画像
+
+アイキャッチ2案（SVG）と挿絵3枚（gpt-image-2、日本語ラベル付き）をDocに入れた。アイキャッチは「一度きりの検索 vs AIが回すループ」と「4つの道具から選んで戻る」の2構図。レビュー時に使わない方を削除してもらう形になる。
+
+Slackへの投稿は指示どおり行っていない（告知は月曜レポート）。
+[Sat Oct 10 17:28:01 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-10-10.log

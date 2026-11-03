@@ -1,0 +1,30 @@
+[Mon Sep  7 01:40:00 JST 2026] 週次バッチ開始（week 2026-W37）
+OK: レシピは v15（7fe2c26a0557）のまま
+[Mon Sep  7 01:40:06 JST 2026] レシピ版を用語くんに通知: v15 → {"ok":true,"version":"v15","previous":"v14","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+週次バッチ完了。
+
+## 処理結果（2026-09-07）
+
+| ID | 用語 | ステータス | Doc |
+|---|---|---|---|
+| G-079 | 恒常的注意力分散 | レビュー待ち | [Doc](https://docs.google.com/document/d/1tDX7ci_7wJUmUQ0rxDqaqNl8ce1LnJZWAprca-K92Uo/edit) |
+| G-019 | TTFB | レビュー待ち | [Doc](https://docs.google.com/document/d/1KYUYaThgUE4dHc1fRaRYC2VPsxLfJWK61VcQCcYZJbw/edit) |
+| G-020 | WebSocket | レビュー待ち | [Doc](https://docs.google.com/document/d/17Rqu6lvXOg0r4u9xDM7ZjRdtmK71MRVuMY1XLZV-vSs/edit) |
+| G-085 | 誤差逆伝播法 | 見送り | 既存WP下書きと重複（p=39205 / slug=backpropagation） |
+
+### 選定の経緯
+- 作り直しリクエスト（U列=TRUE）は0件。枠3件すべてを「提案中」から充当した。
+- 優先②（提案元にSlackを含む）で G-079・G-085 を取り、G-085 が重複チェックで見送りになったため、優先③（公開記事1本・ID昇順）から G-019・G-020 を補充した。
+
+### 内訳
+- ✅ 3本を drafts/ に保存し、`stamp_version.py` で v15（hash 7fe2c26a0557）を刻印。`drafts/_baseline/` にも初稿を控えた
+- ✅ article-critic は Step 5.5 / 8.5 の2回とも実施。escalate なし。初稿の指摘（受動態・重複段落・未展開の略語・4文超の段落）は保存前に反映済み。ログは `AGENT_REPORTS/article-critic-logs/2026-09-07/` に3件
+- ✅ 用語DBの H/I/K/M/N/O/R/S/T 列への書き戻しを4件とも `ok:true` で確認（R・S・T も反映済み）
+- ✅ 提唱者の顔写真は Linda Stone・Ian Hickson を挿入。Steve Souders は Wikipedia に肖像が無いため TTFB のみスキップ
+- ✅ Slack投稿はしていない（月曜レポートに委譲）
+
+### ⚠️ 申し送り2点
+1. **G-001「ヒューマン・イン・ザ・ループ」の G列（生成する）が TRUE のまま**。ステータスは「公開済み」で今回の選定対象外だが、フラグが残っているので毎回の候補抽出に出てくる。手動で FALSE に戻すか、作り直し（U列）へ付け替えるかの判断が要る。
+2. **`pipeline/gas/コード.gs`（ローカルの控え）が実デプロイより古い**。eyecatch_prompt / creator_version / recipe_hash / flag / regen を扱っていない版になっている。実際のデプロイは対応済み（R・S・T が書き込めた）なので実害はないが、次に clasp から触るときは pull してからにしないと巻き戻る。
+[Mon Sep  7 02:04:55 JST 2026] 週次バッチ成功・完了マーク作成: /Users/takahashi_yuya/workspace/article-creator/logs/weekly-done-2026-W37.marker

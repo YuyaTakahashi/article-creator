@@ -1,0 +1,32 @@
+# 出典台帳：コンテキスト汚染攻撃（v18案・2026-10-04）
+
+C01 | MITRE ATLAS は、AIエージェントのLLMが使う文脈を操作して、応答や行動に影響を与える攻撃手法を「AI Agent Context Poisoning（AML.T0080）」として登録している | https://www.startupdefense.io/mitre-atlas-techniques/aml-t0080-ai-agent-context-poisoning（MITRE の定義文を直接引用したページ。atlas.mitre.org は 404 で読めず） | "Adversaries may attempt to manipulate the context used by an AI agent's large language model (LLM) to influence the responses it generates or actions it takes."
+C02 | AML.T0080 には「Memory」と「Thread」の2つの下位手法がある | 同上 | "Memory (AML.T0080.000)" / "Thread (AML.T0080.001)"
+C03 | OWASP は2025年12月9日に「Top 10 for Agentic Applications」を公表し、6番目に「Memory & Context Poisoning（ASI06）」を挙げた | https://genai.owasp.org/2025/12/09/owasp-top-10-for-agentic-applications-the-benchmark-for-agentic-security-in-the-age-of-autonomous-ai/ | "ASI06 – Memory & Context Poisoning" / "Memory poisoning reshaped behaviour long after the initial interaction"
+C04 | OWASP の ASI06 担当者は、問題の核心を「一度見たこと」ではなく「残り続けること」に置いている | https://genai.owasp.org/2026/05/13/memory-is-a-feature-it-is-also-an-attack-surface/（2026-05-13, Idan Habler） | "The issue is not just that the model saw something malicious once. The issue is persistence."
+C05 | 一度の操作が、会話・プロジェクト・再起動をまたいで以後のふるまいを形づくりうる | 同上 | "a one-time action could shape the model's future behavior across sessions, projects, and even reboots."
+C06 | 同担当者は、記憶を攻撃面の一部として、実行経路や認証情報と同じ精査の対象にするよう求めている | 同上 | "memory as part of the attack surface" / "the same scrutiny we already apply to execution paths, credentials, and other sensitive control surfaces"
+C07 | 間接プロンプトインジェクションは、取得されそうなデータに指示を仕込み、直接の接点なしにLLM連携アプリを悪用する攻撃として2023年に示された | https://arxiv.org/abs/2302.12173（Greshake ら、2023-02-23） | "Indirect Prompt Injection, that enable adversaries to remotely (without a direct interface) exploit LLM-integrated applications by strategically injecting prompts into data likely to be retrieved."
+C08 | LLM連携アプリでは、データと指示の境目があいまいになる | 同上 | "LLM-Integrated Applications blur the line between data and instructions."
+C09 | Unit 42 は2025年10月9日に、エージェントの長期記憶を間接プロンプトインジェクションで汚染する検証を公表した | https://unit42.paloaltonetworks.com/indirect-prompt-injection-poisons-ai-longterm-memory/（Royce Lu, Jay Chen） | "Published:October 9, 2025"
+C10 | 検証では、攻撃者が指示を埋め込んだWebページを用意し、被害者がそのURLをチャットボットに渡す | 同上 | "The attacker creates a webpage embedded with prompt injection payloads" / "The victim provides the URL to the chatbot"
+C11 | 埋め込んだ指示は、利用者の画面には表示されない | 同上 | "The malicious instructions the attacker specifies are embedded in the HTML but rendered invisible to the end user, keeping the attack stealthy."
+C12 | 指示は会話の要約を作る処理を操り、要約の中に紛れ込む | 同上 | "These payloads manipulate the session summarization prompt, causing the LLM to include malicious instructions in its summary output"
+C13 | 仕込まれた指示は会話をまたいで残り、エージェントの動作を組み立てるプロンプトに取り込まれる | 同上 | "Once planted, these instructions persist across sessions, and they are incorporated into the agent's orchestration prompts."
+C14 | 被害者は数日後に新しい旅行の予約のために戻り、その会話でエージェントは予約情報を攻撃者のドメインへ黙って送った | 同上 | "the victim returning to the chatbot several days later to book a new trip" / "the agent silently exfiltrates the user's booking information to a malicious domain"
+C15 | Unit 42 は、これは Amazon Bedrock の脆弱性ではなく、エージェントにおけるプロンプトインジェクションという未解決の課題だとしている | 同上 | "Importantly, this is not a vulnerability in the Amazon Bedrock platform. Rather, it underscores a broader, unsolved security challenge in the large language model (LLM) — prompt injection, in the context of the use of agents."
+C16 | Unit 42 は対策として、内容のフィルタリング、アクセス制御、ログ記録、継続的な監視、URLフィルタリングを挙げる | 同上 | "Content filtering," "Access control," "Logging," and "Continuous monitoring" / "URL filtering solutions...can block access to malicious or suspicious domains"
+C17 | Microsoft は、外部の文章と利用者の指示をLLMが見分けやすくする手法「Spotlighting」を使う | https://www.microsoft.com/en-us/msrc/blog/2025/07/how-microsoft-defends-against-indirect-prompt-injection-attacks（2025-07-29） | "a probabilistic technique to help the LLM distinguish user-provided instructions from potentially untrusted external text."
+C18 | Spotlighting には、外部の文章の前後に目印を置く・全体に印を付ける・符号化する、の3つの方式がある | 同上 | "a specific randomized text delimiter is added before and after the untrusted input" / "a special token is added throughout the entirety of the untrusted text" / "the untrusted text is transformed using a well-known encoding algorithm"
+C19 | Microsoft は、予防・検知・被害の抑制にまたがる多層防御をとる | 同上 | "Microsoft therefore takes a defense-in-depth approach spanning prevention, detection, and impact mitigation"
+C20 | 「context poisoning」という語は、Gemini 2.5 の技術レポートで、ポケモンを遊ぶエージェントの目標や要約がゲームの状況についての誤りで汚れる状態を指して使われた | https://www.dbreunig.com/2025/06/22/how-contexts-fail-and-how-to-fix-them.html（技術レポートの引用） | "An especially egregious form of this issue can take place with 'context poisoning' – where many parts of the context (goals, summary) are 'poisoned' with misinformation about the game state, which can often take a very long time to undo."
+C21 | Breunig は context poisoning を、作り話や誤りが文脈に入り、繰り返し参照される失敗として定義した（攻撃ではない） | 同上（2025-06-22） | "Context Poisoning is when a hallucination or other error makes it into the context, where it is repeatedly referenced."
+C22 | Microsoft は間接プロンプトインジェクションを、LLMが正当な指示と取り違える文章を注入して出力を操る手法と定義している | https://www.microsoft.com/en-us/msrc/blog/2025/07/how-microsoft-defends-against-indirect-prompt-injection-attacks（2025-07-29） | "Indirect prompt injection is a technique through which the attacker controls or influences the output of an instruction-tuned LLM by injecting text that the LLM misinterprets as legitimate instructions."
+C23 | MITRE ATLAS は、AIを組み込んだシステムへの攻撃者の戦術と手法を、実際の攻撃の観測とレッドチームの実証をもとにまとめた公開の知識ベースである | https://oecd.ai/en/catalogue/tools/mitre-atlas | "ATLAS (Adversarial Threat Landscape for Artificial-Intelligence Systems) is a globally accessible, living knowledge base of adversary tactics and techniques against Al-enabled systems based on real-world attack observations and realistic demonstrations from Al red teams and security groups."
+C24 | MITRE は、連邦政府の資金による研究開発を担う非営利の組織である | https://www.mitre.org/ | "MITRE is a nonprofit organization and leader in federally funded research and development, specializing in systems integration and applied research."
+
+## 読めなかった出典
+
+- https://atlas.mitre.org/techniques/AML.T0080 … 404。MITRE の定義文は C01 の引用ページで代用した。登録年は確認できなかった
+- OWASP「Agentic AI – Threats and Mitigations」PDF（aigl.blog 転載）… robots.txt で取得不可
+- https://raw.githubusercontent.com/mitre-atlas/atlas-data/main/data/techniques.yaml … 404

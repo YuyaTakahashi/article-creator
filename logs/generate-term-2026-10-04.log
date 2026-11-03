@@ -1,0 +1,33 @@
+[Sun Oct  4 16:58:55 JST 2026] 単発生成: 生成エンジン最適化
+NG: レシピが v17 から変わっているのに版が上がっていない
+   - .agent/skills/article-creator/SKILL.md
+   - .agent/skills/article-critic/references/reader-critic.md
+   - .agent/skills/article-critic/references/template-critic.md
+   - .agent/skills/article-review/SKILL.md
+   → python3 scripts/recipe_version.py bump --note "変更内容の1行説明"
+[Sun Oct  4 16:58:55 JST 2026] 警告: レシピ版が未確定(+dirty)のまま生成する。bump しておくこと
+[Sun Oct  4 16:58:58 JST 2026] レシピ版を用語くんに通知: v17+dirty → {"ok":true,"version":"v17+dirty","previous":"v17","changed":true}
+Permission allow rule (../../.claude/settings.json): Write(/Users/takahashi_yuya/workspace/**) is not matched by file permission checks — only Edit(path) rules are. Use Edit(/Users/takahashi_yuya/workspace/**) instead (Edit rules cover all file-editing tools).
+✅ 完了
+
+**生成エンジン最適化**（G-088） / status=レビュー待ち
+https://docs.google.com/document/d/1icnWv5A_Davcy4c__YczuY6opXd4nieQVv-R6E9RkAI/edit
+
+| 項目 | 内容 |
+|---|---|
+| カテゴリ | マーケティング・ビジネス（358） |
+| slug | generative-engine-optimization |
+| レシピ版 | v18（881c027feaf3） |
+| 保存先 | `drafts/生成エンジン最適化.md`（本文2,253字） |
+| WP重複チェック | 重複なし（exit 0） |
+| Doc内の画像 | アイキャッチ2案＋挿絵2枚（日本語ラベル付き）を差し込み済み |
+
+出典は一次情報3本で固めた。提唱論文（Aggarwal ら, KDD '24, arXiv:2311.09735。PDFをテキスト化して直接引用）、英語版Wikipedia（Googleの2026年見解・別名の揺れ）、2026年7月の批判的総説（Martinez, arXiv:2607.14035。研究45本の再検証）。台帳は `research/生成エンジン最適化_claims.md`、成立条件は `research/生成エンジン最適化_conditions.md` に残した。Search Engine Land（403）とContentful（429）は読めなかったので根拠に使っていない。
+
+⚠️ レビュー時に見てほしい点が2つあります。
+
+1. **語源の後ろを3セクションにした**（効果／限界／実務）。テンプレ準拠Criticの原則は2つだが、CLAUDE.mdルール12の例外（再検証で前提が覆る・45本の総説という厚み）に当たると判断した。「引用が増えても訪問は増えない」を効果セクションに埋めると、反証の核心が対比の一部に見えるため独立させている。不要なら効果セクションへ畳める。
+2. **照合で2か所削った**。出典に名前のないChatGPTの名指しと、裏づけのない「問いを20ほど用意し」の数値。前者はPerplexityとAI Overviewsだけに絞っている。
+
+critic は4軸とも通過（template 14 / style 15 / reader 15 / readability 15）。ログは `AGENT_REPORTS/article-critic-logs/2026-10-04/` に残した。`reviewed_at` は刻んでいない（article-review 未実施のため）。Slackへの投稿はしていない。
+[Sun Oct  4 17:16:14 JST 2026] 単発生成 終了 (exit 0)  ログ: /Users/takahashi_yuya/workspace/article-creator/logs/generate-term-2026-10-04.log

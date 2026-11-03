@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "file": "drafts/恒常的注意力分散.md",
+  "title": "恒常的注意力分散",
+  "slug": "continuous-partial-attention",
+  "creator_version": "v16",
+  "reviewed_at": "2026-09-12",
+  "reviewed_by": "article-review(cowork)",
+  "critic_verdict": "pass",
+  "fixed": [
+    "最小限の説明(excerpt)の向き",
+    "用語名の限定語(恒常的→常に)",
+    "H2構成順序",
+    "受動態2箇所",
+    "Googleドキュメント人間編集の同期",
+    "用語表記ゆれ(散漫→分散、要最終確認)",
+    "提唱者ポートレート<figure>の復元"
+  ],
+  "note": "v16ルール(最小限の説明を用語名と同じ向きで締める・限定語を落とさない)を適用。Googleドキュメント上のyuyaによる人間編集(Step0.5)を同期。分散/散漫の表記ゆれを分散に統一(要yuya最終確認)。Google Docsでraw HTMLが平文化され欠落していた提唱者ポートレート<figure>を復元。article-critic再採点で4軸とも11点以上でpass(ログ: AGENT_REPORTS/article-critic-logs/2026-09-12/continuous-partial-attention_20260912-2.json)",
+  "recorded_at": "2026-09-12T22:31:41+09:00"
+}

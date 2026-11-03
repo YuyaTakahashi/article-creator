@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "file": "drafts/バイソシエーション.md",
+  "title": "バイソシエーション",
+  "slug": "bisociation",
+  "creator_version": "v19",
+  "reviewed_at": "2026-10-17",
+  "reviewed_by": "claude",
+  "critic_verdict": "unknown",
+  "fixed": [
+    "4"
+  ],
+  "note": "台帳照合のみ（事実・範囲）。推敲はyuyaがChatGPTで実施",
+  "recorded_at": "2026-10-17T14:35:19+09:00"
+}
