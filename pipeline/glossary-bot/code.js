@@ -1835,6 +1835,10 @@ function fetchDocContent_(docUrl) {
     } else if (t === DocumentApp.ElementType.LIST_ITEM) {
       const li = el.asListItem();
       out.push('- ' + textElementToMd_(li.editAsText(), li.getText()));
+    } else if (t === DocumentApp.ElementType.TABLE) {
+      // 表は以前は読み飛ばしていた（段落と箇条書きしか読まなかった）。1行のHTMLにして mdToHtml_ にそのまま通す
+      const html = docTableToHtml_(el.asTable());
+      if (html) out.push(html);
     }
   }
   insertDocCodeBlocks_(out, fetchDocCodeBlocks_(docId));
@@ -2175,6 +2179,32 @@ function uploadDocImage_(cfg, blob, baseName) {
   const out = { id: j.id, url: j.source_url };
   props.setProperty(key, JSON.stringify(out));
   return out;
+}
+
+/** Docの表を1行の <table> にする。1行目を見出し（th）として扱う。セル内の太字は <strong> にする。 */
+function docTableToHtml_(table) {
+  const esc = function (x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+  const cellHtml = function (cell) {
+    const parts = [];
+    for (let k = 0; k < cell.getNumChildren(); k++) {
+      const ch = cell.getChild(k);
+      if (ch.getType() !== DocumentApp.ElementType.PARAGRAPH && ch.getType() !== DocumentApp.ElementType.LIST_ITEM) continue;
+      const pe = ch.getType() === DocumentApp.ElementType.PARAGRAPH ? ch.asParagraph() : ch.asListItem();
+      const md = textElementToMd_(pe.editAsText(), pe.getText());
+      if (md.trim()) parts.push(esc(md).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'));
+    }
+    return parts.join('<br>');
+  };
+  const rows = [];
+  for (let r = 0; r < table.getNumRows(); r++) {
+    const row = table.getRow(r);
+    const tag = r === 0 ? 'th' : 'td';
+    const cells = [];
+    for (let c = 0; c < row.getNumCells(); c++) cells.push('<' + tag + '>' + cellHtml(row.getCell(c)) + '</' + tag + '>');
+    rows.push('<tr>' + cells.join('') + '</tr>');
+  }
+  if (!rows.length) return '';
+  return '<table><thead>' + rows[0] + '</thead><tbody>' + rows.slice(1).join('') + '</tbody></table>';
 }
 
 function textElementToMd_(textEl, plain) {
