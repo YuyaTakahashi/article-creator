@@ -35,6 +35,25 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE / "scripts"))
 from portraits import portraits_json  # noqa: E402
+
+
+def refresh_portraits(path, dry_run=False, skip=False):
+    """書き戻す前に、語源・提唱者の人物の肖像を Wikipedia から取って下書きに入れ、本文を返す。
+    肖像を取る工程がどこにも無く、X列が空のまま登録され続けていたため、書き戻しの入口で必ず通す"""
+    text = path.read_text(encoding="utf-8")
+    if skip:
+        return text
+    try:
+        from fetch_portraits import ensure_portraits
+        new, report = ensure_portraits(text)
+    except Exception as e:  # 肖像が取れなくても書き戻しは止めない
+        print(f"  [肖像] 取得を飛ばした（{e}）", file=sys.stderr)
+        return text
+    for line in report:
+        print("  [肖像] " + line)
+    if new != text and not dry_run:
+        path.write_text(new, encoding="utf-8")
+    return new
 SHEET_ID = "1GEhserUiXQIHG8xNl2jUdLvrD2fHzeWXGkdJ_sZGCgY"
 TAB = "UX TIMES 用語DB"
 # 行数は固定せず広めに読む。上限を切ると、超えた行の用語が「無い」と判定されて重複行が生える。
@@ -164,6 +183,8 @@ def main():
     ap = argparse.ArgumentParser(description="記事MDを用語DBに反映する")
     ap.add_argument("md", help="drafts/{用語}.md")
     ap.add_argument("--doc-url", help="Doc化で作ったGoogleドキュメントのURL（--portrait-only 以外では必須）")
+    ap.add_argument("--no-fetch-portraits", action="store_true",
+                    help="Wikipedia から肖像を取りに行かない（下書きにある <figure> だけを送る）")
     ap.add_argument("--portrait-only", action="store_true",
                     help="肖像（X列）だけを書き戻す。ステータスやDocリンクには触らない")
     ap.add_argument("--id", help="用語DBのG-ID。ファイル名と用語名が一致しないときに指定する")
@@ -192,13 +213,14 @@ def main():
             _, gid, _ = find_row(read_sheet(), args.term or path.stem)
         if not gid:
             sys.exit(f"用語DBに行が見つからない: {args.term or path.stem}（--id G-xxx で指定する）")
-        portrait = portraits_json(path.read_text(encoding="utf-8"))
+        portrait = portraits_json(refresh_portraits(path, args.dry_run, args.no_fetch_portraits))
         res = post(env, {"action": "update_row", "id": gid, "portrait": portrait}, args.dry_run)
         if not res.get("ok"):
             sys.exit(f"update_row に失敗: {res}")
         print(f"完了: {gid} に肖像 {len(json.loads(portrait))} 件を書き戻した")
         return 0
 
+    body_now = refresh_portraits(path, args.dry_run, args.no_fetch_portraits)
     fm = read_frontmatter(path)
     term = args.term or path.stem
     warn_if_critic_skipped(term)
@@ -259,7 +281,7 @@ def main():
         "recipe_hash": fm.get("recipe_hash", ""),
         "flag": False,
         # 肖像はDocに入れず、ここでX列に控える。用語くんがWP下書きにするときに差し込む
-        "portrait": portraits_json(path.read_text(encoding="utf-8")),
+        "portrait": portraits_json(body_now),
     }
     if fm.get("category_id"):
         payload["category_id"] = fm["category_id"]

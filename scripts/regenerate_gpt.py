@@ -19,6 +19,7 @@ GPT で書き直しても Doc を作り直さないと、レビューする Doc 
   4. 挿絵の計画（drafts/{slug}-images.json）の見出しを、新しい本文の同じ位置の見出しに付け替える
   5. stamp_version.py でレシピ版を刻む
   6. article-critic を claude -p で通す（判定はログに残し、Doc化は止めない）
+  6.5 前の版の肖像を引き継ぎ、語源・提唱者の人物の肖像を Wikipedia から足す（fetch_portraits.py）
   7. make_doc_md.py → Drive にMDを上げて Google ドキュメントに変換 → 元のMDはゴミ箱へ
   8. doc_images.py send で、アイキャッチ候補と挿絵を新しい Doc に入れる
   9. register_draft.py --id で用語DBを書き戻す（作り直しメモと旧Docリンク付き）
@@ -406,6 +407,7 @@ def main():
     english = json.loads(meta_p.read_text()).get("english", "") if meta_p.exists() else ""
 
     # 3〜5. drafts に反映し、挿絵の見出しを付け替え、版を刻む
+    old_text = md.read_text(encoding="utf-8")  # 前の版の肖像を引き継ぐために控える
     mini = apply_turn3(md, turn3.read_text(encoding="utf-8"), a.model, english)
     print(f"drafts を更新した（最小限の説明: {mini}）")
     run(["python3", "scripts/stamp_version.py", str(md.relative_to(REPO))])
@@ -417,6 +419,15 @@ def main():
     # 挿絵の見出しは、ループで見出しの文言が変わったあとの本文に合わせる（数と順番は変わらない）
     remap_images(REPO / f"drafts/{slug}-images.json", old_h2, body_h2(md.read_text(encoding="utf-8")))
     place_illustrations(md, REPO / f"drafts/{slug}-images.json", a.model)
+    # 肖像：turn3 は本文を丸ごと書き直すので、前の版の <figure> が消える。引き継いだうえで、
+    # 語源・提唱者に出てくる人物のうち肖像の無い人を Wikipedia で探して足す（複数人でよい）
+    from fetch_portraits import ensure_portraits
+    cur = md.read_text(encoding="utf-8")
+    new, report = ensure_portraits(cur, old_text)
+    for line in report:
+        print("  [肖像] " + line)
+    if new != cur:
+        md.write_text(new, encoding="utf-8")
 
     # 7〜9. Doc を作り直し、画像を入れ、用語DBに書き戻す
     mk = ["python3", "scripts/make_doc_md.py", str(md.relative_to(REPO))]
