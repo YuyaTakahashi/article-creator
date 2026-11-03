@@ -3,6 +3,18 @@
 記事の書きぶりを決めるプロンプト群（prompts/recipe-manifest.txt）の変更履歴。
 各記事のフロントマター `creator_version` はここの版番号を指す。
 
+## v24 — 2026-11-03
+
+わかりやすさの差分測定を受け、説明用の作例・事実のつなぎを許可、箇条書きと表を解禁、主語の付けすぎを抑える
+
+レシピhash: `25eb70cdd491`
+
+変更されたファイル:
+  - .agent/skills/article-creator/SKILL.md
+  - .agent/skills/article-critic/references/style-critic.md
+  - prompts/01_information_gathering.md
+  - prompts/02_polishing.md
+
 ## v23 — 2026-10-25
 
 読み手目線Criticの項目5に因果の飛躍（台帳の条件語の言い換えによる飛躍を含む）を足す
