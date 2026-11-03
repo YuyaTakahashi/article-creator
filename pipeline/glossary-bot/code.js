@@ -1798,7 +1798,8 @@ function fetchDocMarkdown_(docUrl) {
  * 以前は段落の文字（getText）しか読まず、画像は黙って落ち、同じ段落のキャプションの文字だけが本文に残っていた。
  */
 function fetchDocContent_(docUrl) {
-  const body = DocumentApp.openById(docIdOf_(docUrl)).getBody();
+  const docId = docIdOf_(docUrl);
+  const body = DocumentApp.openById(docId).getBody();
   const out = [];
   const images = [];
   const pushImages = function (el) {
@@ -1811,11 +1812,16 @@ function fetchDocContent_(docUrl) {
     }
   };
   const n = body.getNumChildren();
+  let inCode = false;
   for (let i = 0; i < n; i++) {
     const el = body.getChild(i);
     const t = el.getType();
     if (t === DocumentApp.ElementType.PARAGRAPH) {
       const p = el.asParagraph();
+      // コードブロックの行が段落として見えた場合は捨てる（中身は fetchDocCodeBlocks_ から入れ直す）
+      const marks = docCodeMarks_(p.getText());
+      if (marks) { inCode = inCode ? false : marks === 1; continue; }
+      if (inCode) continue;
       pushImages(p);
       const md = textElementToMd_(p.editAsText(), p.getText());
       if (!md.trim() && p.getNumChildren() && hasInlineImage_(p)) continue;   // 画像だけの段落
@@ -1831,7 +1837,88 @@ function fetchDocContent_(docUrl) {
       out.push('- ' + textElementToMd_(li.editAsText(), li.getText()));
     }
   }
+  insertDocCodeBlocks_(out, fetchDocCodeBlocks_(docId));
   return { md: out.join('\n\n'), images: images };
+}
+
+// Docの「コードブロック」（Markdownの ``` をDocに取り込むとこれになる）は、DocumentApp の getBody() に出てこない。
+// 段落だけを読むと中身が黙って落ちる（2026-11 SQLインジェクション：SQL文2つがWPの本文から消えた）。
+// そこで Docs API（REST）で読み直し、直前の段落の後ろに ``` で囲んで入れ直す。
+// REST では、ブロックの先頭行の頭と、ブロックの直後の段落の頭に、同じ U+E907 が1つずつ入る。
+const DOC_CODE_MARK = '\ue907';
+function docCodeMarks_(t) { return String(t).split(DOC_CODE_MARK).length - 1; }
+
+/** Docのコードブロックを順に返す。[{ anchor: 直前の文字のある段落, lines: [行...] }]。読めなければ []。 */
+function fetchDocCodeBlocks_(docId) {
+  let doc;
+  try {
+    // 拡張サービス「Docs」（appsscript.json で有効化）を使う。無い環境では REST を直接呼ぶ
+    if (typeof Docs !== 'undefined' && Docs.Documents) doc = Docs.Documents.get(docId);
+  } catch (e) {
+    console.warn('Docs.Documents.get に失敗。REST で読み直す: ' + e);
+  }
+  if (!doc) try {
+    const res = UrlFetchApp.fetch('https://docs.googleapis.com/v1/documents/' + encodeURIComponent(docId), {
+      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+      muteHttpExceptions: true,
+    });
+    if (res.getResponseCode() !== 200) {
+      console.warn('Docのコードブロックを読めない（Docs API ' + res.getResponseCode() + '）: ' + res.getContentText().slice(0, 200));
+      return [];
+    }
+    doc = JSON.parse(res.getContentText());
+  } catch (e) {
+    console.warn('Docのコードブロックを読めない: ' + e);
+    return [];
+  }
+  const blocks = [];
+  let anchor = '';
+  let cur = null;
+  ((doc.body && doc.body.content) || []).forEach(function (el) {
+    if (!el.paragraph) return;
+    const t = (el.paragraph.elements || []).map(function (r) { return (r.textRun && r.textRun.content) || ''; })
+      .join('').replace(/\n$/, '');
+    const marks = docCodeMarks_(t);
+    let closes = false;
+    if (!cur && marks) { cur = { anchor: anchor, lines: [] }; closes = marks >= 2; }
+    else if (cur && marks) closes = true;
+    if (cur) {
+      cur.lines.push(t.split(DOC_CODE_MARK).join(''));
+      if (closes) {
+        while (cur.lines.length && !cur.lines[0].trim()) cur.lines.shift();
+        while (cur.lines.length && !cur.lines[cur.lines.length - 1].trim()) cur.lines.pop();
+        if (cur.lines.length) blocks.push(cur);
+        cur = null;
+      }
+      return;
+    }
+    if (t.trim()) anchor = t.trim();
+  });
+  return blocks;
+}
+
+/** fetchDocContent_ の段落の並び（out）に、コードブロックを直前の段落の後ろへ ``` で囲んで差し込む。 */
+function insertDocCodeBlocks_(out, blocks) {
+  if (!blocks.length) return;
+  const plain = function (s) {
+    return String(s).replace(/^#{1,4}\s+/, '').replace(/^-\s+/, '').replace(/\*\*/g, '')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/\s+/g, '');
+  };
+  let from = 0;
+  blocks.forEach(function (b) {
+    const fence = '```\n' + b.lines.join('\n') + '\n```';
+    const want = plain(b.anchor);
+    let at = -1;
+    for (let i = from; i < out.length; i++) { if (want && plain(out[i]) === want) { at = i; break; } }
+    if (at === -1) {
+      // 直前の段落が見つからなくても、落とすよりは末尾に残して人が気づけるようにする
+      console.warn('コードブロックの位置が分からないので末尾に置いた: ' + b.lines[0]);
+      out.push(fence);
+      return;
+    }
+    out.splice(at + 1, 0, fence);
+    from = at + 2;
+  });
 }
 
 function docIdOf_(docUrl) {
@@ -2160,6 +2247,15 @@ function mdToHtml_(md) {
   const flushList = function () { if (inList) { out.push('</ul>'); inList = false; } };
   for (let idx = 0; idx < lines.length; idx++) {
     const line = lines[idx].replace(/\s+$/, '');
+    // コード（``` で囲んだ行）は <pre><code> にする。中の行は段落・見出し・箇条書きとして読まない
+    if (/^\s*```/.test(line)) {
+      flushPara(); flushList();
+      const code = [];
+      idx++;
+      while (idx < lines.length && !/^\s*```\s*$/.test(lines[idx])) { code.push(lines[idx].replace(/\s+$/, '')); idx++; }
+      out.push('<pre><code>' + code.join('\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>');
+      continue;
+    }
     if (/wp分割ライン/.test(line)) { flushPara(); flushList(); out.push('<!--nextpage-->'); continue; }
     if (line.trim() === '') {
       flushPara();
