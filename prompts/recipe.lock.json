@@ -1,11 +1,11 @@
 {
-  "version": "v24",
-  "hash": "25eb70cdd491186a631c366f5f56af501296bcadd9a7c6592da43cc864f49031",
+  "version": "v25",
+  "hash": "b7ca5b9c0e7ff063fcf126127376f7438d920132f159efcf1c3e550710a2fed5",
   "updated_at": "2026-11-03",
-  "note": "わかりやすさの差分測定を受け、説明用の作例・事実のつなぎを許可、箇条書きと表を解禁、主語の付けすぎを抑える",
+  "note": "v24の作例ルールで固有名詞の匿名化と断り書きの乱発が起きたため、台帳の固有名詞は名前のまま・作例の断りは1回までと明記",
   "files": {
-    "prompts/01_information_gathering.md": "e80e6eee10532161aeebf2c7eabd42e4f30b758b9c5c4545f07471f4e7df4e33",
-    "prompts/02_polishing.md": "e3d307ac383cf09cb06c4b4612977974f1414a51463ef14926f7679af92e502e",
+    "prompts/01_information_gathering.md": "9a2ef9f55be437841d3959a55c781e6a3187d65ed0f8ccf9039dcc218d2fc034",
+    "prompts/02_polishing.md": "2085fb47fbd08e1dc0d2a7aee4f2e4de69c8f05586b2919591d05a687ff92c1e",
     "prompts/03_eyecatch.md": "de780c4cbb29feaa1ef6b9e352f00750b229b84385c91cd4acbe7b434b91fedc",
     ".agent/skills/article-creator/SKILL.md": "268246d91e5ebccd098d61c528f7ceb1020359a871ebac074de472a458e5ce56",
     ".agent/skills/article-review/SKILL.md": "a616db92f0f71b895bc935f4a47e35fc7dc72fddfe84c2df29d05d026fd136e1",
