@@ -104,7 +104,7 @@ function handleMention(event) {
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
     postToSlack(event.channel,
-      ':large_green_circle: 1q0O 用語くん v40（English欄・関連用語の埋め込み）が応答してるよ ✨\n' + buildLabel_(),
+      ':large_green_circle: 1q0O 用語くん v41（抜粋をDocの最小限の説明から取る）が応答してるよ ✨\n' + buildLabel_(),
       event.thread_ts || event.ts);
     return;
   }
@@ -1513,7 +1513,7 @@ function publishRowToWpDraftLocked_(sheet, row) {
   const term = get(COL.TERM);
   const docUrl = String(get(COL.DOC_URL) || '');
   const slug = String(get(COL.SLUG) || '');
-  const excerpt = String(get(COL.EXCERPT) || '');
+  const dbExcerpt = String(get(COL.EXCERPT) || '');
   const categoryId = get(COL.CATEGORY_ID);
   const featuredMedia = get(COL.FEATURED_MEDIA);
   const wpPostId = get(COL.WP_POST_ID);
@@ -1524,6 +1524,10 @@ function publishRowToWpDraftLocked_(sheet, row) {
   const placed = placeDocImages_(cfg, cleanReviewMd_(doc.md), doc.images, slug || String(get(COL.ID) || 'glossary'), term);
   const md = placed.md;
   const title = extractTitle_(md) || term;
+  // 抜粋はDocの「最小限の説明」を正とする。用語DBのN列は生成時の値のままで、Docでの手直しが入っていないため
+  // （2026-11-07 モーダル：Docで直した最小限の説明がWPに載らず、初稿の文言が抜粋に入った）。Docに無いときだけN列を使う
+  const docExcerpt = extractMinimalDesc_(md);
+  const excerpt = docExcerpt || dbExcerpt;
   // 「-- wp分割ライン--」より後ろだけが本文。前段（フロントマター・最小限の説明・改ページ）は本文に入れない（post_to_wp.pyと同じ）
   // 肖像はDocに入っていない。用語DBのX列から差し込む（Docに肖像が入っていた頃の記事は、残ったキャプションを先に消す）
   const portraits = preparePortraits_(cfg, sheet, row);
@@ -1584,6 +1588,8 @@ function publishRowToWpDraftLocked_(sheet, row) {
   const editUrl = cfg.site + '/wp-admin/post.php?post=' + j.id + '&action=edit';
 
   sheet.getRange(row, COL.WP_URL).setValue(editUrl);
+  // Docの最小限の説明で送ったときは、N列もそろえる（次の作り直しや用語くんの一覧で古い定義が出ないように）
+  if (docExcerpt && docExcerpt !== dbExcerpt) sheet.getRange(row, COL.EXCERPT).setValue(docExcerpt);
   sheet.getRange(row, COL.WP_POST_ID).setValue(j.id);
   if (placed.featuredMedia) sheet.getRange(row, COL.FEATURED_MEDIA).setValue(placed.featuredMedia);
   if (placed.warnings.length) note = (note ? note + '\n' : '') + placed.warnings.join('\n');
@@ -2230,6 +2236,29 @@ function textElementToMd_(textEl, plain) {
 
 function cleanReviewMd_(md) {
   return String(md).split('\n').filter(function (line) { return !/^\s*[*_]*（レビュー用ドラフト/.test(line); }).join('\n');
+}
+
+/**
+ * Docの「## 最小限の説明」節の本文（次の見出しか wp分割ライン の手前まで）を1行にして返す。無ければ ''。
+ * 太字・リンク・ルビの記法は外し、末尾の句点は落とす（excerpt は句点なしの名詞締めの決まり）。
+ */
+function extractMinimalDesc_(md) {
+  const lines = String(md).replace(/\r\n/g, '\n').split('\n');
+  let i = lines.findIndex(function (l) { return /^#{1,4}\s*最小限の説明\s*$/.test(l.trim()); });
+  if (i < 0) return '';
+  const out = [];
+  for (i = i + 1; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (/^#{1,6}\s/.test(l) || /wp\s*分割\s*ライン/.test(l)) break;
+    if (l) out.push(l);
+  }
+  return out.join('')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/([A-Za-z0-9.'’&-]+)[¥￥][^¥￥]+[¥￥]/g, '$1')
+    .replace(/^[*_]+|[*_]+$/g, '')
+    .replace(/[。．]+$/, '')
+    .trim();
 }
 
 function extractTitle_(md) {
