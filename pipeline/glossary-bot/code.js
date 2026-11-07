@@ -104,7 +104,7 @@ function handleMention(event) {
   // バージョン確認（どのコード／デプロイが応答しているか特定するデバッグ用）。完全一致のみ。
   if (/^(version|ping|バージョン|でばっぐ|デバッグ|debug)$/i.test(userMessage)) {
     postToSlack(event.channel,
-      ':large_green_circle: 1q0O 用語くん v41（抜粋をDocの最小限の説明から取る）が応答してるよ ✨\n' + buildLabel_(),
+      ':large_green_circle: 1q0O 用語くん v42（挿絵を本文の幅いっぱいに表示する）が応答してるよ ✨\n' + buildLabel_(),
       event.thread_ts || event.ts);
     return;
   }
@@ -2137,7 +2137,7 @@ function placeDocImages_(cfg, md, images, fileBase, term) {
       const up = uploadDocImage_(cfg, img.blob, safeBase + '-' + figureNo);
       const alt = escapeHtmlAttr_(img.desc || (term + 'のイメージ'));
       return '<figure style="text-align:center;margin:1.5em auto;"><img src="' + up.url + '" alt="' + alt +
-        '" style="width:100%;max-width:640px;height:auto;display:block;margin:0 auto;border-radius:6px;"></figure>';
+        '" style="width:100%;max-width:100%;height:auto;display:block;margin:0 auto;border-radius:6px;"></figure>';
     } catch (e) {
       result.warnings.push(figureNo + '枚目の挿絵をWPに上げられなかったので外した（' + e.message + '）');
       return '';
